@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Iniciar sesión — La Otra Tribuna</title>
+  <link rel="stylesheet" href="styles/main.css" />
+  <link rel="icon" type="image/png" href="./assets/imagen.png" />
+</head>
+<body>
+  <!-- ===== HEADER ===== -->
+  <header id="siteHeader">
+    <div class="top container">
+      <div class="brand-wrap">
+        <a href="index.html" class="logo-link" aria-label="Ir al inicio">
+          <img class="logo" src="./assets/imagen.png" alt="La Otra Tribuna" />
+        </a>
+      </div>
+
+      <div class="search">
+        <input type="search" placeholder="Buscar club o país…" />
+      </div>
+
+      <div class="header-messages">Iniciá sesión para comprar y vender</div>
+    </div>
+
+    <!-- ===== SUBNAV ===== -->
+    <nav class="subnav">
+      <div class="container subnav-inner">
+        <div class="subnav-left">
+          <a href="index.html#ubicacion" class="loc-link">
+            <span class="loc-line">Ingresa tu ubicación</span>
+          </a>
+        </div>
+        <div class="subnav-center">
+          <a href="index.html#categorias" class="subnav-link">Categorías</a>
+          <a href="index.html#ofertas" class="subnav-link">Ofertas</a>
+          <a href="index.html#cupones" class="subnav-link">Cupones</a>
+          <a href="index.html#vender" class="subnav-link">Vender</a>
+          <a href="rastrear.html" class="subnav-link">Rastrear Pedido</a>
+        </div>
+        <div class="subnav-right">
+          <a href="ayuda.html" class="subnav-link">Ayuda</a>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <!-- ===== LOGIN FORM ===== -->
+  <main class="track-full">
+    <div class="track-card">
+      <div class="track-title">
+        <img src="./assets/imagen.png" alt="Logo" style="height:32px" />
+        <h2>Iniciar Sesión</h2>
+      </div>
+
+      <form class="track-form">
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" type="email" required placeholder="tucorreo@ejemplo.com" />
+        </div>
+
+        <div class="field">
+          <label for="password">Contraseña</label>
+          <input id="password" type="password" required placeholder="************" />
+        </div>
+
+        <button type="submit" class="btn primary">Ingresar</button>
+      </form>
+
+      <p class="muted" style="margin-top:20px;font-size:14px;">
+        ¿Aún no tenés cuenta?
+        <a href="registro.html" style="color:var(--brand);font-weight:600;text-decoration:none;">Registrate acá</a>
+      </p>
+    </div>
+  </main>
+</body>
+</html>

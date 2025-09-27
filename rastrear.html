@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Rastrear Pedido — La Otra Tribuna</title>
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="icon" type="image/png" href="./assets/imagen.png">
+</head>
+<body>
+  <!-- ===== HEADER ===== -->
+  <header id="siteHeader">
+    <div class="top container">
+      <div class="brand-wrap">
+        <a href="index.html" class="logo-link" aria-label="Ir al inicio">
+          <img class="logo" src="./assets/imagen.png" alt="La Otra Tribuna">
+        </a>
+      </div>
+
+      <div class="search">
+        <input id="q" type="search" placeholder="Buscar club o país…" autocomplete="off" />
+        <div id="searchMenu" class="search-menu" hidden></div>
+      </div>
+
+      <div class="header-messages">Envíos seguros y rápidos</div>
+
+      <div class="actions">
+        <a href="login.html" class="btn-login">Iniciar sesión</a>
+        <button class="pill" id="favBtn" aria-label="Favoritos">❤️<span id="favCount">0</span></button>
+        <button class="pill" id="cartBtn" aria-label="Carrito">🛒 <span id="cartCount">0</span></button>
+      </div>
+    </div>
+
+    <!-- ===== SUBNAV ===== -->
+    <nav class="subnav">
+      <div class="container subnav-inner">
+        <div class="subnav-left">
+          <a href="#ubicacion" class="loc-link" id="openLocation">
+            <svg class="loc-ic" width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M12 22s7-6.46 7-12a7 7 0 1 0-14 0c0 5.54 7 12 7 12Z" stroke="currentColor" stroke-width="1.6"/>
+              <circle cx="12" cy="10" r="2.5" stroke="currentColor" stroke-width="1.6"/>
+            </svg>
+            <span class="loc-line" id="locText">Ingresa tu <strong>ubicación</strong></span>
+          </a>
+        </div>
+
+        <div class="subnav-center">
+          <a href="index.html#categorias" class="subnav-link">Categorías</a>
+          <a href="index.html#ofertas" class="subnav-link">Ofertas</a>
+          <a href="index.html#cupones" class="subnav-link">Cupones</a>
+          <a href="index.html#vender" class="subnav-link">Vender</a>
+          <a href="rastrear.html" class="subnav-link active">Rastrear Pedido</a>
+        </div>
+
+        <div class="subnav-right">
+          <a href="ayuda.html" class="subnav-link">Ayuda</a>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <!-- ===== OVERLAY ===== -->
+  <div id="overlay" class="overlay"></div>
+
+  <!-- ===== MODAL UBICACIÓN ===== -->
+  <div id="locationModal" class="modal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3>Elige dónde recibir tus compras</h3>
+        <button class="modal-close" id="closeLocation">✕</button>
+      </div>
+      <form id="locForm" class="loc-form">
+        <div class="field">
+          <label for="departamento">Departamento</label>
+          <select id="departamento" required>
+            <option value="" selected>Elija una opción</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="localidad">Localidad</label>
+          <select id="localidad" required disabled>
+            <option value="" selected>Elija una opción</option>
+          </select>
+        </div>
+        <div class="actions-row">
+          <button type="button" class="btn" id="cancelLoc">Cancelar</button>
+          <button type="submit" class="btn primary" id="acceptLoc" disabled>Aceptar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== CONTENIDO ===== -->
+  <main class="track-full">
+    <div class="track-card">
+      <div class="track-title">
+        <img src="./assets/imagen.png" alt="" style="width:40px; height:40px; border-radius:8px;">
+        <h2 style="margin:0; font-size:22px">Rastrear Pedido</h2>
+      </div>
+
+      <form id="trackForm" class="track-form">
+        <div class="field">
+          <label for="tracking">Número de seguimiento</label>
+          <input id="tracking" type="text" placeholder="Ej: ABC123456UY" required>
+        </div>
+        <button class="btn primary" type="submit">Rastrear</button>
+      </form>
+
+      <div id="trackResult" class="track-result" hidden>
+        <h3>Resultado</h3>
+        <p id="trackResultText" class="muted"></p>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">© <span id="year"></span> La Otra Tribuna.</footer>
+
+  <script>
+    // ===== Footer dinámico
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // ===== LocalStorage Ubicación (reutiliza lo del index)
+    const LOCATION_KEY = 'lot_location';
+    const locText = document.getElementById('locText');
+    const deptSel = document.getElementById('departamento');
+    const locSel = document.getElementById('localidad');
+    const acceptLocBtn = document.getElementById('acceptLoc');
+    const overlay = document.getElementById('overlay');
+    const locationModal = document.getElementById('locationModal');
+
+    const DEPTS = {
+      "Montevideo":["Montevideo"],
+      "Canelones":["Ciudad de la Costa","Las Piedras"],
+      "Maldonado":["Punta del Este","San Carlos"]
+    };
+
+    function fillDept(){ Object.keys(DEPTS).forEach(d => deptSel.append(new Option(d,d))); }
+    function renderLocationText(){
+      const raw = localStorage.getItem(LOCATION_KEY);
+      if(!raw){ locText.innerHTML = 'Ingresa tu <strong>ubicación</strong>'; return; }
+      try{ const {loc} = JSON.parse(raw); locText.textContent = `Enviar a ${loc}`; }
+      catch{ locText.innerHTML = 'Ingresa tu <strong>ubicación</strong>'; }
+    }
+
+    document.getElementById('openLocation').addEventListener('click', e=>{
+      e.preventDefault(); locationModal.classList.add('open'); overlay.classList.add('show');
+    });
+    document.getElementById('closeLocation').addEventListener('click', ()=>{
+      locationModal.classList.remove('open'); overlay.classList.remove('show');
+    });
+    document.getElementById('cancelLoc').addEventListener('click', ()=>{
+      locationModal.classList.remove('open'); overlay.classList.remove('show');
+    });
+    overlay.addEventListener('click', ()=>{
+      locationModal.classList.remove('open'); overlay.classList.remove('show');
+    });
+
+    deptSel.addEventListener('change', ()=>{
+      locSel.innerHTML = '<option value="">Elija una opción</option>';
+      if(!deptSel.value){ locSel.disabled = true; acceptLocBtn.disabled = true; return; }
+      DEPTS[deptSel.value].forEach(l => locSel.append(new Option(l,l)));
+      locSel.disabled = false; acceptLocBtn.disabled = true;
+    });
+    locSel.addEventListener('change', ()=>{ acceptLocBtn.disabled = !locSel.value; });
+
+    document.getElementById('locForm').addEventListener('submit', e=>{
+      e.preventDefault();
+      localStorage.setItem(LOCATION_KEY, JSON.stringify({dept:deptSel.value, loc:locSel.value}));
+      renderLocationText();
+      locationModal.classList.remove('open'); overlay.classList.remove('show');
+    });
+
+    fillDept(); renderLocationText();
+
+    // ===== Rastrear Pedido (simulado)
+    document.getElementById('trackForm').addEventListener('submit', e=>{
+      e.preventDefault();
+      const code = document.getElementById('tracking').value.trim();
+      if(!code) return;
+      document.getElementById('trackResultText').textContent = `Seguimiento del pedido ${code} (demo)`;
+      document.getElementById('trackResult').hidden = false;
+    });
+  </script>
+</body>
+</html>

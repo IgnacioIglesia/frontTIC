@@ -1,0 +1,610 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>La Otra Tribuna — Tienda de camisetas</title>
+  <link rel="stylesheet" href="styles/main.css" />
+  <link rel="icon" type="image/png" href="./assets/imagen.png" />
+</head>
+<body>
+  <!-- ===== HEADER ===== -->
+  <header id="siteHeader">
+    <div class="top container">
+      <div class="brand-wrap">
+        <a href="index.html" class="logo-link" aria-label="Ir al inicio">
+          <img class="logo" src="./assets/imagen.png" alt="La Otra Tribuna" />
+        </a>
+      </div>
+
+      <div class="search">
+        <input id="q" type="search" placeholder="Buscar club o país…" autocomplete="off" />
+        <div id="searchMenu" class="search-menu" hidden></div>
+      </div>
+
+      <div class="header-messages" id="headerMessage">Envíos seguros y rápidos</div>
+
+      <div class="actions">
+        <a href="login.html" class="btn-login">Iniciar sesión</a>
+        <button class="pill" id="favBtn" aria-label="Abrir favoritos">❤️<span id="favCount">0</span></button>
+        <button class="pill" id="cartBtn" aria-label="Abrir carrito">🛒 <span id="cartCount">0</span></button>
+      </div>
+    </div>
+
+    <!-- ===== SUBNAV ===== -->
+    <nav class="subnav">
+      <div class="container subnav-inner">
+        <div class="subnav-left">
+          <a href="#ubicacion" class="loc-link" id="openLocation">
+            <svg class="loc-ic" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 22s7-6.46 7-12a7 7 0 1 0-14 0c0 5.54 7 12 7 12Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="12" cy="10" r="2.5" stroke="currentColor" stroke-width="1.6"/>
+            </svg>
+            <span class="loc-line" id="locText">Ingresa tu <strong>ubicación</strong></span>
+          </a>
+        </div>
+
+        <div class="subnav-center">
+          <a href="#categorias" class="subnav-link">Categorías</a>
+          <a href="#ofertas" class="subnav-link">Ofertas</a>
+          <a href="#cupones" class="subnav-link">Cupones</a>
+          <a href="#vender" class="subnav-link">Vender</a>
+          <!-- 👉 ahora abre la página completa -->
+          <a href="rastrear.html" class="subnav-link">Rastrear Pedido</a>
+        </div>
+
+        <div class="subnav-right">
+          <a href="ayuda.html" class="subnav-link">Ayuda</a>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Overlay compartido -->
+  <div id="overlay" class="overlay"></div>
+
+  <!-- ===== Modal de ubicación ===== -->
+  <div id="locationModal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="locTitle" aria-modal="true">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 id="locTitle">Elige dónde recibir tus compras</h3>
+        <button class="modal-close" id="closeLocation" aria-label="Cerrar">✕</button>
+      </div>
+      <p class="muted" style="margin:0 0 12px">Podrás ver costos y tiempos de entrega precisos en todo lo que busques.</p>
+
+      <form id="locForm" class="loc-form" autocomplete="off">
+        <div class="field">
+          <label for="departamento">Departamento</label>
+          <select id="departamento" required>
+            <option value="" selected>Elija una opción</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="localidad">Localidad</label>
+          <select id="localidad" required disabled>
+            <option value="" selected>Elija una opción</option>
+          </select>
+        </div>
+        <div class="actions-row">
+          <button type="button" class="btn" id="cancelLoc">Cancelar</button>
+          <button type="submit" class="btn primary" id="acceptLoc" disabled>Aceptar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== Paneles laterales ===== -->
+  <aside id="cartMenu" class="cart-menu">
+    <div class="cart-header">
+      <h3>Tu carrito</h3>
+      <button id="closeCart" class="close-btn">✕</button>
+    </div>
+    <div id="cartItems" class="cart-items">
+      <p class="muted">Tu carrito está vacío</p>
+    </div>
+    <div class="cart-footer">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span>Total:</span>
+        <strong id="cartTotal">$ 0</strong>
+      </div>
+      <button class="btn primary checkout-btn">Finalizar compra</button>
+    </div>
+  </aside>
+
+  <aside id="favMenu" class="cart-menu">
+    <div class="cart-header">
+      <h3>Favoritos</h3>
+      <button id="closeFav" class="close-btn">✕</button>
+    </div>
+    <div id="favItems" class="cart-items">
+      <p class="muted">Aún no agregaste favoritos</p>
+    </div>
+    <div class="cart-footer">
+      <button class="btn primary checkout-btn" id="favGoCart">Pasar todo al carrito</button>
+    </div>
+  </aside>
+
+  <main>
+    <!-- HERO con fondos rotativos -->
+    <section class="hero">
+      <div class="copy">
+        <h1>El mercado de las camisetas</h1>
+        <p class="hero-sub">Publicá, comprá y vendé entre hinchas de verdad.</p>
+      </div>
+    </section>
+
+    <div class="container">
+      <section id="catalogo">
+        <h2>Catálogo</h2>
+        <p class="muted">Resultados: <span id="count">0</span></p>
+
+        <div class="filters">
+          <select id="club"><option value="">Todos los clubes</option></select>
+          <select id="pais"><option value="">Todos los países</option></select>
+          <select id="categoria">
+            <option value="">Todas las categorías</option>
+            <option>Club</option>
+            <option>Selección</option>
+            <option>Retro</option>
+          </select>
+          <div class="filter-price">
+            <label class="muted" for="price">Precio máx.: <span id="priceLabel"></span></label>
+            <input id="price" class="range" type="range" min="1500" max="4000" step="50" value="4000" />
+          </div>
+        </div>
+
+        <div id="grid" class="grid"></div>
+      </section>
+
+      <footer>©️ <span id="year"></span> La Otra Tribuna.</footer>
+    </div>
+  </main>
+
+  <script>
+    // ===== Datos demo =====
+    const DATA = [
+      {id:1,nombre:'Camiseta Local 24/25',club:'Barcelona',pais:'España',categoria:'Club',precio:3290,img:'./assets/camisetas/barcelona-local.jpg'},
+      {id:2,nombre:'Camiseta Visitante 24/25',club:'Barcelona',pais:'España',categoria:'Club',precio:3190,img:'./assets/camisetas/barcelona-visitante.jpg'},
+      {id:3,nombre:'Camiseta Titular 24/25',club:'Real Madrid',pais:'España',categoria:'Club',precio:3490,img:'./assets/camisetas/real-madrid-titular.jpg'},
+      {id:4,nombre:'Camiseta Selección 24/25',club:'Uruguay',pais:'Uruguay',categoria:'Selección',precio:2990,img:'./assets/camisetas/uruguay-seleccion.jpg'}
+    ];
+    const PLACEHOLDER = 'https://placehold.co/600x750?text=Camiseta';
+    const uy = new Intl.NumberFormat('es-UY',{style:'currency',currency:'UYU',maximumFractionDigits:0});
+
+    const qs = s => document.querySelector(s);
+    const grid = qs('#grid'), count = qs('#count');
+    const price = qs('#price'), priceLabel = qs('#priceLabel');
+    const clubSel = qs('#club'), paisSel = qs('#pais'), catSel = qs('#categoria');
+    const q = qs('#q');
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // ===== Carrito =====
+    const cartBtn = document.getElementById('cartBtn');
+    const cartMenu = document.getElementById('cartMenu');
+    const closeCart = document.getElementById('closeCart');
+    const overlay = document.getElementById('overlay');
+    const cartItemsDiv = document.getElementById('cartItems');
+    const cartTotal = document.getElementById('cartTotal');
+    const cartCountBadge = document.getElementById('cartCount');
+    const cart = new Map();
+
+    function showOverlay(){ overlay.classList.add('show'); }
+    function hideOverlay(){ overlay.classList.remove('show'); }
+    function hideOverlayIfIdle(){
+      if(!document.querySelector('.cart-menu.open') && !document.getElementById('locationModal').classList.contains('open')){
+        hideOverlay();
+      }
+    }
+    function openCart(){ cartMenu.classList.add('open'); showOverlay(); }
+    function closeCartMenu(){ cartMenu.classList.remove('open'); hideOverlayIfIdle(); }
+    cartBtn.addEventListener('click', openCart);
+    closeCart.addEventListener('click', closeCartMenu);
+
+    function updateCartUI(){
+      let totalQty = 0, totalPrice = 0;
+      cart.forEach(({item, qty}) => { totalQty += qty; totalPrice += item.precio * qty; });
+      cartCountBadge.textContent = totalQty;
+
+      cartItemsDiv.innerHTML = '';
+      if(!totalQty){
+        cartItemsDiv.innerHTML = '<p class="muted">Tu carrito está vacío</p>';
+        cartTotal.textContent = '$ 0';
+        return;
+      }
+      cart.forEach(({item, qty}) => {
+        const row = document.createElement('div');
+        row.className = 'cart-item';
+        row.innerHTML = `
+          <img src="${item.img}" alt="${item.nombre}" onerror="this.src='${PLACEHOLDER}'">
+          <div class="meta">
+            <strong>${item.nombre}</strong>
+            <span class="muted">${uy.format(item.precio)} c/u</span>
+            <div class="qty">
+              <button class="icon" data-act="dec" data-id="${item.id}">−</button>
+              <span>${qty}</span>
+              <button class="icon" data-act="inc" data-id="${item.id}">＋</button>
+              <button class="icon" data-act="rm"  data-id="${item.id}" title="Quitar">🗑</button>
+            </div>
+          </div>
+          <div><strong>${uy.format(item.precio * qty)}</strong></div>`;
+        cartItemsDiv.appendChild(row);
+      });
+      cartTotal.textContent = uy.format(totalPrice);
+    }
+
+    cartItemsDiv.addEventListener('click', (e)=>{
+      const btn = e.target.closest('button.icon'); if(!btn) return;
+      const id = Number(btn.dataset.id), act = btn.dataset.act, entry = cart.get(id); if(!entry) return;
+      if(act==='inc') entry.qty += 1;
+      else if(act==='dec'){ entry.qty = Math.max(0, entry.qty - 1); if(!entry.qty) cart.delete(id); }
+      else if(act==='rm') cart.delete(id);
+      updateCartUI();
+    });
+
+    // ===== Favoritos =====
+    const favBtn = document.getElementById('favBtn');
+    const favMenu = document.getElementById('favMenu');
+    const closeFav = document.getElementById('closeFav');
+    const favItemsDiv = document.getElementById('favItems');
+    const favCountBadge = document.getElementById('favCount');
+    const favGoCartBtn = document.getElementById('favGoCart');
+    const favorites = new Set(JSON.parse(localStorage.getItem('lot_favorites') || '[]'));
+
+    function saveFavorites(){ localStorage.setItem('lot_favorites', JSON.stringify([...favorites])); }
+    function updateFavBadge(){ favCountBadge.textContent = favorites.size; favBtn.classList.toggle('active', favorites.size>0); }
+    function openFav(){ favMenu.classList.add('open'); showOverlay(); }
+    function closeFavMenu(){ favMenu.classList.remove('open'); hideOverlayIfIdle(); }
+
+    favBtn.addEventListener('click', openFav);
+    closeFav.addEventListener('click', closeFavMenu);
+    favGoCartBtn.addEventListener('click', ()=>{
+      favorites.forEach(id=>{
+        const prod = DATA.find(p=>p.id===id); if(!prod) return;
+        const entry = cart.get(id) || { item: prod, qty: 0 }; entry.qty += 1; cart.set(id, entry);
+      });
+      updateCartUI(); openCart();
+    });
+
+    function renderFavMenu(){
+      favItemsDiv.innerHTML = '';
+      if(!favorites.size){ favItemsDiv.innerHTML = '<p class="muted">Aún no agregaste favoritos</p>'; return; }
+      DATA.filter(p=>favorites.has(p.id)).forEach(item=>{
+        const row = document.createElement('div');
+        row.className = 'cart-item';
+        row.innerHTML = `
+          <img src="${item.img}" alt="${item.nombre}" onerror="this.src='${PLACEHOLDER}'">
+          <div class="meta">
+            <strong>${item.nombre}</strong>
+            <span class="muted">${uy.format(item.precio)}</span>
+            <div class="qty" style="gap:8px">
+              <button class="icon" data-act="addcart" data-id="${item.id}">🛒 Agregar</button>
+              <button class="icon" data-act="rmfav"  data-id="${item.id}">🗑 Quitar</button>
+            </div>
+          </div>
+          <div><strong>${uy.format(item.precio)}</strong></div>`;
+        favItemsDiv.appendChild(row);
+      });
+    }
+
+    favItemsDiv.addEventListener('click', (e)=>{
+      const btn = e.target.closest('button.icon'); if(!btn) return;
+      const id = Number(btn.dataset.id), act = btn.dataset.act;
+      const prod = DATA.find(p => p.id === id); if(!prod) return;
+      if(act==='addcart'){
+        const entry = cart.get(id) || { item: prod, qty: 0 }; entry.qty += 1; cart.set(id, entry); updateCartUI(); openCart();
+      }else if(act==='rmfav'){
+        favorites.delete(id); saveFavorites(); updateFavBadge(); renderFavMenu(); updateGridFavIcons();
+      }
+    });
+
+    // ===== Render catálogo =====
+    function render(){
+      priceLabel.textContent = uy.format(Number(price.value));
+      const term = (q.value||'').toLowerCase();
+      const maxP = Number(price.value);
+      const club = clubSel.value, pais = paisSel.value, cat = catSel.value;
+
+      const items = DATA.filter(p =>
+        p.precio <= maxP &&
+        (!club || p.club===club) &&
+        (!pais || p.pais===pais) &&
+        (!cat || p.categoria===cat) &&
+        (p.nombre.toLowerCase().includes(term) || p.club.toLowerCase().includes(term) || p.pais.toLowerCase().includes(term))
+      );
+
+      count.textContent = items.length;
+      grid.innerHTML = '';
+      for(const p of items){
+        const el = document.createElement('article');
+        el.className = 'card';
+        el.innerHTML = `
+          <div class="media">
+            <img src="${p.img}" alt="${p.nombre}" loading="lazy" onerror="this.src='${PLACEHOLDER}'">
+            <button class="fav-toggle ${favorites.has(p.id)?'active':''}" data-fav-id="${p.id}">
+              ${favorites.has(p.id)?'❤️':'🤍'}
+            </button>
+          </div>
+          <div class="body">
+            <div class="meta">
+              <div>
+                <div style="font-weight:700;font-size:16px;line-height:1.2">${p.nombre}</div>
+                <div class="muted">${p.club} • ${p.categoria}</div>
+              </div>
+              <div class="price">${uy.format(p.precio)}</div>
+            </div>
+            <button class="btn primary" data-id="${p.id}">Agregar al carrito</button>
+          </div>`;
+        grid.appendChild(el);
+      }
+      updateGridFavIcons();
+    }
+
+    function updateGridFavIcons(){
+      document.querySelectorAll('.fav-toggle').forEach(btn=>{
+        const id = Number(btn.dataset.favId);
+        btn.classList.toggle('active', favorites.has(id));
+        btn.textContent = favorites.has(id) ? '❤️' : '🤍';
+      });
+    }
+
+    grid.addEventListener('click', (e)=>{
+      const addBtn = e.target.closest('button[data-id]');
+      const favBtnEl = e.target.closest('.fav-toggle');
+
+      if(addBtn){
+        const id = Number(addBtn.dataset.id);
+        const prod = DATA.find(p => p.id === id);
+        const entry = cart.get(id) || { item: prod, qty: 0 };
+        entry.qty += 1; cart.set(id, entry);
+        addBtn.textContent = 'Agregado ✓'; setTimeout(()=> addBtn.textContent = 'Agregar al carrito', 900);
+        updateCartUI(); openCart(); return;
+      }
+      if(favBtnEl){
+        const id = Number(favBtnEl.dataset.favId);
+        if(favorites.has(id)) favorites.delete(id); else favorites.add(id);
+        saveFavorites(); updateFavBadge(); renderFavMenu(); updateGridFavIcons(); return;
+      }
+    });
+
+    // ===== Buscador (historial + sugerencias) =====
+    const SEARCH_HISTORY_KEY = 'lot_search_history';
+    const MAX_HISTORY = 8;
+    const qInput = document.getElementById('q');
+    const searchMenu = document.getElementById('searchMenu');
+
+    function loadHistory(){ try{ return JSON.parse(localStorage.getItem(SEARCH_HISTORY_KEY)) || []; }catch{ return []; } }
+    function saveHistoryList(list){ localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(list.slice(0, MAX_HISTORY))); }
+    function addToHistory(term){
+      term = (term||'').trim(); if(term.length<2) return;
+      const list = loadHistory();
+      saveHistoryList([term, ...list.filter(t => t.toLowerCase() !== term.toLowerCase())]);
+    }
+    function clearHistory(){ localStorage.removeItem(SEARCH_HISTORY_KEY); renderSearchMenu(); }
+
+    function getSuggestions(term){
+      const t = term.trim().toLowerCase(); if(!t) return [];
+      return DATA.filter(p =>
+        p.nombre.toLowerCase().includes(t) || p.club.toLowerCase().includes(t) || p.pais.toLowerCase().includes(t)
+      ).slice(0, 6);
+    }
+
+    function openSearchMenu(){ searchMenu.hidden = false; }
+    function closeSearchMenu(){ searchMenu.hidden = true; activeIndex = -1; }
+
+    function renderSearchMenu(){
+      const term = qInput.value.trim();
+      const history = loadHistory();
+      const suggestions = getSuggestions(term);
+      let html = '';
+
+      if(!term && history.length){
+        html += `
+          <div class="search-section">
+            <h5>Búsquedas recientes</h5>
+            <ul class="search-list">
+              ${history.map(t => `<li class="search-item" data-type="history" data-value="${t.replace(/"/g,'&quot;')}">🔎 <span>${t}</span></li>`).join('')}
+            </ul>
+            <div class="search-empty"><span class="search-clear" id="clearHistory">Borrar historial</span></div>
+          </div>`;
+      }
+      if(term){
+        html += `
+          <div class="search-section">
+            <h5>Sugerencias</h5>
+            ${
+              suggestions.length
+              ? `<ul class="search-list">
+                  ${suggestions.map(p =>
+                    `<li class="search-item" data-type="suggestion" data-value="${p.nombre.replace(/"/g,'&quot;')}">🏷️ <span>${p.nombre}</span> <small>• ${p.club} — ${p.pais}</small></li>`
+                  ).join('')}
+                </ul>`
+              : `<div class="search-empty">Sin resultados para <strong>${term}</strong></div>`
+            }
+          </div>`;
+      }
+      if(!html) html = `<div class="search-empty">Empieza a escribir para buscar</div>`;
+      searchMenu.innerHTML = html;
+
+      const clearBtn = document.getElementById('clearHistory'); if(clearBtn) clearBtn.addEventListener('click', clearHistory);
+      searchMenu.querySelectorAll('.search-item').forEach(li => {
+        li.addEventListener('click', () => {
+          const value = li.dataset.value;
+          qInput.value = value; addToHistory(value); render(); closeSearchMenu();
+        });
+      });
+    }
+
+    qInput.addEventListener('focus', () => { renderSearchMenu(); openSearchMenu(); });
+    qInput.addEventListener('input', () => { renderSearchMenu(); openSearchMenu(); });
+
+    document.addEventListener('click', (e)=>{
+      if(!searchMenu.hidden && !searchMenu.contains(e.target) && e.target !== qInput){ closeSearchMenu(); }
+    });
+
+    // navegación teclado en menú de búsqueda
+    let activeIndex = -1;
+    qInput.addEventListener('keydown', (e)=>{
+      if(searchMenu.hidden) return;
+      const items = Array.from(searchMenu.querySelectorAll('.search-item'));
+      if(!items.length) return;
+
+      if(e.key === 'ArrowDown'){ e.preventDefault(); activeIndex = (activeIndex + 1) % items.length; }
+      else if(e.key === 'ArrowUp'){ e.preventDefault(); activeIndex = (activeIndex - 1 + items.length) % items.length; }
+      else if(e.key === 'Enter' && activeIndex >= 0){ e.preventDefault(); items[activeIndex].click(); return; }
+      else return;
+
+      items.forEach(el => el.classList.remove('active'));
+      items[activeIndex].classList.add('active');
+      items[activeIndex].scrollIntoView({block:'nearest'});
+    });
+
+    // ===== Header scrolled =====
+    const siteHeader = document.getElementById('siteHeader');
+    function onScroll(){ siteHeader.classList.toggle('is-scrolled', window.scrollY > 0); }
+    onScroll();
+    window.addEventListener('scroll', onScroll, {passive:true});
+
+    // ===== Inicializaciones =====
+    function attachInputs(){ [price, clubSel, paisSel, catSel, q].forEach(el => el.addEventListener('input', render)); }
+    attachInputs();
+    render(); updateCartUI(); updateFavBadge(); renderFavMenu();
+
+    // ===== Ubicación (mismo storage que rastrear.html) =====
+    const LOCATION_KEY = 'lot_location';
+    const openLocationBtn = document.getElementById('openLocation');
+    const locationModal = document.getElementById('locationModal');
+    const closeLocationBtn = document.getElementById('closeLocation');
+    const cancelLocBtn = document.getElementById('cancelLoc');
+    const deptSel = document.getElementById('departamento');
+    const locSel = document.getElementById('localidad');
+    const acceptLocBtn = document.getElementById('acceptLoc');
+
+    const DEPTS = {
+      "Artigas": [
+        "Artigas", "Bella Unión", "Tomás Gomensoro", "Baltasar Brum"
+      ],
+      "Canelones": [
+        "Canelones", "Ciudad de la Costa", "Las Piedras", "Pando", "La Paz",
+        "Progreso", "Santa Lucía", "Atlántida", "Parque del Plata", "Sauce",
+        "San Ramón", "Empalme Olmos", "Toledo"
+      ],
+      "Cerro Largo": [
+        "Melo", "Río Branco", "Fraile Muerto", "Tupambaé", "Isidoro Noblía"
+      ],
+      "Colonia": [
+        "Colonia del Sacramento", "Carmelo", "Nueva Helvecia", "Juan Lacaze",
+        "Rosario", "Tarariras", "Ombúes de Lavalle"
+      ],
+      "Durazno": [
+        "Durazno", "Sarandí del Yí", "Carmen", "Centenario"
+      ],
+      "Flores": [
+        "Trinidad", "Ismael Cortinas"
+      ],
+      "Florida": [
+        "Florida", "Sarandí Grande", "Casupá", "25 de Mayo"
+      ],
+      "Lavalleja": [
+        "Minas", "José Pedro Varela", "Solís de Mataojo", "Mariscala"
+      ],
+      "Maldonado": [
+        "Maldonado", "Punta del Este", "San Carlos", "Piriápolis",
+        "Pan de Azúcar", "Aiguá", "La Barra"
+      ],
+      "Montevideo": [
+        "Montevideo" // se maneja por barrios normalmente
+      ],
+      "Paysandú": [
+        "Paysandú", "Guichón", "Quebracho", "Piedras Coloradas"
+      ],
+      "Río Negro": [
+        "Fray Bentos", "Young", "Nuevo Berlín", "San Javier"
+      ],
+      "Rivera": [
+        "Rivera", "Tranqueras", "Minas de Corrales", "Vichadero", "Mandubí"
+      ],
+      "Rocha": [
+        "Rocha", "Chuy", "Castillos", "Lascano", "La Paloma", "Punta del Diablo"
+      ],
+      "Salto": [
+        "Salto", "Constitución", "Belén", "Daymán", "San Antonio"
+      ],
+      "San José": [
+        "San José de Mayo", "Ciudad del Plata", "Libertad", "Ecilda Paullier",
+        "Delta El Tigre", "Raigón"
+      ],
+      "Soriano": [
+        "Mercedes", "Dolores", "Cardona", "José Enrique Rodó", "Palmitas"
+      ],
+      "Tacuarembó": [
+        "Tacuarembó", "Paso de los Toros", "San Gregorio de Polanco",
+        "Curtina", "Ansina"
+      ],
+      "Treinta y Tres": [
+        "Treinta y Tres", "Vergara", "Santa Clara de Olimar", "Villa Sara"
+      ]
+    };
+
+    function fillDept(){ Object.keys(DEPTS).forEach(d => deptSel.append(new Option(d,d))); }
+    function renderLocationText(){
+      const raw = localStorage.getItem(LOCATION_KEY);
+      if(!raw){ locText.innerHTML = 'Ingresa tu <strong>ubicación</strong>'; return; }
+      try{
+        const {loc} = JSON.parse(raw);
+        locText.textContent = `Enviar a ${loc}`;
+      }catch{ locText.innerHTML = 'Ingresa tu <strong>ubicación</strong>'; }
+    }
+
+    function openLocation(){ locationModal.classList.add('open'); showOverlay(); }
+    function closeLocation(){ locationModal.classList.remove('open'); hideOverlayIfIdle(); }
+
+    openLocationBtn.addEventListener('click', (e)=>{ e.preventDefault(); openLocation(); });
+    closeLocationBtn.addEventListener('click', closeLocation);
+    cancelLocBtn.addEventListener('click', closeLocation);
+    overlay.addEventListener('click', ()=>{ closeCartMenu(); closeFavMenu(); closeLocation(); });
+
+    deptSel.addEventListener('change', ()=>{
+      const dept = deptSel.value;
+      locSel.innerHTML = '<option value="" selected>Elija una opción</option>';
+      if(!dept){ locSel.disabled = true; acceptLocBtn.disabled = true; return; }
+      DEPTS[dept].forEach(loc => locSel.append(new Option(loc,loc)));
+      locSel.disabled = false; acceptLocBtn.disabled = true;
+    });
+    locSel.addEventListener('change', ()=>{ acceptLocBtn.disabled = !locSel.value; });
+
+    document.getElementById('locForm').addEventListener('submit', (e)=>{
+      e.preventDefault();
+      if(!deptSel.value || !locSel.value) return;
+      const value = { dept: deptSel.value, loc: locSel.value };
+      localStorage.setItem(LOCATION_KEY, JSON.stringify(value));
+      renderLocationText();
+      closeLocation();
+    });
+
+    fillDept(); renderLocationText();
+
+    // ===== HERO: fondos rotativos =====
+    (function(){
+      const hero = document.querySelector('.hero');
+      const fondos = ['./assets/fondo1.png','./assets/fondo2.png','./assets/fondo3.png'];
+      let idx = 0;
+      function setBg(){ hero.style.backgroundImage = `url('${fondos[idx]}')`; }
+      setBg();
+      setInterval(()=>{ idx = (idx+1)%fondos.length; setBg(); }, 7000);
+    })();
+
+    // Mensaje rotativo del header (opcional)
+    const messages = [
+      "Envíos seguros y rápidos",
+      "Llevá la historia en tu camiseta",
+      "Tu pedido llega directo a tu puerta",
+      "Pagá con total confianza"
+    ];
+    let msgIndex = 0;
+    setInterval(()=>{
+      msgIndex = (msgIndex + 1) % messages.length;
+      document.getElementById('headerMessage').textContent = messages[msgIndex];
+    }, 3000);
+  </script>
+</body>
+</html>
