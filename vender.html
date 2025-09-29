@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Vender — La Otra Tribuna</title>
+  <link rel="stylesheet" href="styles/main.css" />
+  <link rel="stylesheet" href="styles/vender.css" />
+  <link rel="icon" type="image/png" href="./assets/logo.png" />
+</head>
+<body>
+  <!-- ===== HEADER (igual que index) ===== -->
+  <header id="siteHeader">
+    <div class="top container">
+      <div class="brand-wrap">
+        <a href="index.html" class="logo-link" aria-label="Ir al inicio">
+          <img class="logo" src="./assets/logo.png" alt="La Otra Tribuna" />
+        </a>
+      </div>
+
+      <div class="search">
+        <input type="search" placeholder="Buscar club o país…" autocomplete="off" />
+      </div>
+
+      <div class="header-messages">Publicá tu camiseta en segundos</div>
+
+      <div class="actions">
+        <a href="login.html" class="btn-login">Iniciar sesión</a>
+      </div>
+    </div>
+
+    <nav class="subnav">
+      <div class="container subnav-inner">
+        <div class="subnav-left">
+          <a href="index.html#ubicacion" class="loc-link">
+            <svg class="loc-ic" width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M12 22s7-6.46 7-12a7 7 0 1 0-14 0c0 5.54 7 12 7 12Z"
+                stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="12" cy="10" r="2.5" stroke="currentColor" stroke-width="1.6"/>
+            </svg>
+            <span class="loc-line">Ingresa tu <strong>ubicación</strong></span>
+          </a>
+        </div>
+
+        <div class="subnav-center">
+          <a href="index.html#categorias" class="subnav-link">Categorías</a>
+          <a href="index.html#ofertas" class="subnav-link">Ofertas</a>
+          <a href="index.html#cupones" class="subnav-link">Cupones</a>
+          <a href="vender.html" class="subnav-link active">Vender</a>
+          <a href="rastrear.html" class="subnav-link">Rastrear Pedido</a>
+        </div>
+
+        <div class="subnav-right">
+          <a href="ayuda.html" class="subnav-link">Ayuda</a>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <!-- ===== CONTENIDO ===== -->
+  <main class="track-full">
+    <div class="track-card sell-card">
+      <div class="track-title">
+        <img src="./assets/imagen.png" alt="Logo" style="height:28px;border-radius:6px" />
+        <h2>Vender</h2>
+      </div>
+
+      <form class="track-form">
+        <div class="form-grid two-cols">
+          <!-- Imagen de la publicación -->
+          <div class="field span-2">
+            <label>Imagen de la publicación</label>
+            <div class="image-field">
+              <div class="image-drop">
+                <input type="file" id="imagen" accept="image/*" hidden>
+                <img id="preview" alt="">
+                <label for="imagen" class="btn">Subir imagen</label>
+              </div>
+              <div class="image-actions">
+                <p class="muted">Subí una foto clara de la camiseta. Solo se admite 1 imagen por ahora.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Título -->
+          <div class="field span-2">
+            <label for="titulo">Título</label>
+            <input id="titulo" type="text" placeholder="Ej: Camiseta Barcelona 24/25" required>
+          </div>
+
+          <!-- Descripción -->
+          <div class="field span-2">
+            <label for="descripcion">Descripción</label>
+            <textarea id="descripcion" placeholder="Detalles sobre la camiseta…" required></textarea>
+          </div>
+
+          <!-- Precio y Moneda -->
+          <div class="field">
+            <label for="precio">Precio</label>
+            <input id="precio" type="number" placeholder="Ej: 3500" required>
+          </div>
+          <div class="field">
+            <label for="moneda">Moneda</label>
+            <select id="moneda" required>
+              <option value="UYU">UYU</option>
+              <option value="USD">USD</option>
+            </select>
+          </div>
+
+          <!-- Condición -->
+          <div class="field">
+            <label for="condicion">Condición</label>
+            <select id="condicion" required>
+              <option value="Nuevo">Nuevo</option>
+              <option value="Usado">Usado</option>
+            </select>
+          </div>
+
+          <!-- Autenticidad -->
+          <div class="field">
+            <label for="auth">Autenticidad</label>
+            <select id="auth" required>
+              <option value="Original">Original</option>
+              <option value="Replica">Réplica</option>
+            </select>
+          </div>
+
+          <!-- Talle -->
+          <div class="field">
+            <label for="talle">Talle</label>
+            <select id="talle" required>
+              <option>XS</option><option>S</option><option>M</option>
+              <option>L</option><option>XL</option><option>XXL</option><option>XXXL</option>
+            </select>
+          </div>
+
+          <!-- Stock -->
+          <div class="field">
+            <label for="stock">Stock</label>
+            <input id="stock" type="number" placeholder="Ej: 10" required>
+          </div>
+
+          <!-- Estado de la publicación -->
+          <div class="field span-2">
+            <label>Estado de la publicación</label>
+            <div class="segmented">
+              <input type="radio" id="activa" name="estado" value="Activa" checked>
+              <label for="activa">Activa</label>
+
+              <input type="radio" id="conv" name="estado" value="En conversación">
+              <label for="conv">En conversación</label>
+
+              <input type="radio" id="vendida" name="estado" value="Vendida">
+              <label for="vendida">Vendida</label>
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" class="btn primary">Publicar</button>
+      </form>
+    </div>
+  </main>
+
+  <footer class="site-footer">© <span id="year"></span> La Otra Tribuna.</footer>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // Vista previa de la imagen
+    const fileInput = document.getElementById('imagen');
+    const preview = document.getElementById('preview');
+    fileInput.addEventListener('change', e => {
+      const file = e.target.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => { preview.src = ev.target.result; preview.style.display = 'block'; };
+      reader.readAsDataURL(file);
+    });
+  </script>
+</body>
+</html>
