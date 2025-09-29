@@ -45,7 +45,6 @@
         <div class="subnav-center">
           <a href="index.html#categorias" class="subnav-link">Categorías</a>
           <a href="index.html#ofertas" class="subnav-link">Ofertas</a>
-          <a href="index.html#cupones" class="subnav-link">Cupones</a>
           <a href="vender.html" class="subnav-link">Vender</a>
           <a href="rastrear.html" class="subnav-link">Rastrear Pedido</a>
         </div>
@@ -136,7 +135,69 @@
     const acceptLocBtn = document.getElementById('acceptLoc');
     const locText = document.getElementById('locText');
 
-    const DEPTS = { "Montevideo":["Montevideo"], "Canelones":["Canelones","Ciudad de la Costa","Las Piedras","Pando"] };
+    const DEPTS = {"Artigas": [
+        "Artigas", "Bella Unión", "Tomás Gomensoro", "Baltasar Brum"
+      ],
+      "Canelones": [
+        "Canelones", "Ciudad de la Costa", "Las Piedras", "Pando", "La Paz",
+        "Progreso", "Santa Lucía", "Atlántida", "Parque del Plata", "Sauce",
+        "San Ramón", "Empalme Olmos", "Toledo"
+      ],
+      "Cerro Largo": [
+        "Melo", "Río Branco", "Fraile Muerto", "Tupambaé", "Isidoro Noblía"
+      ],
+      "Colonia": [
+        "Colonia del Sacramento", "Carmelo", "Nueva Helvecia", "Juan Lacaze",
+        "Rosario", "Tarariras", "Ombúes de Lavalle"
+      ],
+      "Durazno": [
+        "Durazno", "Sarandí del Yí", "Carmen", "Centenario"
+      ],
+      "Flores": [
+        "Trinidad", "Ismael Cortinas"
+      ],
+      "Florida": [
+        "Florida", "Sarandí Grande", "Casupá", "25 de Mayo"
+      ],
+      "Lavalleja": [
+        "Minas", "José Pedro Varela", "Solís de Mataojo", "Mariscala"
+      ],
+      "Maldonado": [
+        "Maldonado", "Punta del Este", "San Carlos", "Piriápolis",
+        "Pan de Azúcar", "Aiguá", "La Barra"
+      ],
+      "Montevideo": [
+        "Montevideo" // se maneja por barrios normalmente
+      ],
+      "Paysandú": [
+        "Paysandú", "Guichón", "Quebracho", "Piedras Coloradas"
+      ],
+      "Río Negro": [
+        "Fray Bentos", "Young", "Nuevo Berlín", "San Javier"
+      ],
+      "Rivera": [
+        "Rivera", "Tranqueras", "Minas de Corrales", "Vichadero", "Mandubí"
+      ],
+      "Rocha": [
+        "Rocha", "Chuy", "Castillos", "Lascano", "La Paloma", "Punta del Diablo"
+      ],
+      "Salto": [
+        "Salto", "Constitución", "Belén", "Daymán", "San Antonio"
+      ],
+      "San José": [
+        "San José de Mayo", "Ciudad del Plata", "Libertad", "Ecilda Paullier",
+        "Delta El Tigre", "Raigón"
+      ],
+      "Soriano": [
+        "Mercedes", "Dolores", "Cardona", "José Enrique Rodó", "Palmitas"
+      ],
+      "Tacuarembó": [
+        "Tacuarembó", "Paso de los Toros", "San Gregorio de Polanco",
+        "Curtina", "Ansina"
+      ],
+      "Treinta y Tres": [
+        "Treinta y Tres", "Vergara", "Santa Clara de Olimar", "Villa Sara"
+      ]};
 
     function fillDept(){ Object.keys(DEPTS).forEach(d => deptSel.append(new Option(d,d))); }
     function renderLocationText(){
