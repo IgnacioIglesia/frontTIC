@@ -6,9 +6,10 @@
   <title>Registrarse — La Otra Tribuna</title>
   <link rel="stylesheet" href="styles/main.css" />
   <link rel="icon" type="image/png" href="./assets/logo.png" />
+  <style>.hidden{display:none}</style>
 </head>
 <body>
-  <!-- ===== HEADER (mismo de index) ===== -->
+  <!-- ===== HEADER (idéntico al tuyo) ===== -->
   <header id="siteHeader">
     <div class="top container">
       <div class="brand-wrap">
@@ -16,46 +17,54 @@
           <img class="logo" src="./assets/logo.png" alt="La Otra Tribuna" />
         </a>
       </div>
-
       <div class="search">
         <input type="search" placeholder="Buscar club o país…" autocomplete="off" />
       </div>
-
       <div class="header-messages">Registrate gratis en segundos</div>
-
       <div class="actions">
         <a href="login.html" class="btn-login">Iniciar sesión</a>
       </div>
     </div>
 
-    <!-- SUBNAV igual que index -->
     <nav class="subnav">
       <div class="container subnav-inner">
         <div class="subnav-left">
-          <a href="index.html#ubicacion" class="loc-link">
+          <a href="#ubicacion" class="loc-link" id="openLocation">
             <svg class="loc-ic" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path d="M12 22s7-6.46 7-12a7 7 0 1 0-14 0c0 5.54 7 12 7 12Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
               <circle cx="12" cy="10" r="2.5" stroke="currentColor" stroke-width="1.6"/>
             </svg>
-            <span class="loc-line">Ingresa tu <strong>ubicación</strong></span>
+            <span class="loc-line" id="locText">Enviar a <strong>Montevideo</strong></span>
           </a>
         </div>
 
         <div class="subnav-center">
-          <a href="index.html#categorias" class="subnav-link">Categorías</a>
-          <a href="index.html#ofertas" class="subnav-link">Ofertas</a>
+          <div class="has-submenu" id="catsDrop">
+            <a href="index.html" class="subnav-link" id="catsLink" aria-haspopup="true" aria-expanded="false">
+              Categorías <span class="chev" aria-hidden="true">▾</span>
+            </a>
+            <div class="cat-submenu" id="catsMenu" role="menu" aria-label="Categorías">
+              <a href="index.html?cat=club#catalogo">Club</a>
+              <a href="index.html?cat=seleccion#catalogo">Selección</a>
+              <a href="index.html?cat=retro#catalogo">Retro</a>
+            </div>
+          </div>
+          <a href="ofertas.html" class="subnav-link">Ofertas</a>
           <a href="vender.html" class="subnav-link">Vender</a>
           <a href="rastrear.html" class="subnav-link">Rastrear Pedido</a>
         </div>
 
         <div class="subnav-right">
+          <a href="favoritos.html" class="subnav-link">Favoritos</a>
+          <a href="como-funciona.html" class="subnav-link">Cómo funciona</a>
+          <a href="autenticidad.html" class="subnav-link">Autenticidad</a>
           <a href="ayuda.html" class="subnav-link">Ayuda</a>
         </div>
       </div>
     </nav>
   </header>
 
-  <!-- ===== CONTENIDO ===== -->
+  <!-- ===== CONTENIDO (mismo diseño, dividido en 2 pasos) ===== -->
   <main class="track-full">
     <div class="track-card register">
       <div class="track-title">
@@ -63,58 +72,80 @@
         <h2 style="margin:0">Registrarse</h2>
       </div>
 
-      <form class="track-form">
-        <!-- 2 columnas en desktop -->
-        <div class="form-grid two-cols">
-          <div class="field">
-            <label for="nombre">Nombre</label>
-            <input id="nombre" type="text" placeholder="Tu nombre" required>
+      <form class="track-form" id="registerForm">
+        <!-- PASO 1: mismos campos, mismo layout -->
+        <div id="step1">
+          <div class="form-grid two-cols">
+            <div class="field">
+              <label for="nombre">Nombre</label>
+              <input id="nombre" type="text" placeholder="Tu nombre" required>
+            </div>
+
+            <div class="field">
+              <label for="apellido">Apellido</label>
+              <input id="apellido" type="text" placeholder="Tu apellido" required>
+            </div>
+
+            <div class="field span-2">
+              <label for="email">Email</label>
+              <input id="email" type="email" placeholder="tucorreo@ejemplo.com" required>
+            </div>
+
+            <div class="field span-2">
+              <label for="password">Contraseña</label>
+              <input id="password" type="password" placeholder="************" required>
+            </div>
           </div>
 
-          <div class="field">
-            <label for="apellido">Apellido</label>
-            <input id="apellido" type="text" placeholder="Tu apellido" required>
-          </div>
+          <!-- Aviso legal en el paso 1 -->
+          <p class="muted" style="margin-top:8px;font-size:14px;">
+            Al continuar, acepto los
+            <a href="terminos.html" target="_blank">Términos y Condiciones</a>
+            y autorizo el uso de mis datos de acuerdo a la
+            <a href="privacidad.html" target="_blank">Declaración de Privacidad</a>.
+          </p>
 
-          <div class="field span-2">
-            <label for="email">Email</label>
-            <input id="email" type="email" placeholder="tucorreo@ejemplo.com" required>
-          </div>
-
-          <div class="field span-2">
-            <label for="password">Contraseña</label>
-            <input id="password" type="password" placeholder="************" required>
-          </div>
-
-          <div class="field">
-            <label for="pais">País</label>
-            <select id="pais" required>
-              <option value="Uruguay" selected>Uruguay</option>
-            </select>
-          </div>
-
-          <div class="field">
-            <label for="ciudad">Ciudad</label>
-            <input id="ciudad" type="text" placeholder="Ej: Montevideo" required>
-          </div>
-
-          <div class="field span-2">
-            <label for="direccion">Dirección</label>
-            <input id="direccion" type="text" placeholder="Calle y esquina" required>
-          </div>
-
-          <div class="field">
-            <label for="apto">Nº apto/casa</label>
-            <input id="apto" type="text" placeholder="Número de puerta">
-          </div>
-
-          <div class="field">
-            <label for="cp">Código postal</label>
-            <input id="cp" type="text" inputmode="numeric" placeholder="Ej: 11300" required>
+          <div style="display:flex;justify-content:flex-end;margin-top:12px">
+            <button type="button" class="btn primary" id="toStep2">Continuar</button>
           </div>
         </div>
 
-        <button type="submit" class="btn primary">Crear cuenta</button>
+        <!-- PASO 2: mismos campos de dirección -->
+        <div id="step2" class="hidden">
+          <div class="form-grid two-cols">
+            <div class="field">
+              <label for="pais">País</label>
+              <select id="pais" required>
+                <option value="Uruguay" selected>Uruguay</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="ciudad">Ciudad</label>
+              <input id="ciudad" type="text" placeholder="Ej: Montevideo" required>
+            </div>
+
+            <div class="field span-2">
+              <label for="direccion">Dirección</label>
+              <input id="direccion" type="text" placeholder="Calle y esquina" required>
+            </div>
+
+            <div class="field">
+              <label for="apto">Nº apto/casa</label>
+              <input id="apto" type="text" placeholder="Número de puerta">
+            </div>
+
+            <div class="field">
+              <label for="cp">Código postal</label>
+              <input id="cp" type="text" inputmode="numeric" placeholder="Ej: 11300" required>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:12px">
+            <button type="button" class="btn" id="backStep">Volver</button>
+            <button type="submit" class="btn primary">Crear cuenta</button>
+          </div>
+        </div>
       </form>
 
       <p class="muted" style="margin-top:18px;font-size:14px;">
@@ -128,10 +159,37 @@
 
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();
-    // Sombra del header al hacer scroll (igual que index)
     const siteHeader = document.getElementById('siteHeader');
     function onScroll(){ siteHeader.classList.toggle('is-scrolled', window.scrollY > 0); }
     onScroll(); window.addEventListener('scroll', onScroll, {passive:true});
+
+    // ---- Navegación entre pasos (sin tocar el estilo original) ----
+    const step1 = document.getElementById('step1');
+    const step2 = document.getElementById('step2');
+    const toStep2 = document.getElementById('toStep2');
+    const backStep = document.getElementById('backStep');
+
+    toStep2.addEventListener('click', ()=>{
+      // Validación mínima del paso 1
+      const ok = ['nombre','apellido','email','password'].every(id => document.getElementById(id).value.trim());
+      if(!ok){ alert('Completá nombre, apellido, email y contraseña.'); return; }
+      step1.classList.add('hidden');
+      step2.classList.remove('hidden');
+      // focus en primer campo del paso 2
+      document.getElementById('pais').focus();
+    });
+
+    backStep.addEventListener('click', ()=>{
+      step2.classList.add('hidden');
+      step1.classList.remove('hidden');
+      document.getElementById('nombre').focus();
+    });
+
+    document.getElementById('registerForm').addEventListener('submit', (e)=>{
+      e.preventDefault();
+      // acá iría tu POST; de momento un OK de demo
+      alert('Cuenta creada con éxito 🎉');
+    });
   </script>
 </body>
 </html>

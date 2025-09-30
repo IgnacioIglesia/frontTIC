@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Ayuda — La Otra Tribuna</title>
+  <title>Autenticidad — La Otra Tribuna</title>
   <link rel="stylesheet" href="styles/main.css" />
   <link rel="icon" type="image/png" href="./assets/logo.png" />
 </head>
@@ -21,13 +21,12 @@
         <input type="search" placeholder="Buscar club o país…" autocomplete="off" />
       </div>
 
-      <div class="header-messages" id="headerMessage">Estamos para ayudarte</div>
+      <div class="header-messages" id="headerMessage">Compra y vendé con confianza</div>
 
       <div class="actions">
         <a href="login.html" class="btn-login">Iniciar sesión</a>
       </div>
     </div>
-
     <nav class="subnav">
       <div class="container subnav-inner">
         <div class="subnav-left">
@@ -37,7 +36,7 @@
               <path d="M12 22s7-6.46 7-12a7 7 0 1 0-14 0c0 5.54 7 12 7 12Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
               <circle cx="12" cy="10" r="2.5" stroke="currentColor" stroke-width="1.6"/>
             </svg>
-            <span class="loc-line" id="locText">Enviar a <strong>Montevideo</strong></span>
+            <span class="loc-line" id="locText">Ingresa tu <strong>ubicación</strong></span>
           </a>
         </div>
     
@@ -47,9 +46,9 @@
               Categorías <span class="chev" aria-hidden="true">▾</span>
             </a>
             <div class="cat-submenu" id="catsMenu" role="menu" aria-label="Categorías">
-              <a href="index.html?cat=club#catalogo">Club</a>
-              <a href="index.html?cat=seleccion#catalogo">Selección</a>
-              <a href="index.html?cat=retro#catalogo">Retro</a>
+                <a href="index.html?cat=club#catalogo">Club</a>
+                <a href="index.html?cat=seleccion#catalogo">Selección</a>
+                <a href="index.html?cat=retro#catalogo">Retro</a>
             </div>
           </div>
           <a href="ofertas.html" class="subnav-link">Ofertas</a>
@@ -67,7 +66,7 @@
     </nav>
   </header>
 
-  <!-- Overlay + modal ubicación -->
+  <!-- ===== Overlay + MODAL UBICACIÓN ===== -->
   <div id="overlay" class="overlay"></div>
   <div id="locationModal" class="modal" aria-hidden="true" role="dialog" aria-modal="true">
     <div class="modal-card">
@@ -97,44 +96,53 @@
   </div>
 
   <!-- ===== CONTENIDO ===== -->
-  <main class="track-full">
-    <div class="track-card">
-      <div class="track-title">
-        <img src="./assets/imagen.png" alt="" style="width:28px;height:28px;border-radius:6px;">
-        <h2 style="margin:0;font-size:18px">Ayuda</h2>
+  <main class="container">
+    <div class="info-wrap">
+      <h1>Autenticidad & Garantía</h1>
+      <p class="lead">Cómo verificamos, qué te pedimos al publicar y qué cobertura tenés como comprador.</p>
+
+      <div class="section">
+        <h3>¿Cómo verificamos una camiseta?</h3>
+        <ul class="info-list">
+          <li><strong>Fotos obligatorias:</strong> frontal, dorsal, etiqueta interna, holograma o patch, detalle de sponsors.</li>
+          <li><strong>Detalles de fabricación:</strong> tipo de tejido, costuras, tipografías, escudos y parches.</li>
+          <li><strong>Coincidencia temporada/modelo:</strong> contrastamos con catálogos oficiales y referencias públicas.</li>
+          <li><strong>Revisión comunitaria:</strong> los usuarios pueden reportar dudas; nuestro equipo revisa en 24–48 h.</li>
+        </ul>
       </div>
 
-      <form id="helpForm" class="track-form">
-        <!-- Email primero -->
-        <div class="field">
-          <label for="email">Email</label>
-          <input id="email" type="email" placeholder="Tu email" required>
-        </div>
+      <div class="section">
+        <h3>Política de réplicas</h3>
+        <ul class="info-list">
+          <li>Se permiten <strong>réplicas</strong> siempre que estén <strong>marcadas</strong> como tal al publicar.</li>
+          <li>Las publicaciones mal clasificadas pueden ser pausadas o removidas.</li>
+        </ul>
+      </div>
 
-        <!-- N° pedido opcional -->
-        <div class="field">
-          <label for="order">N.º de pedido (opcional)</label>
-          <input id="order" type="text" placeholder="Ej: ABC123456UY">
-        </div>
+      <div class="section">
+        <h3>Protección al comprador</h3>
+        <ul class="info-list">
+          <li>Si el ítem recibido <strong>no coincide</strong> con lo publicado, podés solicitar <strong>devolución</strong>.</li>
+          <li>Pagos procesados con intermediarios seguros y liberación al vendedor cuando confirmás recepción.</li>
+        </ul>
+      </div>
 
-        <!-- Descripción -->
-        <div class="field">
-          <label for="message">¿Qué ocurrió?</label>
-          <textarea id="message" placeholder="Contanos el problema con el mayor detalle posible…" required></textarea>
-        </div>
-
-        <button class="btn primary" type="submit">Enviar</button>
-      </form>
-
-      <div id="helpResult" class="track-result" style="display:none"></div>
+      <div class="section">
+        <h3>Consejos rápidos para publicar</h3>
+        <ul class="info-list">
+          <li>Fotos con buena luz, fondo neutro, sin filtros.</li>
+          <li>Mostrá número de serie/holograma (si lo tuviera) y estado real (manchas, roturas, desgaste).</li>
+          <li>Especificá <strong>talle</strong>, <strong>medidas</strong> y si es <strong>jugador</strong> o <strong>fan</strong>.</li>
+        </ul>
+      </div>
     </div>
   </main>
 
   <script>
-    // Fija el texto del mensaje del header
-    document.getElementById('headerMessage').textContent = 'Estamos para ayudarte';
+    // Mensaje del header
+    document.getElementById('headerMessage').textContent = 'Compra y vendé con confianza';
 
-    // ===== Ubicación (mismo storage que index/rastrear) =====
+    // ====== UBICACIÓN (mismo que ayuda/como-funciona/favoritos) ======
     const LOCATION_KEY = 'lot_location';
     const overlay = document.getElementById('overlay');
     const openLocationBtn = document.getElementById('openLocation');
@@ -146,75 +154,34 @@
     const acceptLocBtn = document.getElementById('acceptLoc');
     const locText = document.getElementById('locText');
 
-    const DEPTS = {"Artigas": [
-        "Artigas", "Bella Unión", "Tomás Gomensoro", "Baltasar Brum"
-      ],
-      "Canelones": [
-        "Canelones", "Ciudad de la Costa", "Las Piedras", "Pando", "La Paz",
-        "Progreso", "Santa Lucía", "Atlántida", "Parque del Plata", "Sauce",
-        "San Ramón", "Empalme Olmos", "Toledo"
-      ],
-      "Cerro Largo": [
-        "Melo", "Río Branco", "Fraile Muerto", "Tupambaé", "Isidoro Noblía"
-      ],
-      "Colonia": [
-        "Colonia del Sacramento", "Carmelo", "Nueva Helvecia", "Juan Lacaze",
-        "Rosario", "Tarariras", "Ombúes de Lavalle"
-      ],
-      "Durazno": [
-        "Durazno", "Sarandí del Yí", "Carmen", "Centenario"
-      ],
-      "Flores": [
-        "Trinidad", "Ismael Cortinas"
-      ],
-      "Florida": [
-        "Florida", "Sarandí Grande", "Casupá", "25 de Mayo"
-      ],
-      "Lavalleja": [
-        "Minas", "José Pedro Varela", "Solís de Mataojo", "Mariscala"
-      ],
-      "Maldonado": [
-        "Maldonado", "Punta del Este", "San Carlos", "Piriápolis",
-        "Pan de Azúcar", "Aiguá", "La Barra"
-      ],
-      "Montevideo": [
-        "Montevideo" // se maneja por barrios normalmente
-      ],
-      "Paysandú": [
-        "Paysandú", "Guichón", "Quebracho", "Piedras Coloradas"
-      ],
-      "Río Negro": [
-        "Fray Bentos", "Young", "Nuevo Berlín", "San Javier"
-      ],
-      "Rivera": [
-        "Rivera", "Tranqueras", "Minas de Corrales", "Vichadero", "Mandubí"
-      ],
-      "Rocha": [
-        "Rocha", "Chuy", "Castillos", "Lascano", "La Paloma", "Punta del Diablo"
-      ],
-      "Salto": [
-        "Salto", "Constitución", "Belén", "Daymán", "San Antonio"
-      ],
-      "San José": [
-        "San José de Mayo", "Ciudad del Plata", "Libertad", "Ecilda Paullier",
-        "Delta El Tigre", "Raigón"
-      ],
-      "Soriano": [
-        "Mercedes", "Dolores", "Cardona", "José Enrique Rodó", "Palmitas"
-      ],
-      "Tacuarembó": [
-        "Tacuarembó", "Paso de los Toros", "San Gregorio de Polanco",
-        "Curtina", "Ansina"
-      ],
-      "Treinta y Tres": [
-        "Treinta y Tres", "Vergara", "Santa Clara de Olimar", "Villa Sara"
-      ]};
+    const DEPTS = {
+      "Artigas":["Artigas","Bella Unión","Tomás Gomensoro","Baltasar Brum"],
+      "Canelones":["Canelones","Ciudad de la Costa","Las Piedras","Pando","La Paz","Progreso","Santa Lucía","Atlántida","Parque del Plata","Sauce","San Ramón","Empalme Olmos","Toledo"],
+      "Cerro Largo":["Melo","Río Branco","Fraile Muerto","Tupambaé","Isidoro Noblía"],
+      "Colonia":["Colonia del Sacramento","Carmelo","Nueva Helvecia","Juan Lacaze","Rosario","Tarariras","Ombúes de Lavalle"],
+      "Durazno":["Durazno","Sarandí del Yí","Carmen","Centenario"],
+      "Flores":["Trinidad","Ismael Cortinas"],
+      "Florida":["Florida","Sarandí Grande","Casupá","25 de Mayo"],
+      "Lavalleja":["Minas","José Pedro Varela","Solís de Mataojo","Mariscala"],
+      "Maldonado":["Maldonado","Punta del Este","San Carlos","Piriápolis","Pan de Azúcar","Aiguá","La Barra"],
+      "Montevideo":["Montevideo"],
+      "Paysandú":["Paysandú","Guichón","Quebracho","Piedras Coloradas"],
+      "Río Negro":["Fray Bentos","Young","Nuevo Berlín","San Javier"],
+      "Rivera":["Rivera","Tranqueras","Minas de Corrales","Vichadero","Mandubí"],
+      "Rocha":["Rocha","Chuy","Castillos","Lascano","La Paloma","Punta del Diablo"],
+      "Salto":["Salto","Constitución","Belén","Daymán","San Antonio"],
+      "San José":["San José de Mayo","Ciudad del Plata","Libertad","Ecilda Paullier","Delta El Tigre","Raigón"],
+      "Soriano":["Mercedes","Dolores","Cardona","José Enrique Rodó","Palmitas"],
+      "Tacuarembó":["Tacuarembó","Paso de los Toros","San Gregorio de Polanco","Curtina","Ansina"],
+      "Treinta y Tres":["Treinta y Tres","Vergara","Santa Clara de Olimar","Villa Sara"]
+    };
 
     function fillDept(){ Object.keys(DEPTS).forEach(d => deptSel.append(new Option(d,d))); }
     function renderLocationText(){
       const raw = localStorage.getItem(LOCATION_KEY);
       if(!raw){ locText.innerHTML = 'Ingresa tu <strong>ubicación</strong>'; return; }
-      try{ const {loc} = JSON.parse(raw); locText.textContent = `Enviar a ${loc}`; } catch { locText.innerHTML = 'Ingresa tu <strong>ubicación</strong>'; }
+      try{ const {loc} = JSON.parse(raw); locText.textContent = `Enviar a ${loc}`; }
+      catch{ locText.innerHTML = 'Ingresa tu <strong>ubicación</strong>'; }
     }
     function showOverlay(){ overlay.classList.add('show'); }
     function hideOverlay(){ overlay.classList.remove('show'); }
@@ -233,7 +200,9 @@
       DEPTS[dept].forEach(loc => locSel.append(new Option(loc,loc)));
       locSel.disabled = false; acceptLocBtn.disabled = true;
     });
+
     locSel.addEventListener('change', ()=> acceptLocBtn.disabled = !locSel.value);
+
     document.getElementById('locForm').addEventListener('submit', (e)=>{
       e.preventDefault();
       if(!deptSel.value || !locSel.value) return;
@@ -243,28 +212,23 @@
 
     fillDept(); renderLocationText();
 
-    // ===== Form Ayuda =====
-    const form = document.getElementById('helpForm');
-    const result = document.getElementById('helpResult');
-    form.addEventListener('submit', (e)=>{
-      e.preventDefault();
-      const email = document.getElementById('email').value.trim();
-      const order = document.getElementById('order').value.trim();
-      const message = document.getElementById('message').value.trim();
-
-      // (placeholder) mostrar confirmación
-      result.style.display = 'block';
-      result.innerHTML =
-        `<strong>¡Gracias!</strong> Recibimos tu consulta.<br>
-         <b>Email:</b> ${email}${order ? ` • <b>Pedido:</b> ${order}` : ''}<br>
-         Te respondemos a la brevedad.`;
-      form.reset();
-    });
-
-    // Sombra header al hacer scroll
+    // Sombra header
     const siteHeader = document.getElementById('siteHeader');
     const onScroll = ()=> siteHeader.classList.toggle('is-scrolled', window.scrollY > 0);
     onScroll(); window.addEventListener('scroll', onScroll, {passive:true});
+
+    // Submenú categorías en mobile
+    const catsDrop = document.getElementById('catsDrop');
+    const catsLink = document.getElementById('catsLink');
+    catsLink?.addEventListener('click', (e)=>{
+      if (window.matchMedia('(max-width: 820px)').matches){
+        e.preventDefault();
+        catsDrop.classList.toggle('open');
+      }
+    });
+    document.addEventListener('click', (e)=>{
+      if(!catsDrop.contains(e.target)) catsDrop.classList.remove('open');
+    });
   </script>
 </body>
 </html>

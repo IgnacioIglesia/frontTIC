@@ -28,17 +28,36 @@
     <nav class="subnav">
       <div class="container subnav-inner">
         <div class="subnav-left">
-          <a href="index.html#ubicacion" class="loc-link">
-            <span class="loc-line">Ingresa tu ubicación</span>
+          <!-- botón/estado de ubicación -->
+          <a href="#ubicacion" class="loc-link" id="openLocation">
+            <svg class="loc-ic" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 22s7-6.46 7-12a7 7 0 1 0-14 0c0 5.54 7 12 7 12Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="12" cy="10" r="2.5" stroke="currentColor" stroke-width="1.6"/>
+            </svg>
+            <span class="loc-line" id="locText">Enviar a <strong>Montevideo</strong></span>
           </a>
         </div>
+    
         <div class="subnav-center">
-          <a href="index.html#categorias" class="subnav-link">Categorías</a>
-          <a href="index.html#ofertas" class="subnav-link">Ofertas</a>
+          <div class="has-submenu" id="catsDrop">
+            <a href="index.html" class="subnav-link" id="catsLink" aria-haspopup="true" aria-expanded="false">
+              Categorías <span class="chev" aria-hidden="true">▾</span>
+            </a>
+            <div class="cat-submenu" id="catsMenu" role="menu" aria-label="Categorías">
+              <a href="index.html?cat=club#catalogo">Club</a>
+              <a href="index.html?cat=seleccion#catalogo">Selección</a>
+              <a href="index.html?cat=retro#catalogo">Retro</a>
+            </div>
+          </div>
+          <a href="ofertas.html" class="subnav-link">Ofertas</a>
           <a href="vender.html" class="subnav-link">Vender</a>
           <a href="rastrear.html" class="subnav-link">Rastrear Pedido</a>
         </div>
+    
         <div class="subnav-right">
+          <a href="favoritos.html" class="subnav-link">Favoritos</a>
+          <a href="como-funciona.html" class="subnav-link">Cómo funciona</a>
+          <a href="autenticidad.html" class="subnav-link">Autenticidad</a>
           <a href="ayuda.html" class="subnav-link">Ayuda</a>
         </div>
       </div>

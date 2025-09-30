@@ -6,6 +6,23 @@
   <title>La Otra Tribuna — Tienda de camisetas</title>
   <link rel="stylesheet" href="styles/main.css" />
   <link rel="icon" type="image/png" href="./assets/logo.png" />
+
+  <!-- FIXES mínimos por si main.css se perdió en algún merge -->
+  <style>
+    /* corazón en las cards */
+    .card .media{position:relative}
+    .fav-toggle{
+      position:absolute; top:8px; right:8px;
+      background:#fff; border:1px solid var(--ring,#e5e7eb);
+      border-radius:10px; padding:4px 8px; line-height:1;
+      cursor:pointer; font-size:18px;
+      box-shadow:0 6px 14px rgba(0,0,0,.12);
+    }
+    .fav-toggle.active{ color:#e11; }
+
+    /* chevron más grande en subnav */
+    .subnav .chev{ font-size:16px; line-height:1; margin-left:6px; display:inline-block; transform:translateY(-1px); }
+  </style>
 </head>
 <body>
   <!-- ===== HEADER ===== -->
@@ -40,18 +57,30 @@
               <path d="M12 22s7-6.46 7-12a7 7 0 1 0-14 0c0 5.54 7 12 7 12Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
               <circle cx="12" cy="10" r="2.5" stroke="currentColor" stroke-width="1.6"/>
             </svg>
-            <span class="loc-line" id="locText">Ingresa tu <strong>ubicación</strong></span>
+            <span class="loc-line" id="locText">Enviar a <strong>Montevideo</strong></span>
           </a>
         </div>
-
+    
         <div class="subnav-center">
-          <a href="#categorias" class="subnav-link">Categorías</a>
-          <a href="#ofertas" class="subnav-link">Ofertas</a>
+          <div class="has-submenu" id="catsDrop">
+            <a href="#categorias" class="subnav-link" id="catsLink" aria-haspopup="true" aria-expanded="false">
+              Categorías <span class="chev" aria-hidden="true">▾</span>
+            </a>
+            <div class="cat-submenu" id="catsMenu" role="menu" aria-label="Categorías">
+              <a href="#" data-cat="Club">Club</a>
+              <a href="#" data-cat="Selección">Selección</a>
+              <a href="#" data-cat="Retro">Retro</a>
+            </div>
+          </div>
+          <a href="ofertas.html" class="subnav-link">Ofertas</a>
           <a href="vender.html" class="subnav-link">Vender</a>
           <a href="rastrear.html" class="subnav-link">Rastrear Pedido</a>
         </div>
-
+    
         <div class="subnav-right">
+          <a href="favoritos.html" class="subnav-link">Favoritos</a>
+          <a href="como-funciona.html" class="subnav-link">Cómo funciona</a>
+          <a href="autenticidad.html" class="subnav-link">Autenticidad</a>
           <a href="ayuda.html" class="subnav-link">Ayuda</a>
         </div>
       </div>
@@ -389,6 +418,12 @@
     function openSearchMenu(){ searchMenu.hidden = false; }
     function closeSearchMenu(){ searchMenu.hidden = true; activeIndex = -1; }
 
+    function hl(text, term){
+      if(!term) return text;
+      const re = new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'ig');
+      return text.replace(re, '<span class="hl">$1</span>');
+    }
+
     function renderSearchMenu(){
       const term = qInput.value.trim();
       const history = loadHistory();
@@ -398,38 +433,50 @@
       if(!term && history.length){
         html += `
           <div class="search-section">
-            <h5>Búsquedas recientes</h5>
+            <div class="search-title">Búsquedas recientes</div>
             <ul class="search-list">
-              ${history.map(t => `<li class="search-item" data-type="history" data-value="${t.replace(/"/g,'&quot;')}">🔎 <span>${t}</span></li>`).join('')}
+              ${history.map(t =>
+                `<li class="search-item" data-type="history" data-value="${t.replace(/"/g,'&quot;')}">
+                  <span>${t}</span>
+                </li>`
+              ).join('')}
             </ul>
-            <div class="search-empty"><span class="search-clear" id="clearHistory">Borrar historial</span></div>
           </div>`;
       }
+
       if(term){
         html += `
           <div class="search-section">
-            <h5>Sugerencias</h5>
+            <div class="search-title">Sugerencias</div>
             ${
               suggestions.length
               ? `<ul class="search-list">
                   ${suggestions.map(p =>
-                    `<li class="search-item" data-type="suggestion" data-value="${p.nombre.replace(/"/g,'&quot;')}">🏷️ <span>${p.nombre}</span> <small>• ${p.club} — ${p.pais}</small></li>`
+                    `<li class="search-item" data-type="suggestion" data-value="${p.nombre.replace(/"/g,'&quot;')}">
+                      <div>
+                        <div>${hl(p.nombre, term)}</div>
+                        <small>• ${hl(p.club, term)} — ${hl(p.pais, term)}</small>
+                      </div>
+                    </li>`
                   ).join('')}
                 </ul>`
               : `<div class="search-empty">Sin resultados para <strong>${term}</strong></div>`
             }
           </div>`;
       }
+
       if(!html) html = `<div class="search-empty">Empieza a escribir para buscar</div>`;
       searchMenu.innerHTML = html;
 
-      const clearBtn = document.getElementById('clearHistory'); if(clearBtn) clearBtn.addEventListener('click', clearHistory);
+      // handlers
       searchMenu.querySelectorAll('.search-item').forEach(li => {
         li.addEventListener('click', () => {
           const value = li.dataset.value;
           qInput.value = value; addToHistory(value); render(); closeSearchMenu();
         });
       });
+      const clearBtn = document.getElementById('clearHistory');
+      if(clearBtn) clearBtn.addEventListener('click', clearHistory);
     }
 
     qInput.addEventListener('focus', () => { renderSearchMenu(); openSearchMenu(); });
@@ -478,69 +525,25 @@
     const acceptLocBtn = document.getElementById('acceptLoc');
 
     const DEPTS = {
-      "Artigas": [
-        "Artigas", "Bella Unión", "Tomás Gomensoro", "Baltasar Brum"
-      ],
-      "Canelones": [
-        "Canelones", "Ciudad de la Costa", "Las Piedras", "Pando", "La Paz",
-        "Progreso", "Santa Lucía", "Atlántida", "Parque del Plata", "Sauce",
-        "San Ramón", "Empalme Olmos", "Toledo"
-      ],
-      "Cerro Largo": [
-        "Melo", "Río Branco", "Fraile Muerto", "Tupambaé", "Isidoro Noblía"
-      ],
-      "Colonia": [
-        "Colonia del Sacramento", "Carmelo", "Nueva Helvecia", "Juan Lacaze",
-        "Rosario", "Tarariras", "Ombúes de Lavalle"
-      ],
-      "Durazno": [
-        "Durazno", "Sarandí del Yí", "Carmen", "Centenario"
-      ],
-      "Flores": [
-        "Trinidad", "Ismael Cortinas"
-      ],
-      "Florida": [
-        "Florida", "Sarandí Grande", "Casupá", "25 de Mayo"
-      ],
-      "Lavalleja": [
-        "Minas", "José Pedro Varela", "Solís de Mataojo", "Mariscala"
-      ],
-      "Maldonado": [
-        "Maldonado", "Punta del Este", "San Carlos", "Piriápolis",
-        "Pan de Azúcar", "Aiguá", "La Barra"
-      ],
-      "Montevideo": [
-        "Montevideo" // se maneja por barrios normalmente
-      ],
-      "Paysandú": [
-        "Paysandú", "Guichón", "Quebracho", "Piedras Coloradas"
-      ],
-      "Río Negro": [
-        "Fray Bentos", "Young", "Nuevo Berlín", "San Javier"
-      ],
-      "Rivera": [
-        "Rivera", "Tranqueras", "Minas de Corrales", "Vichadero", "Mandubí"
-      ],
-      "Rocha": [
-        "Rocha", "Chuy", "Castillos", "Lascano", "La Paloma", "Punta del Diablo"
-      ],
-      "Salto": [
-        "Salto", "Constitución", "Belén", "Daymán", "San Antonio"
-      ],
-      "San José": [
-        "San José de Mayo", "Ciudad del Plata", "Libertad", "Ecilda Paullier",
-        "Delta El Tigre", "Raigón"
-      ],
-      "Soriano": [
-        "Mercedes", "Dolores", "Cardona", "José Enrique Rodó", "Palmitas"
-      ],
-      "Tacuarembó": [
-        "Tacuarembó", "Paso de los Toros", "San Gregorio de Polanco",
-        "Curtina", "Ansina"
-      ],
-      "Treinta y Tres": [
-        "Treinta y Tres", "Vergara", "Santa Clara de Olimar", "Villa Sara"
-      ]
+      "Artigas":["Artigas","Bella Unión","Tomás Gomensoro","Baltasar Brum"],
+      "Canelones":["Canelones","Ciudad de la Costa","Las Piedras","Pando","La Paz","Progreso","Santa Lucía","Atlántida","Parque del Plata","Sauce","San Ramón","Empalme Olmos","Toledo"],
+      "Cerro Largo":["Melo","Río Branco","Fraile Muerto","Tupambaé","Isidoro Noblía"],
+      "Colonia":["Colonia del Sacramento","Carmelo","Nueva Helvecia","Juan Lacaze","Rosario","Tarariras","Ombúes de Lavalle"],
+      "Durazno":["Durazno","Sarandí del Yí","Carmen","Centenario"],
+      "Flores":["Trinidad","Ismael Cortinas"],
+      "Florida":["Florida","Sarandí Grande","Casupá","25 de Mayo"],
+      "Lavalleja":["Minas","José Pedro Varela","Solís de Mataojo","Mariscala"],
+      "Maldonado":["Maldonado","Punta del Este","San Carlos","Piriápolis","Pan de Azúcar","Aiguá","La Barra"],
+      "Montevideo":["Montevideo"],
+      "Paysandú":["Paysandú","Guichón","Quebracho","Piedras Coloradas"],
+      "Río Negro":["Fray Bentos","Young","Nuevo Berlín","San Javier"],
+      "Rivera":["Rivera","Tranqueras","Minas de Corrales","Vichadero","Mandubí"],
+      "Rocha":["Rocha","Chuy","Castillos","Lascano","La Paloma","Punta del Diablo"],
+      "Salto":["Salto","Constitución","Belén","Daymán","San Antonio"],
+      "San José":["San José de Mayo","Ciudad del Plata","Libertad","Ecilda Paullier","Delta El Tigre","Raigón"],
+      "Soriano":["Mercedes","Dolores","Cardona","José Enrique Rodó","Palmitas"],
+      "Tacuarembó":["Tacuarembó","Paso de los Toros","San Gregorio de Polanco","Curtina","Ansina"],
+      "Treinta y Tres":["Treinta y Tres","Vergara","Santa Clara de Olimar","Villa Sara"]
     };
 
     function fillDept(){ Object.keys(DEPTS).forEach(d => deptSel.append(new Option(d,d))); }
@@ -603,6 +606,49 @@
       msgIndex = (msgIndex + 1) % messages.length;
       document.getElementById('headerMessage').textContent = messages[msgIndex];
     }, 3000);
+
+    // ==== LÓGICA DEL SUBMENÚ CATEGORÍAS ====
+    const catsDrop = document.getElementById('catsDrop');
+    const catsLink = document.getElementById('catsLink');
+    const catsMenu = document.getElementById('catsMenu');
+
+    catsMenu.addEventListener('click', (e)=>{
+      const a = e.target.closest('a[data-cat]'); if(!a) return;
+      e.preventDefault();
+      catSel.value = a.dataset.cat;
+      render();
+      document.getElementById('catalogo').scrollIntoView({behavior:'smooth', block:'start'});
+      catsDrop.classList.remove('open');
+      catsLink.setAttribute('aria-expanded','false');
+    });
+
+    // Mobile: abrir por click (en desktop se abre por hover con CSS)
+    catsLink.addEventListener('click', (e)=>{
+      if (window.matchMedia('(max-width: 820px)').matches){
+        e.preventDefault();
+        const isOpen = catsDrop.classList.toggle('open');
+        catsLink.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      }
+    });
+
+    // Cerrar si se hace click fuera (mobile + fallback)
+    document.addEventListener('click', (e)=>{
+      if(!catsDrop.contains(e.target)){
+        catsDrop.classList.remove('open');
+        catsLink.setAttribute('aria-expanded','false');
+      }
+    });
+
+    // Link "Favoritos" de la sub-barra abre el panel lateral (en index)
+    (function(){
+      const favLink = document.getElementById('favLink');
+      if(favLink && typeof openFav === 'function'){
+        favLink.addEventListener('click', (e)=>{
+          e.preventDefault();
+          openFav();
+        });
+      }
+    })();
   </script>
 </body>
 </html>
