@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mi perfil — La Otra Tribuna</title>
+
+  <!-- Tus estilos globales -->
+  <link rel="stylesheet" href="styles/main.css" />
+  <link rel="stylesheet" href="styles/user-widget.css" />
+  <link rel="icon" type="image/png" href="./assets/logo.png" />
+</head>
+<body>
+    <!-- ===== HEADER ===== -->
+    <header id="siteHeader">
+      <div class="top container">
+        <div class="brand-wrap">
+          <a href="index.html" class="logo-link" aria-label="Ir al inicio">
+            <img class="logo" src="./assets/logo.png" alt="La Otra Tribuna" />
+          </a>
+        </div>
+  
+        <div class="search">
+          <input id="q" type="search" placeholder="Buscar club o país…" autocomplete="off" />
+        </div>
+  
+        <div class="header-messages" id="headerMessage">Tu pedido llega directo a tu puerta</div>
+  
+        <div class="actions" style="display:flex;align-items:center;gap:12px;">
+          <!-- Botón por defecto si no hay sesión -->
+          <a id="loginBtn" href="login.html" class="btn-login">Iniciar sesión</a>
+  
+          <!-- Widget usuario -->
+          <div id="userWidget" class="user-widget hidden" aria-live="polite">
+            <div id="userAvatar" class="user-avatar" title="Mi perfil"></div>
+            <span id="greeting" class="user-greeting"></span>
+            <!-- Menú -->
+            <div id="userMenu" class="user-menu hidden">
+              <a href="perfil.html">👤 Perfil</a>
+              <a href="#" id="logoutBtn">🚪 Cerrar sesión</a>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+      <!-- ===== SUBNAV ===== -->
+    <nav class="subnav">
+        <div class="container subnav-inner">
+          <div class="subnav-left">
+            <a href="#ubicacion" class="loc-link" id="openLocation">
+              <svg class="loc-ic" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 22s7-6.46 7-12a7 7 0 1 0-14 0c0 5.54 7 12 7 12Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="12" cy="10" r="2.5" stroke="currentColor" stroke-width="1.6"/>
+              </svg>
+              <span class="loc-line" id="locText">Enviar a <strong>Montevideo</strong></span>
+            </a>
+          </div>
+          <div class="subnav-center">
+            <div class="has-submenu" id="catsDrop">
+              <a href="index.html" class="subnav-link">Categorías ▾</a>
+              <div class="cat-submenu">
+                <a href="index.html?cat=club#catalogo">Club</a>
+                <a href="index.html?cat=seleccion#catalogo">Selección</a>
+                <a href="index.html?cat=retro#catalogo">Retro</a>
+              </div>
+            </div>
+            <a href="ofertas.html" class="subnav-link">Ofertas</a>
+            <a href="vender.html" class="subnav-link">Vender</a>
+            <a href="rastrear.html" class="subnav-link">Rastrear Pedido</a>
+          </div>
+          <div class="subnav-right">
+            <a href="favoritos.html" class="subnav-link">Favoritos</a>
+            <a href="como-funciona.html" class="subnav-link">Cómo funciona</a>
+            <a href="autenticidad.html" class="subnav-link">Autenticidad</a>
+            <a href="ayuda.html" class="subnav-link">Ayuda</a>
+          </div>
+        </div>
+      </nav>
+    </header>
+  
+    <!-- ===== CONTENIDO ===== -->
+    <main class="profile-wrap">
+      <div class="profile-header">
+        <div id="bigAvatar" class="user-avatar" style="width:56px;height:56px;font-size:20px;"></div>
+        <div>
+          <h2 style="margin:0 0 4px" id="titleName">Mi perfil</h2>
+          <div class="muted" id="titleEmail"></div>
+        </div>
+      </div>
+  
+      <!-- Datos personales -->
+      <section class="profile-card">
+        <h3 style="margin:0 0 12px">Datos personales</h3>
+        <form id="formUser" class="grid-2" autocomplete="off">
+          <div class="field">
+            <label for="nombre">Nombre</label>
+            <input id="nombre" type="text" placeholder="Tu nombre" required />
+          </div>
+          <div class="field">
+            <label for="apellido">Apellido</label>
+            <input id="apellido" type="text" placeholder="Tu apellido" required />
+          </div>
+          <div class="field" style="grid-column:1/-1">
+            <label for="email">Email</label>
+            <input id="email" type="email" placeholder="tucorreo@ejemplo.com" readonly />
+            <div class="note muted">El email se gestiona desde tu cuenta y no puede modificarse aquí.</div>
+          </div>
+        </form>
+      </section>
+  
+      <!-- Dirección -->
+      <section class="profile-card">
+        <h3 style="margin:0 0 12px">Dirección</h3>
+        <form id="formAddr" class="grid-3" autocomplete="off">
+          <div class="field">
+            <label for="pais">País</label>
+            <select id="pais">
+              <option value="Uruguay">Uruguay</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="departamento">Departamento</label>
+            <input id="departamento" type="text" placeholder="Cerro Largo" />
+          </div>
+          <div class="field">
+            <label for="ciudad">Ciudad</label>
+            <input id="ciudad" type="text" placeholder="Melo" />
+          </div>
+          <div class="field" style="grid-column:1/3">
+            <label for="calle">Dirección</label>
+            <input id="calle" type="text" placeholder="Avenida / Calle y esquina" />
+          </div>
+          <div class="field">
+            <label for="numero">Nº apto/casa</label>
+            <input id="numero" type="text" placeholder="3042" />
+          </div>
+          <div class="field">
+            <label for="cp">Código postal</label>
+            <input id="cp" type="text" inputmode="numeric" placeholder="11300" />
+          </div>
+        </form>
+        <div class="actions-row">
+          <button id="saveBtn" class="btn primary">Guardar cambios</button>
+        </div>
+        <div class="note muted">Se guarda tu dirección principal. Podrás ampliarlo a múltiples direcciones más adelante.</div>
+      </section>
+  
+      <footer class="muted" style="margin:22px 0 36px">© <span id="year"></span> La Otra Tribuna.</footer>
+    </main>
+  
+    <!-- Toast -->
+    <div id="toast" class="toast">Guardado</div>
+  
+    <!-- ===== SUPABASE + LÓGICA PERFIL ===== -->
+    <script type="module">
+      import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+      const SUPABASE_URL = 'https://imexctmcesopdfdebsgo.supabase.co'
+      const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImltZXhjdG1jZXNvcGRmZGVic2dvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzMDczMDIsImV4cCI6MjA3NDg4MzMwMn0.g1lziVKAuUvMEOkYxJhe2D2z8PlwGJ6xcXo_SSpTj7Q'
+      const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  
+      const $ = (s)=>document.querySelector(s)
+      $('#year').textContent = new Date().getFullYear()
+  
+      const loginBtn   = $('#loginBtn')
+      const userWidget = $('#userWidget')
+      const avatarEl   = $('#userAvatar')
+      const greetEl    = $('#greeting')
+      const userMenu   = $('#userMenu')
+      const logoutBtn  = $('#logoutBtn')
+  
+      const bigAvatar  = $('#bigAvatar')
+      const titleName  = $('#titleName')
+      const titleEmail = $('#titleEmail')
+  
+      const fUser = { nombre: $('#nombre'), apellido: $('#apellido'), email: $('#email') }
+      const fAddr = { pais: $('#pais'), departamento: $('#departamento'), ciudad: $('#ciudad'), calle: $('#calle'), numero: $('#numero'), cp: $('#cp') }
+  
+      const toast = $('#toast')
+      const showToast = (t='Guardado')=>{ toast.textContent=t; toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'),1600) }
+  
+      const initialsFrom = (nombre='',apellido='',email='')=>{
+        const n=(nombre||'').trim().split(/\s+/)[0]||'', a=(apellido||'').trim().split(/\s+/)[0]||''
+        const ini=(n[0]||'')+(a[0]||''); return (ini||(email[0]||'?')).toUpperCase()
+      }
+      const firstNameFrom = (nombre='',email='')=>{
+        const n=(nombre||'').trim().split(/\s+/)[0]; return n||(email||'').split('@')[0]
+      }
+  
+      async function refreshHeader(){
+        const { data:{ session } } = await supabase.auth.getSession()
+        if(!session){ userWidget.classList.add('hidden'); loginBtn.classList.remove('hidden'); window.location.href='login.html'; return null }
+        loginBtn.classList.add('hidden'); userWidget.classList.remove('hidden')
+        const email=session.user.email||''
+        let nombre=session.user.user_metadata?.nombre||'', apellido=session.user.user_metadata?.apellido||''
+        try{
+          const { data: perfil } = await supabase.from('usuario').select('nombre,apellido,email').eq('id_auth',session.user.id).maybeSingle()
+          if(perfil){ nombre=perfil.nombre??nombre; apellido=perfil.apellido??apellido }
+        }catch{}
+        const initials=initialsFrom(nombre,apellido,email)
+        avatarEl.textContent=initials; bigAvatar.textContent=initials
+        greetEl.textContent=`Hola, ${firstNameFrom(nombre,email)}!`
+        titleName.textContent=`${nombre||'(Sin nombre)'} ${apellido||''}`.trim()
+        titleEmail.textContent=email
+        return session.user
+      }
+  
+      let currentUserId=null, currentUsuarioId=null
+      async function loadData(){
+        const { data:{ session } } = await supabase.auth.getSession(); if(!session) return
+        currentUserId=session.user.id
+        let { data:u } = await supabase.from('usuario').select('id_usuario,nombre,apellido,email').eq('id_auth',currentUserId).maybeSingle()
+        if(!u){
+          const meta=session.user.user_metadata||{}
+          const ins=await supabase.from('usuario').insert({id_auth:currentUserId,nombre:meta.nombre||'',apellido:meta.apellido||'',email:session.user.email||''}).select('id_usuario,nombre,apellido,email').single()
+          u=ins.data
+        }
+        currentUsuarioId=u.id_usuario
+        fUser.nombre.value=u.nombre||''; fUser.apellido.value=u.apellido||''; fUser.email.value=u.email||session.user.email||''
+        const { data:dList } = await supabase.from('direccion').select('id_direccion,pais,departamento,ciudad,calle,numero,cp').eq('id_usuario',currentUsuarioId).order('id_direccion',{ascending:true}).limit(1)
+        const d=(dList&&dList[0])||{}
+        fAddr.pais.value=d.pais||'Uruguay'; fAddr.departamento.value=d.departamento||''; fAddr.ciudad.value=d.ciudad||''; fAddr.calle.value=d.calle||''; fAddr.numero.value=d.numero||''; fAddr.cp.value=d.cp||''
+      }
+  
+      async function saveAll(){
+        if(!currentUsuarioId) return
+        const up=await supabase.from('usuario').update({nombre:fUser.nombre.value.trim(),apellido:fUser.apellido.value.trim()}).eq('id_usuario',currentUsuarioId)
+        if(up.error){ alert('No se pudo guardar el perfil: '+up.error.message); return }
+        const payload={id_usuario:currentUsuarioId,pais:fAddr.pais.value,departamento:fAddr.departamento.value.trim(),ciudad:fAddr.ciudad.value.trim(),calle:fAddr.calle.value.trim(),numero:fAddr.numero.value.trim()||null,cp:fAddr.cp.value.trim()}
+        const { data:ex } = await supabase.from('direccion').select('id_direccion').eq('id_usuario',currentUsuarioId).limit(1)
+        let dirRes
+        if(ex && ex.length){ dirRes=await supabase.from('direccion').update(payload).eq('id_direccion',ex[0].id_direccion) }
+        else { dirRes=await supabase.from('direccion').insert(payload) }
+        if(dirRes.error){ alert('No se pudo guardar la dirección: '+dirRes.error.message); return }
+        avatarEl.textContent=initialsFrom(fUser.nombre.value,fUser.apellido.value,fUser.email.value)
+        bigAvatar.textContent=avatarEl.textContent
+        greetEl.textContent=`Hola, ${firstNameFrom(fUser.nombre.value,fUser.email.value)}!`
+        titleName.textContent=`${fUser.nombre.value||'(Sin nombre)'} ${fUser.apellido.value}`.trim()
+        showToast('Cambios guardados')
+      }
+  
+      // Menú usuario
+      userWidget.addEventListener('click',(e)=>{ if(e.target.closest('#userMenu')) return; userMenu.classList.toggle('hidden') })
+      document.addEventListener('click',(e)=>{ if(!userWidget.contains(e.target)) userMenu.classList.add('hidden') })
+      logoutBtn.addEventListener('click', async (e)=>{ e.preventDefault(); await supabase.auth.signOut(); window.location.href='login.html' })
+  
+      // Eventos
+      document.getElementById('saveBtn').addEventListener('click', saveAll)
+  
+      // Init
+      await refreshHeader()
+      await loadData()
+      supabase.auth.onAuthStateChange(()=>{ refreshHeader(); loadData() })
+    </script>
+  </body>
+  </html>
