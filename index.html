@@ -205,6 +205,14 @@
     const q = qs('#q');
     document.getElementById('year').textContent = new Date().getFullYear();
 
+        // === Preseleccionar categoría desde ?cat= ===
+    const params = new URLSearchParams(window.location.search);
+    const catParam = (params.get('cat') || '').toLowerCase();
+    const CAT_MAP = { club: 'Club', seleccion: 'Selección', retro: 'Retro' };
+    if (CAT_MAP[catParam]) {
+      catSel.value = CAT_MAP[catParam];        // setea el filtro
+    }
+
     // ===== Carrito =====
     const cartBtn = document.getElementById('cartBtn');
     const cartMenu = document.getElementById('cartMenu');
