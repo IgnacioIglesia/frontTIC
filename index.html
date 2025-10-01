@@ -22,6 +22,27 @@
 
     /* chevron más grande en subnav */
     .subnav .chev{ font-size:16px; line-height:1; margin-left:6px; display:inline-block; transform:translateY(-1px); }
+
+    /* Navegación del hero */
+    .hero{ position: relative; }
+    .hero-nav{
+      position:absolute; top:50%; transform:translateY(-50%);
+      width:42px; height:42px; border-radius:999px;
+      display:flex; align-items:center; justify-content:center;
+      border:1px solid var(--ring,#e5e7eb);
+      background:rgba(255,255,255,.85);
+      box-shadow:0 8px 24px rgba(0,0,0,.18);
+      font-size:22px; line-height:1; cursor:pointer;
+      transition:transform .15s ease, background .15s ease;
+      user-select:none;
+    }
+    .hero-nav:hover{ background:#fff; transform:translateY(-50%) scale(1.05); }
+    .hero-nav.prev{ left:12px; }
+    .hero-nav.next{ right:12px; }
+
+    @media (max-width: 640px){
+      .hero-nav{ width:36px;height:36px;font-size:20px; }
+    }
   </style>
 </head>
 <body>
@@ -154,11 +175,15 @@
   <main>
     <!-- HERO con fondos rotativos -->
     <section class="hero">
-      <div class="copy">
-        <h1>El mercado de las camisetas</h1>
-        <p class="hero-sub">Publicá, comprá y vendé entre hinchas de verdad.</p>
-      </div>
-    </section>
+  <!-- Flechas -->
+  <button class="hero-nav prev" aria-label="Imagen anterior">‹</button>
+  <button class="hero-nav next" aria-label="Imagen siguiente">›</button>
+
+  <div class="copy">
+    <h1>El mercado de las camisetas</h1>
+    <p class="hero-sub">Publicá, comprá y vendé entre hinchas de verdad.</p>
+  </div>
+</section>
 
     <div class="container">
       <section id="catalogo">
@@ -593,14 +618,41 @@
     fillDept(); renderLocationText();
 
     // ===== HERO: fondos rotativos =====
-    (function(){
-      const hero = document.querySelector('.hero');
-      const fondos = ['./assets/fondo1.png','./assets/fondo2.png','./assets/fondo3.png', './assets/fondo4.png'];
-      let idx = 0;
-      function setBg(){ hero.style.backgroundImage = `url('${fondos[idx]}')`; }
-      setBg();
-      setInterval(()=>{ idx = (idx+1)%fondos.length; setBg(); }, 7000);
-    })();
+    // ===== HERO: fondos rotativos + flechas =====
+(function(){
+  const hero = document.querySelector('.hero');
+
+  // Asegurate de tener las 4 imágenes en /assets/
+  const fondos = [
+    './assets/fondo1.png',
+    './assets/fondo2.png',
+    './assets/fondo3.png',
+    './assets/fondo4.png'
+  ];
+
+  let idx = 0;
+  const prevBtn = document.querySelector('.hero-nav.prev');
+  const nextBtn = document.querySelector('.hero-nav.next');
+
+  function setBg(){ hero.style.backgroundImage = `url('${fondos[idx]}')`; }
+  function next(){ idx = (idx+1) % fondos.length; setBg(); }
+  function prev(){ idx = (idx-1+fondos.length) % fondos.length; setBg(); }
+
+  setBg();
+
+  // autoplay
+  const INTERVAL = 7000;
+  let timer = setInterval(next, INTERVAL);
+  function restart(){ clearInterval(timer); timer = setInterval(next, INTERVAL); }
+
+  // flechas
+  nextBtn.addEventListener('click', ()=>{ next(); restart(); });
+  prevBtn.addEventListener('click', ()=>{ prev(); restart(); });
+
+  // pausa al pasar el mouse (opcional)
+  hero.addEventListener('mouseenter', ()=> clearInterval(timer));
+  hero.addEventListener('mouseleave', restart);
+})();
 
     // Mensaje rotativo del header (opcional)
     const messages = [
