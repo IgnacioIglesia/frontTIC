@@ -151,11 +151,15 @@
   <main>
     <!-- HERO con fondos rotativos -->
     <section class="hero">
-      <div class="copy">
-        <h1>El mercado de las camisetas</h1>
-        <p class="hero-sub">Publicá, comprá y vendé entre hinchas de verdad.</p>
-      </div>
-    </section>
+  <!-- Flechas -->
+  <button class="hero-nav prev" aria-label="Imagen anterior">‹</button>
+  <button class="hero-nav next" aria-label="Imagen siguiente">›</button>
+
+  <div class="copy">
+    <h1>El mercado de las camisetas</h1>
+    <p class="hero-sub">Publicá, comprá y vendé entre hinchas de verdad.</p>
+  </div>
+</section>
 
     <div class="container">
       <section id="catalogo">
@@ -202,6 +206,14 @@
     const clubSel = qs('#club'), paisSel = qs('#pais'), catSel = qs('#categoria');
     const q = qs('#q');
     document.getElementById('year').textContent = new Date().getFullYear();
+
+        // === Preseleccionar categoría desde ?cat= ===
+    const params = new URLSearchParams(window.location.search);
+    const catParam = (params.get('cat') || '').toLowerCase();
+    const CAT_MAP = { club: 'Club', seleccion: 'Selección', retro: 'Retro' };
+    if (CAT_MAP[catParam]) {
+      catSel.value = CAT_MAP[catParam];        // setea el filtro
+    }
 
     // ===== Carrito =====
     const cartBtn = document.getElementById('cartBtn');
@@ -584,14 +596,41 @@
     fillDept(); renderLocationText();
 
     // ===== HERO: fondos rotativos =====
-    (function(){
-      const hero = document.querySelector('.hero');
-      const fondos = ['./assets/fondo1.png','./assets/fondo2.png','./assets/fondo3.png'];
-      let idx = 0;
-      function setBg(){ hero.style.backgroundImage = `url('${fondos[idx]}')`; }
-      setBg();
-      setInterval(()=>{ idx = (idx+1)%fondos.length; setBg(); }, 7000);
-    })();
+    // ===== HERO: fondos rotativos + flechas =====
+(function(){
+  const hero = document.querySelector('.hero');
+
+  // Asegurate de tener las 4 imágenes en /assets/
+  const fondos = [
+    './assets/fondo1.png',
+    './assets/fondo2.png',
+    './assets/fondo3.png',
+    './assets/fondo4.png'
+  ];
+
+  let idx = 0;
+  const prevBtn = document.querySelector('.hero-nav.prev');
+  const nextBtn = document.querySelector('.hero-nav.next');
+
+  function setBg(){ hero.style.backgroundImage = `url('${fondos[idx]}')`; }
+  function next(){ idx = (idx+1) % fondos.length; setBg(); }
+  function prev(){ idx = (idx-1+fondos.length) % fondos.length; setBg(); }
+
+  setBg();
+
+  // autoplay
+  const INTERVAL = 7000;
+  let timer = setInterval(next, INTERVAL);
+  function restart(){ clearInterval(timer); timer = setInterval(next, INTERVAL); }
+
+  // flechas
+  nextBtn.addEventListener('click', ()=>{ next(); restart(); });
+  prevBtn.addEventListener('click', ()=>{ prev(); restart(); });
+
+  // pausa al pasar el mouse (opcional)
+  hero.addEventListener('mouseenter', ()=> clearInterval(timer));
+  hero.addEventListener('mouseleave', restart);
+})();
 
     // Mensaje rotativo del header (opcional)
     const messages = [
