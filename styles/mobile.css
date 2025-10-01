@@ -1,0 +1,120 @@
+/* ===== FIXES GLOBALES ===== */
+
+/* Evita scroll horizontal causado por 100vw o márgenes negativos */
+body {
+  overflow-x: hidden;
+}
+
+/* Tappable: tamaño mínimo de toque accesible */
+button, .btn, a.btn, .pill, .loc-link, .subnav-link {
+  min-height: 44px;
+}
+
+/* ===== BREAKPOINTS ===== */
+
+/* Ajustes para <= 640px (móviles medianos) */
+@media (max-width: 640px) {
+
+  /* Header compacto */
+  .top {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+  .brand-wrap {
+    order: 1;
+    margin-left: 0;
+  }
+  .search {
+    order: 3;
+    width: 100%;
+    margin: 0;
+  }
+  .actions {
+    order: 2;
+  }
+  header .header-messages {
+    display: none; /* ahorrar espacio en móvil */
+  }
+
+  /* Subnav más flexible */
+  .subnav-inner {
+    gap: 8px;
+    padding: 6px 8px;
+  }
+  .subnav-link {
+    font-size: 13px;
+    padding: 6px 8px;
+  }
+  .loc-link {
+    padding-right: 8px;
+    margin-right: 8px;
+  }
+  .subnav .chev {
+    font-size: 14px;
+  }
+
+  /* Formularios en modal → 1 columna */
+  .loc-form {
+    grid-template-columns: 1fr;
+  }
+  .actions-row {
+    justify-content: stretch;
+  }
+  .actions-row .btn {
+    width: 100%;
+  }
+}
+
+/* Ajustes para <= 480px (móviles chicos) */
+@media (max-width: 480px) {
+
+  /* Logo más chico */
+  .brand-wrap img.logo {
+    height: 44px;
+  }
+
+  /* Grillas a 1 columna */
+  .grid {
+    grid-template-columns: 1fr;
+  }
+  .favs-grid {
+    grid-template-columns: 1fr;
+  }
+  .filters {
+    grid-template-columns: 1fr;
+  }
+
+  /* Cards más bajas */
+  .card .media {
+    min-height: 200px;
+  }
+
+  /* Hero más bajo y texto más chico */
+  .hero {
+    min-height: 360px;
+  }
+  .hero .copy {
+    padding: 28px 16px;
+  }
+  .hero-sub {
+    font-size: 14px;
+  }
+
+  /* Formularios compactos */
+  .track-card {
+    padding: 24px 18px;
+  }
+  .track-form input {
+    height: 44px;
+  }
+
+  /* Uploader de imagen más chico */
+  .image-drop {
+    height: 240px;
+  }
+
+  /* Panel lateral ocupa toda la pantalla */
+  .cart-menu {
+    width: 100%;
+  }
+}
