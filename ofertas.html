@@ -7,16 +7,42 @@
   <link rel="stylesheet" href="styles/main.css" />
   <link rel="icon" type="image/png" href="./assets/logo.png" />
   <style>
-    /* ===== Hero Ofertas ===== */
-    .hero-ofertas{
-      background: url('./assets/oferta3.png') center/cover no-repeat;
-      min-height: 280px;
-      display:flex;align-items:center;justify-content:center;
-      text-align:center;color:#fff;
-    }
-    .hero-ofertas .copy h1{margin:0;font-weight:800;font-size:clamp(24px,4vw,40px);}
-    .hero-ofertas .hero-sub{margin-top:6px;opacity:.95;font-size:clamp(14px,2.2vw,18px);}
-  </style>
+    /* Para que la barra llegue completa al máximo */
+#price.range {
+    width: 100%;
+    background: linear-gradient(to right, #064e3b 100%, #e5e7eb 0%);
+  }
+
+  #price.range::-webkit-slider-runnable-track {
+    background: linear-gradient(to right, #064e3b var(--percent,100%), #e5e7eb var(--percent,100%));
+  }
+
+  #price.range::-moz-range-track {
+    background: linear-gradient(to right, #064e3b var(--percent,100%), #e5e7eb var(--percent,100%));
+  }
+  /* ===== Hero Ofertas ===== */
+  .hero-ofertas{
+    background: url('./assets/oferta3.png') center/cover no-repeat;
+    min-height: 280px;
+    display:flex;
+    flex-direction: column;    /* apila en columna */
+    align-items:center;
+    justify-content:flex-end;  /* baja el texto al fondo */
+    text-align:center;
+    color:#fff;
+    padding-bottom: 20px;      /* espacio del borde inferior */
+  }
+  .hero-ofertas .copy h1{
+    margin:0;
+    font-weight:800;
+    font-size:clamp(24px,4vw,40px);
+  }
+  .hero-ofertas .hero-sub{
+    margin-top:6px;
+    opacity:.95;
+    font-size:clamp(14px,2.2vw,18px);
+  }
+</style>
 </head>
 <body>
   <!-- ===== HEADER ===== -->
