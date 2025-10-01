@@ -5,24 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>La Otra Tribuna — Tienda de camisetas</title>
   <link rel="stylesheet" href="styles/main.css" />
+  <link rel="stylesheet" href="styles/user-widget.css" /> <!-- CSS del avatar/saludo -->
   <link rel="icon" type="image/png" href="./assets/logo.png" />
-
-  <!-- FIXES mínimos por si main.css se perdió en algún merge -->
-  <style>
-    /* corazón en las cards */
-    .card .media{position:relative}
-    .fav-toggle{
-      position:absolute; top:8px; right:8px;
-      background:#fff; border:1px solid var(--ring,#e5e7eb);
-      border-radius:10px; padding:4px 8px; line-height:1;
-      cursor:pointer; font-size:18px;
-      box-shadow:0 6px 14px rgba(0,0,0,.12);
-    }
-    .fav-toggle.active{ color:#e11; }
-
-    /* chevron más grande en subnav */
-    .subnav .chev{ font-size:16px; line-height:1; margin-left:6px; display:inline-block; transform:translateY(-1px); }
-  </style>
 </head>
 <body>
   <!-- ===== HEADER ===== -->
@@ -41,8 +25,21 @@
 
       <div class="header-messages" id="headerMessage">Envíos seguros y rápidos</div>
 
-      <div class="actions">
-        <a href="login.html" class="btn-login">Iniciar sesión</a>
+      <div class="actions" style="display:flex;align-items:center;gap:12px;">
+        <!-- Botón por defecto -->
+        <a id="loginBtn" href="login.html" class="btn-login">Iniciar sesión</a>
+
+        <!-- Widget de usuario (oculto hasta que haya sesión) -->
+        <div id="userWidget" class="user-widget hidden" aria-live="polite">
+          <div id="userAvatar" class="user-avatar" title="Mi perfil"></div>
+          <span id="greeting" class="user-greeting"></span>
+          <!-- Menú desplegable -->
+          <div id="userMenu" class="user-menu hidden">
+            <a href="perfil.html">👤 Perfil</a>
+            <a href="#" id="logoutBtn">🚪 Cerrar sesión</a>
+          </div>
+        </div>
+        <!-- Tus botones -->
         <button class="pill" id="favBtn" aria-label="Abrir favoritos">❤️<span id="favCount">0</span></button>
         <button class="pill" id="cartBtn" aria-label="Abrir carrito">🛒 <span id="cartCount">0</span></button>
       </div>
@@ -60,7 +57,7 @@
             <span class="loc-line" id="locText">Enviar a <strong>Montevideo</strong></span>
           </a>
         </div>
-    
+
         <div class="subnav-center">
           <div class="has-submenu" id="catsDrop">
             <a href="#categorias" class="subnav-link" id="catsLink" aria-haspopup="true" aria-expanded="false">
@@ -76,9 +73,9 @@
           <a href="vender.html" class="subnav-link">Vender</a>
           <a href="rastrear.html" class="subnav-link">Rastrear Pedido</a>
         </div>
-    
+
         <div class="subnav-right">
-          <a href="favoritos.html" class="subnav-link">Favoritos</a>
+          <a href="favoritos.html" class="subnav-link" id="favLink">Favoritos</a>
           <a href="como-funciona.html" class="subnav-link">Cómo funciona</a>
           <a href="autenticidad.html" class="subnav-link">Autenticidad</a>
           <a href="ayuda.html" class="subnav-link">Ayuda</a>
@@ -187,6 +184,7 @@
     </div>
   </main>
 
+  <!-- ===== TU LÓGICA EXISTENTE ===== -->
   <script>
     // ===== Datos demo =====
     const DATA = [
@@ -514,7 +512,7 @@
     attachInputs();
     render(); updateCartUI(); updateFavBadge(); renderFavMenu();
 
-    // ===== Ubicación (mismo storage que rastrear.html) =====
+    // ===== Ubicación =====
     const LOCATION_KEY = 'lot_location';
     const openLocationBtn = document.getElementById('openLocation');
     const locationModal = document.getElementById('locationModal');
@@ -523,6 +521,7 @@
     const deptSel = document.getElementById('departamento');
     const locSel = document.getElementById('localidad');
     const acceptLocBtn = document.getElementById('acceptLoc');
+    const locText = document.getElementById('locText'); // FIX: referencia
 
     const DEPTS = {
       "Artigas":["Artigas","Bella Unión","Tomás Gomensoro","Baltasar Brum"],
@@ -649,6 +648,85 @@
         });
       }
     })();
+  </script>
+
+  <!-- ===== SUPABASE: widget de usuario ===== -->
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+    const SUPABASE_URL = 'https://imexctmcesopdfdebsgo.supabase.co'
+    const SUPABASE_ANON_KEY = 'xxxxxx'
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+    const loginBtn   = document.getElementById('loginBtn')
+    const userWidget = document.getElementById('userWidget')
+    const avatarEl   = document.getElementById('userAvatar')
+    const greetEl    = document.getElementById('greeting')
+
+    const initialsFrom = (nombre='', apellido='', email='')=>{
+      const n = (nombre||'').trim().split(/\s+/)[0] || ''
+      const a = (apellido||'').trim().split(/\s+/)[0] || ''
+      const ini = (n[0]||'') + (a[0]||'')
+      return (ini || (email[0]||'?')).toUpperCase()
+    }
+    const firstNameFrom = (nombre='', email='')=>{
+      const n = (nombre||'').trim().split(/\s+/)[0]
+      return n || (email || '').split('@')[0]
+    }
+
+    async function refreshHeader(){
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session){
+        userWidget.classList.add('hidden')
+        loginBtn.classList.remove('hidden')
+        return
+      }
+      const uid = session.user.id
+      let nombre = '', apellido = '', email = session.user.email || ''
+      try{
+        const { data: perfil } = await supabase
+          .from('usuario')
+          .select('nombre, apellido, email')
+          .eq('id_auth', uid)
+          .maybeSingle()
+        if (perfil){
+          nombre = perfil.nombre || session.user.user_metadata?.nombre || ''
+          apellido = perfil.apellido || session.user.user_metadata?.apellido || ''
+          email = perfil.email || email
+        }else{
+          nombre = session.user.user_metadata?.nombre || ''
+          apellido = session.user.user_metadata?.apellido || ''
+        }
+      }catch(_){}
+
+      avatarEl.textContent = initialsFrom(nombre, apellido, email)
+      greetEl.textContent  = `Hola, ${firstNameFrom(nombre, email)}!`
+
+      loginBtn.classList.add('hidden')
+      userWidget.classList.remove('hidden')
+    }
+
+    await refreshHeader()
+    supabase.auth.onAuthStateChange((_event, _session) => { refreshHeader() })
+
+    // === Menú de usuario ===
+    const userMenu   = document.getElementById('userMenu')
+    const logoutBtn  = document.getElementById('logoutBtn')
+
+    userWidget.addEventListener('click', (e)=>{
+      if(e.target.closest('#userMenu')) return
+      userMenu.classList.toggle('hidden')
+    })
+
+    document.addEventListener('click', (e)=>{
+      if(!userWidget.contains(e.target)){
+        userMenu.classList.add('hidden')
+      }
+    })
+
+    logoutBtn.addEventListener('click', async ()=>{
+      await supabase.auth.signOut()
+      location.reload()
+    })
   </script>
 </body>
 </html>

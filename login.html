@@ -16,11 +16,9 @@
           <img class="logo" src="./assets/logo.png" alt="La Otra Tribuna" />
         </a>
       </div>
-
       <div class="search">
         <input type="search" placeholder="Buscar club o país…" />
       </div>
-
       <div class="header-messages">Iniciá sesión para comprar y vender</div>
     </div>
 
@@ -28,7 +26,6 @@
     <nav class="subnav">
       <div class="container subnav-inner">
         <div class="subnav-left">
-          <!-- botón/estado de ubicación -->
           <a href="#ubicacion" class="loc-link" id="openLocation">
             <svg class="loc-ic" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path d="M12 22s7-6.46 7-12a7 7 0 1 0-14 0c0 5.54 7 12 7 12Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
@@ -37,13 +34,10 @@
             <span class="loc-line" id="locText">Enviar a <strong>Montevideo</strong></span>
           </a>
         </div>
-    
         <div class="subnav-center">
           <div class="has-submenu" id="catsDrop">
-            <a href="index.html" class="subnav-link" id="catsLink" aria-haspopup="true" aria-expanded="false">
-              Categorías <span class="chev" aria-hidden="true">▾</span>
-            </a>
-            <div class="cat-submenu" id="catsMenu" role="menu" aria-label="Categorías">
+            <a href="index.html" class="subnav-link">Categorías ▾</a>
+            <div class="cat-submenu">
               <a href="index.html?cat=club#catalogo">Club</a>
               <a href="index.html?cat=seleccion#catalogo">Selección</a>
               <a href="index.html?cat=retro#catalogo">Retro</a>
@@ -53,7 +47,6 @@
           <a href="vender.html" class="subnav-link">Vender</a>
           <a href="rastrear.html" class="subnav-link">Rastrear Pedido</a>
         </div>
-    
         <div class="subnav-right">
           <a href="favoritos.html" class="subnav-link">Favoritos</a>
           <a href="como-funciona.html" class="subnav-link">Cómo funciona</a>
@@ -72,7 +65,7 @@
         <h2>Iniciar Sesión</h2>
       </div>
 
-      <form class="track-form">
+      <form id="loginForm" class="track-form">
         <div class="field">
           <label for="email">Email</label>
           <input id="email" type="email" required placeholder="tucorreo@ejemplo.com" />
@@ -90,7 +83,54 @@
         ¿Aún no tenés cuenta?
         <a href="registro.html" style="color:var(--brand);font-weight:600;text-decoration:none;">Registrate acá</a>
       </p>
+
+      <p id="msg" class="muted" style="margin-top:10px;"></p>
     </div>
   </main>
+
+  <!-- ===== SUPABASE ===== -->
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
+    // ⚠️ Tu URL y anon key de Supabase
+    const SUPABASE_URL = 'https://imexctmcesopdfdebsgo.supabase.co'
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImltZXhjdG1jZXNvcGRmZGVic2dvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzMDczMDIsImV4cCI6MjA3NDg4MzMwMn0.g1lziVKAuUvMEOkYxJhe2D2z8PlwGJ6xcXo_SSpTj7Q'
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+    const form = document.getElementById('loginForm')
+    const msg = document.getElementById('msg')
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault()
+      msg.textContent = 'Iniciando sesión...'
+
+      const email = document.getElementById('email').value
+      const password = document.getElementById('password').value
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      })
+
+      if (error) {
+        if (error.message.includes("Invalid login credentials")) {
+          msg.textContent = "El email o la contraseña son incorrectos.";
+        } else if (error.message.includes("Email not confirmed")) {
+          msg.textContent = "Tu email aún no fue confirmado. Revisá tu bandeja.";
+        } else {
+          msg.textContent = "Ocurrió un error: " + error.message;
+        }
+        msg.style.color = "red";
+      } else {
+        msg.textContent = '¡Login correcto! Redirigiendo...'
+        msg.style.color = 'green'
+        // Redirigir al inicio o dashboard
+        setTimeout(() => {
+          window.location.href = 'index.html'
+        }, 1200)
+      }
+    })
+  </script>
 </body>
 </html>

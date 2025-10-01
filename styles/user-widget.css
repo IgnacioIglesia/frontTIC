@@ -1,0 +1,60 @@
+/* Avatar redondo con iniciales */
+.user-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--brand, #004225);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  
+  /* Contenedor del saludo */
+  .user-widget {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: relative; /* para que el menú se ancle aquí */
+    cursor: pointer;
+  }
+  
+  .user-greeting {
+    font-weight: 500;
+    color: var(--text, #1b1b1f);
+  }
+  
+  /* Menú desplegable */
+  .user-menu {
+    position: absolute;
+    top: 110%; /* debajo del widget */
+    right: 0;
+    background: #fff;
+    border: 1px solid var(--ring, #e5e7eb);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    min-width: 160px;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    padding: 6px 0;
+  }
+  
+  .user-menu.hidden {
+    display: none;
+  }
+  
+  .user-menu a {
+    display: block;
+    padding: 10px 16px;
+    text-decoration: none;
+    color: var(--text, #1b1b1f);
+    font-size: 14px;
+    transition: background 0.2s;
+  }
+  
+  .user-menu a:hover {
+    background: var(--chip, #f3f4f6);
+  }

@@ -9,7 +9,7 @@
   <style>.hidden{display:none}</style>
 </head>
 <body>
-  <!-- ===== HEADER (idéntico al tuyo) ===== -->
+  <!-- ===== HEADER ===== -->
   <header id="siteHeader">
     <div class="top container">
       <div class="brand-wrap">
@@ -64,7 +64,7 @@
     </nav>
   </header>
 
-  <!-- ===== CONTENIDO (mismo diseño, dividido en 2 pasos) ===== -->
+  <!-- ===== CONTENIDO ===== -->
   <main class="track-full">
     <div class="track-card register">
       <div class="track-title">
@@ -73,7 +73,7 @@
       </div>
 
       <form class="track-form" id="registerForm">
-        <!-- PASO 1: mismos campos, mismo layout -->
+        <!-- PASO 1 -->
         <div id="step1">
           <div class="form-grid two-cols">
             <div class="field">
@@ -89,19 +89,19 @@
             <div class="field span-2">
               <label for="email">Email</label>
               <input id="email" type="email" placeholder="tucorreo@ejemplo.com" required>
+              <div id="email-error" style="display:none;color:crimson;font-size:12px;margin-top:6px"></div>
             </div>
 
             <div class="field span-2">
               <label for="password">Contraseña</label>
-              <input id="password" type="password" placeholder="************" required>
+              <input id="password" type="password" placeholder="************" required minlength="6">
             </div>
           </div>
 
-          <!-- Aviso legal en el paso 1 -->
           <p class="muted" style="margin-top:8px;font-size:14px;">
             Al continuar, acepto los
             <a href="terminos.html" target="_blank">Términos y Condiciones</a>
-            y autorizo el uso de mis datos de acuerdo a la
+            y la
             <a href="privacidad.html" target="_blank">Declaración de Privacidad</a>.
           </p>
 
@@ -110,7 +110,7 @@
           </div>
         </div>
 
-        <!-- PASO 2: mismos campos de dirección -->
+        <!-- PASO 2 -->
         <div id="step2" class="hidden">
           <div class="form-grid two-cols">
             <div class="field">
@@ -121,8 +121,13 @@
             </div>
 
             <div class="field">
+              <label for="departamento">Departamento</label>
+              <input id="departamento" type="text" placeholder="Ej: Cerro Largo" required>
+            </div>
+
+            <div class="field">
               <label for="ciudad">Ciudad</label>
-              <input id="ciudad" type="text" placeholder="Ej: Montevideo" required>
+              <input id="ciudad" type="text" placeholder="Ej: Melo" required>
             </div>
 
             <div class="field span-2">
@@ -137,16 +142,18 @@
 
             <div class="field">
               <label for="cp">Código postal</label>
-              <input id="cp" type="text" inputmode="numeric" placeholder="Ej: 11300" required>
+              <input id="cp" type="text" pattern="[0-9]*" inputmode="numeric" placeholder="Ej: 11300" required>
             </div>
           </div>
 
           <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:12px">
             <button type="button" class="btn" id="backStep">Volver</button>
-            <button type="submit" class="btn primary">Crear cuenta</button>
+            <button type="submit" class="btn primary" id="submitBtn">Crear cuenta</button>
           </div>
         </div>
       </form>
+
+      <p id="msg" class="muted" style="margin-top:12px;font-size:14px;"></p>
 
       <p class="muted" style="margin-top:18px;font-size:14px;">
         ¿Ya tenés cuenta?
@@ -157,38 +164,135 @@
 
   <footer class="site-footer">© <span id="year"></span> La Otra Tribuna.</footer>
 
-  <script>
+  <!-- ===== LÓGICA: UI + SUPABASE ===== -->
+  <script type="module">
+    // --------- UI header helpers ----------
     document.getElementById('year').textContent = new Date().getFullYear();
     const siteHeader = document.getElementById('siteHeader');
     function onScroll(){ siteHeader.classList.toggle('is-scrolled', window.scrollY > 0); }
     onScroll(); window.addEventListener('scroll', onScroll, {passive:true});
 
-    // ---- Navegación entre pasos (sin tocar el estilo original) ----
+    // --------- SUPABASE ----------
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+    const SUPABASE_URL = 'https://imexctmcesopdfdebsgo.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImltZXhjdG1jZXNvcGRmZGVic2dvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzMDczMDIsImV4cCI6MjA3NDg4MzMwMn0.g1lziVKAuUvMEOkYxJhe2D2z8PlwGJ6xcXo_SSpTj7Q';
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // --------- Navegación de pasos ----------
     const step1 = document.getElementById('step1');
     const step2 = document.getElementById('step2');
     const toStep2 = document.getElementById('toStep2');
     const backStep = document.getElementById('backStep');
+    const msgEl = document.getElementById('msg');
+    const submitBtn = document.getElementById('submitBtn');
+    const emailErrorEl = document.getElementById('email-error');
 
-    toStep2.addEventListener('click', ()=>{
-      // Validación mínima del paso 1
+    // Paso 1 -> Paso 2 con chequeo de email existente (RPC a auth.users)
+    toStep2.addEventListener('click', async ()=>{
+      emailErrorEl.style.display = 'none';
+      emailErrorEl.textContent = '';
+
       const ok = ['nombre','apellido','email','password'].every(id => document.getElementById(id).value.trim());
       if(!ok){ alert('Completá nombre, apellido, email y contraseña.'); return; }
-      step1.classList.add('hidden');
-      step2.classList.remove('hidden');
-      // focus en primer campo del paso 2
-      document.getElementById('pais').focus();
+
+      const email = document.getElementById('email').value.trim();
+      const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+      if(!emailOk){
+        emailErrorEl.textContent = 'Ingresá un email válido.';
+        emailErrorEl.style.display = 'block';
+        return;
+      }
+
+      try {
+        toStep2.disabled = true;
+        const { data, error } = await supabase.rpc('email_existe', { p_email: email });
+        if (error) {
+          console.error(error);
+          emailErrorEl.textContent = 'No se pudo verificar el email. Probá de nuevo.';
+          emailErrorEl.style.display = 'block';
+          return;
+        }
+        if (data === true) {
+          emailErrorEl.textContent = 'Este email ya está registrado. Iniciá sesión.';
+          emailErrorEl.style.display = 'block';
+          return;
+        }
+        // OK, avanzar
+        step1.classList.add('hidden'); step2.classList.remove('hidden');
+        document.getElementById('pais').focus();
+      } finally {
+        toStep2.disabled = false;
+      }
     });
 
-    backStep.addEventListener('click', ()=>{
-      step2.classList.add('hidden');
-      step1.classList.remove('hidden');
+    backStep?.addEventListener('click', ()=>{
+      step2.classList.add('hidden'); step1.classList.remove('hidden');
       document.getElementById('nombre').focus();
     });
 
-    document.getElementById('registerForm').addEventListener('submit', (e)=>{
+    // Envío final (solo signUp: el TRIGGER crea usuario + dirección)
+    const form = document.getElementById('registerForm');
+    form.addEventListener('submit', async (e)=>{
       e.preventDefault();
-      // acá iría tu POST; de momento un OK de demo
-      alert('Cuenta creada con éxito 🎉');
+
+      msgEl.textContent = 'Creando cuenta...';
+      msgEl.style.color = '';
+      submitBtn.disabled = true;
+
+      const nombre = document.getElementById('nombre').value.trim();
+      const apellido = document.getElementById('apellido').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value.trim();
+
+      const pais = document.getElementById('pais').value;
+      const departamento = document.getElementById('departamento').value.trim();
+      const ciudad = document.getElementById('ciudad').value.trim();
+      const calle = document.getElementById('direccion').value.trim();
+      const numero = (document.getElementById('apto').value.trim() || null);
+      const cp = document.getElementById('cp').value.trim();
+
+      try {
+        // 1) Crear cuenta en Auth enviando todo en metadata
+        const { data: sign, error: signErr } = await supabase.auth.signUp({
+          email, password,
+          options: {
+            data: { nombre, apellido, pais, departamento, ciudad, calle, numero, cp },
+            emailRedirectTo: 'http://127.0.0.1:5500/login.html'
+          }
+        });
+        if (signErr) {
+          if (/already.*registered|exists/i.test(signErr.message)) {
+            msgEl.textContent = 'Ese email ya está registrado. Iniciá sesión.';
+          } else {
+            msgEl.textContent = 'No se pudo crear la cuenta: ' + signErr.message;
+          }
+          msgEl.style.color = 'red';
+          submitBtn.disabled = false;
+          return;
+        }
+
+        // 2) El trigger en la DB crea public.usuario y public.direccion.
+        //    Si confirmación por email está ON, probablemente no haya sesión ahora.
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          msgEl.textContent = 'Te enviamos un email para confirmar la cuenta. Después iniciá sesión.';
+          msgEl.style.color = 'green';
+          submitBtn.disabled = false;
+          setTimeout(()=>{ window.location.href = 'login.html'; }, 1400);
+          return;
+        }
+
+        // Si hay sesión inmediata, igualmente ya está todo creado por el trigger.
+        msgEl.textContent = '¡Cuenta creada con éxito! Redirigiendo... 🎉';
+        msgEl.style.color = 'green';
+        setTimeout(()=>{ window.location.href = 'login.html'; }, 1200);
+
+      } catch (err) {
+        console.error(err);
+        msgEl.textContent = err?.message || 'Ocurrió un error inesperado';
+        msgEl.style.color = 'red';
+        submitBtn.disabled = false;
+      }
     });
   </script>
 </body>

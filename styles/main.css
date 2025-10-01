@@ -371,3 +371,19 @@ select, .range{ width:100%; padding:10px; border:1px solid var(--ring); border-r
 .step-dot{width:8px;height:8px;border-radius:50%;background:#cfd5cf}
 .step-dot.active{background:var(--brand)}
 .hidden{display:none}
+
+.hidden{display:none !important;}
+
+.user-widget{
+  display:flex; align-items:center; gap:10px;
+}
+.user-avatar{
+  width:36px; height:36px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-weight:700; letter-spacing:.3px;
+  background: #134E4A; /* verde oscuro */
+  color:#fff; user-select:none;
+}
+.user-greeting{
+  font-weight:600; color:#0f172a; /* slate-900 */
+}
