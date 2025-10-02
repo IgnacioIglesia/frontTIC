@@ -6,7 +6,34 @@
   <title>Vender — La Otra Tribuna</title>
   <link rel="stylesheet" href="styles/main.css" />
   <link rel="stylesheet" href="styles/vender.css" />
-  <link rel="icon" type="image/png" href="./assets/logo.png" />
+  <link rel="stylesheet" href="styles/user-widget.css" /> 
+  <style>
+    body {
+    background: url('./assets/venta.png') no-repeat center top;
+    background-size: cover;
+    background-attachment: fixed;
+  }
+
+  /* Capa blanca translúcida encima del fondo */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: rgba(255,255,255,0.4);
+    z-index: -1;
+  }
+
+  /* Tarjeta */
+  .sell-card {
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    padding: 24px;
+    max-width: 640px;
+    margin: auto;
+    box-shadow: 0 4px 12px rgba(0,0,0,.08);
+  }
+  </style>
 </head>
 <body>
   <!-- ===== HEADER ===== -->
@@ -25,8 +52,19 @@
 
       <div class="header-messages">Publicá tu camiseta en segundos</div>
 
-      <div class="actions">
-        <a href="login.html" class="btn-login">Iniciar sesión</a>
+      <div class="actions" style="display:flex;align-items:center;gap:12px;">
+        <!-- Botón por defecto -->
+        <a id="loginBtn" href="login.html" class="btn-login">Iniciar sesión</a>
+
+        <!-- Widget de usuario (oculto hasta que haya sesión) -->
+        <div id="userWidget" class="user-widget hidden" aria-live="polite" style="position:relative;">
+          <div id="userAvatar" class="user-avatar" title="Mi perfil"></div>
+          <span id="greeting" class="user-greeting"></span>
+          <div id="userMenu" class="user-menu hidden">
+            <a href="perfil.html">👤 Perfil</a>
+            <a href="#" id="logoutBtn">🚪 Cerrar sesión</a>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -34,7 +72,6 @@
     <nav class="subnav">
       <div class="container subnav-inner">
         <div class="subnav-left">
-          <!-- botón/estado de ubicación -->
           <a href="#ubicacion" class="loc-link" id="openLocation">
             <svg class="loc-ic" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path d="M12 22s7-6.46 7-12a7 7 0 1 0-14 0c0 5.54 7 12 7 12Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
@@ -49,7 +86,6 @@
             <a href="index.html" class="subnav-link" id="catsLink" aria-haspopup="true" aria-expanded="false">
               Categorías <span class="chev" aria-hidden="true">▾</span>
             </a>
-            <!-- En páginas que NO son el index, el submenú navega con links -->
             <div class="cat-submenu" id="catsMenu" role="menu" aria-label="Categorías">
               <a href="index.html?cat=club#catalogo">Club</a>
               <a href="index.html?cat=seleccion#catalogo">Selección</a>
@@ -71,11 +107,9 @@
     </nav>
   </header>
 
-  <!-- ===== OVERLAY ===== -->
+  <!-- ===== OVERLAY UBICACIÓN ===== -->
   <div id="overlay" class="overlay"></div>
-
-  <!-- ===== MODAL UBICACIÓN ===== -->
-  <div id="locationModal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="locTitle" aria-modal="true">
+  <div id="locationModal" class="modal" aria-hidden="true" role="dialog" aria-modal="true">
     <div class="modal-card">
       <div class="modal-head">
         <h3 id="locTitle">Elige dónde recibir tus compras</h3>
@@ -181,7 +215,7 @@
             <input id="stock" type="number" min="0" placeholder="Ej: 10" required>
           </div>
 
-          <!-- Categoría (segmented) -->
+          <!-- Categoría -->
           <div class="field span-2">
             <label>Categoría de la publicación</label>
             <div class="segmented">
@@ -196,7 +230,7 @@
             </div>
           </div>
 
-          <!-- Estado (segmented) -->
+          <!-- Estado -->
           <div class="field span-2">
             <label>Estado de la publicación</label>
             <div class="segmented">
@@ -212,7 +246,6 @@
           </div>
         </div>
 
-        <!-- Botón centrado -->
         <button type="submit" class="btn primary submit-full">Publicar</button>
       </form>
     </div>
@@ -220,10 +253,8 @@
 
   <footer class="site-footer">© <span id="year"></span> La Otra Tribuna.</footer>
 
-  <!-- ===== SCRIPTS ===== -->
-  <!-- Si tenés este archivo, define window.UY_DEPTS -->
+  <!-- ===== SCRIPTS BASE ===== -->
   <script src="scripts/uy-depts.js"></script>
-
   <script>
     // Año + sombra header
     document.getElementById('year').textContent = new Date().getFullYear();
@@ -242,88 +273,60 @@
     const locSel  = document.getElementById('localidad');
     const acceptLocBtn = document.getElementById('acceptLoc');
     const locText = document.getElementById('locText');
+    const DEPTS = window.UY_DEPTS || {"Montevideo":["Montevideo"]};
 
-    const DEPTS = (window.UY_DEPTS) || {
-      "Artigas":["Artigas","Bella Unión","Tomás Gomensoro","Baltasar Brum"],
-      "Canelones":["Canelones","Ciudad de la Costa","Las Piedras","Pando","La Paz","Progreso","Santa Lucía","Atlántida","Parque del Plata","Sauce","San Ramón","Empalme Olmos","Toledo"],
-      "Cerro Largo":["Melo","Río Branco","Fraile Muerto","Tupambaé","Isidoro Noblía"],
-      "Colonia":["Colonia del Sacramento","Carmelo","Nueva Helvecia","Juan Lacaze","Rosario","Tarariras","Ombúes de Lavalle"],
-      "Durazno":["Durazno","Sarandí del Yí","Carmen","Centenario"],
-      "Flores":["Trinidad","Ismael Cortinas"],
-      "Florida":["Florida","Sarandí Grande","Casupá","25 de Mayo"],
-      "Lavalleja":["Minas","José Pedro Varela","Solís de Mataojo","Mariscala"],
-      "Maldonado":["Maldonado","Punta del Este","San Carlos","Piriápolis","Pan de Azúcar","Aiguá","La Barra"],
-      "Montevideo":["Montevideo"],
-      "Paysandú":["Paysandú","Guichón","Quebracho","Piedras Coloradas"],
-      "Río Negro":["Fray Bentos","Young","Nuevo Berlín","San Javier"],
-      "Rivera":["Rivera","Tranqueras","Minas de Corrales","Vichadero","Mandubí"],
-      "Rocha":["Rocha","Chuy","Castillos","Lascano","La Paloma","Punta del Diablo"],
-      "Salto":["Salto","Constitución","Belén","Daymán","San Antonio"],
-      "San José":["San José de Mayo","Ciudad del Plata","Libertad","Ecilda Paullier","Delta El Tigre","Raigón"],
-      "Soriano":["Mercedes","Dolores","Cardona","José Enrique Rodó","Palmitas"],
-      "Tacuarembó":["Tacuarembó","Paso de los Toros","San Gregorio de Polanco","Curtina","Ansina"],
-      "Treinta y Tres":["Treinta y Tres","Vergara","Santa Clara de Olimar","Villa Sara"]
-    };
-
+    function fillDept(){ Object.keys(DEPTS).forEach(d => deptSel.append(new Option(d,d))); }
     function renderLocationText(){
       const raw = localStorage.getItem(LOCATION_KEY);
       if(!raw){ locText.innerHTML = 'Ingresa tu <strong>ubicación</strong>'; return; }
       try{ const {loc} = JSON.parse(raw); locText.textContent = `Enviar a ${loc}`; }
       catch{ locText.innerHTML = 'Ingresa tu <strong>ubicación</strong>'; }
     }
-    function fillDept(){ Object.keys(DEPTS).forEach(d => deptSel.append(new Option(d,d))); }
-
-    function showOverlay(){ overlay.classList.add('show'); }
-    function hideOverlay(){ overlay.classList.remove('show'); }
-    function openLocation(){ locationModal.classList.add('open'); showOverlay(); }
-    function closeLocation(){ locationModal.classList.remove('open'); hideOverlay(); }
-
-    openLocationBtn.addEventListener('click', (e)=>{ e.preventDefault(); openLocation(); });
-    closeLocationBtn.addEventListener('click', closeLocation);
-    cancelLocBtn.addEventListener('click', closeLocation);
-    overlay.addEventListener('click', closeLocation);
+    openLocationBtn.addEventListener('click', e=>{ e.preventDefault(); locationModal.classList.add('open'); overlay.classList.add('show'); });
+    closeLocationBtn.addEventListener('click', ()=>{ locationModal.classList.remove('open'); overlay.classList.remove('show'); });
+    cancelLocBtn.addEventListener('click', ()=>{ locationModal.classList.remove('open'); overlay.classList.remove('show'); });
+    overlay.addEventListener('click', ()=>{ locationModal.classList.remove('open'); overlay.classList.remove('show'); });
 
     deptSel.addEventListener('change', ()=>{
-      const dept = deptSel.value;
-      locSel.innerHTML = '<option value="" selected>Elija una opción</option>';
-      if(!dept){ locSel.disabled = true; acceptLocBtn.disabled = true; return; }
-      (DEPTS[dept] || []).forEach(l => locSel.append(new Option(l,l)));
+      locSel.innerHTML = '<option value="">Elija una opción</option>';
+      if(!deptSel.value){ locSel.disabled = true; acceptLocBtn.disabled = true; return; }
+      DEPTS[deptSel.value].forEach(l => locSel.append(new Option(l,l)));
       locSel.disabled = false; acceptLocBtn.disabled = true;
     });
-    locSel.addEventListener('change', ()=> acceptLocBtn.disabled = !locSel.value);
+    locSel.addEventListener('change', ()=>{ acceptLocBtn.disabled = !locSel.value; });
 
-    document.getElementById('locForm').addEventListener('submit', (e)=>{
+    document.getElementById('locForm').addEventListener('submit', e=>{
       e.preventDefault();
-      if(!deptSel.value || !locSel.value) return;
       localStorage.setItem(LOCATION_KEY, JSON.stringify({dept:deptSel.value, loc:locSel.value}));
-      renderLocationText(); closeLocation();
+      renderLocationText();
+      locationModal.classList.remove('open');
+      overlay.classList.remove('show');
     });
 
     fillDept(); renderLocationText();
 
-    // ===== Imagen: vista previa + drag & drop =====
+    // ===== Imagen: preview + drag & drop
     const fileInput = document.getElementById('imagen');
     const preview   = document.getElementById('preview');
     const dropArea  = document.getElementById('dropArea');
-
-    fileInput.addEventListener('change', e => {
+    fileInput?.addEventListener('change', e=>{
       const file = e.target.files?.[0]; if(!file) return;
       const reader = new FileReader();
-      reader.onload = ev => { preview.src = ev.target.result; preview.style.display = 'block'; };
+      reader.onload = ev => { preview.src = ev.target.result; preview.style.display='block'; };
       reader.readAsDataURL(file);
     });
     ['dragenter','dragover'].forEach(evt =>
-      dropArea.addEventListener(evt, e => { e.preventDefault(); dropArea.classList.add('drag'); })
+      dropArea?.addEventListener(evt, e=>{ e.preventDefault(); dropArea.classList.add('drag'); })
     );
     ['dragleave','drop'].forEach(evt =>
-      dropArea.addEventListener(evt, e => { e.preventDefault(); dropArea.classList.remove('drag'); })
+      dropArea?.addEventListener(evt, e=>{ e.preventDefault(); dropArea.classList.remove('drag'); })
     );
-    dropArea.addEventListener('drop', e => {
+    dropArea?.addEventListener('drop', e=>{
       const f = e.dataTransfer.files && e.dataTransfer.files[0];
       if(f){ fileInput.files = e.dataTransfer.files; fileInput.dispatchEvent(new Event('change')); }
     });
 
-    // ===== Interacción del submenú en mobile (toggle) =====
+    // Submenú mobile
     const catsDrop = document.getElementById('catsDrop');
     const catsLink = document.getElementById('catsLink');
     catsLink.addEventListener('click', (e)=>{
@@ -339,6 +342,79 @@
         catsLink.setAttribute('aria-expanded','false');
       }
     });
+  </script>
+
+  <!-- ===== SUPABASE: saludo “Hola, Ignacio!” ===== -->
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+    const SUPABASE_URL = 'https://imexctmcesopdfdebsgo.supabase.co'
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImltZXhjdG1jZXNvcGRmZGVic2dvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzMDczMDIsImV4cCI6MjA3NDg4MzMwMn0.g1lziVKAuUvMEOkYxJhe2D2z8PlwGJ6xcXo_SSpTj7Q'
+
+    const supabase  = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    const loginBtn  = document.getElementById('loginBtn')
+    const userWdg   = document.getElementById('userWidget')
+    const avatarEl  = document.getElementById('userAvatar')
+    const greetEl   = document.getElementById('greeting')
+    const userMenu  = document.getElementById('userMenu')
+    const logoutBtn = document.getElementById('logoutBtn')
+
+    const initialsFrom = (n='',a='',e='')=>{
+      const ini = (n.trim().split(/\s+/)[0]?.[0]||'') + (a.trim().split(/\s+/)[0]?.[0]||'')
+      return (ini || (e?.[0]||'?')).toUpperCase()
+    }
+    const firstNameFrom = (n='',e='')=>{
+      const f = n.trim().split(/\s+/)[0]
+      return f || (e||'').split('@')[0]
+    }
+
+    async function refreshHeader(){
+      const { data:{ session } } = await supabase.auth.getSession()
+      if(!session){
+        userWdg.classList.add('hidden')
+        loginBtn.classList.remove('hidden')
+        return
+      }
+      const uid = session.user.id
+      let nombre='', apellido='', email=session.user.email||''
+      try{
+        const { data: perfil } = await supabase
+          .from('usuario')
+          .select('nombre, apellido, email')
+          .eq('id_auth', uid)
+          .maybeSingle()
+        if(perfil){
+          nombre  = perfil.nombre   || session.user.user_metadata?.nombre   || ''
+          apellido= perfil.apellido || session.user.user_metadata?.apellido || ''
+          email   = perfil.email    || email
+        }else{
+          nombre   = session.user.user_metadata?.nombre   || ''
+          apellido = session.user.user_metadata?.apellido || ''
+        }
+      }catch(_){}
+
+      avatarEl.textContent = initialsFrom(nombre, apellido, email)
+      greetEl.textContent  = `Hola, ${firstNameFrom(nombre, email)}!`
+
+      loginBtn.classList.add('hidden')
+      userWdg.classList.remove('hidden')
+    }
+
+    await refreshHeader()
+    supabase.auth.onAuthStateChange(()=>refreshHeader())
+
+    // Menú del usuario
+    userWdg.addEventListener('click', (e)=>{
+      if(e.target.closest('#userMenu')) return
+      userMenu.classList.toggle('hidden')
+    })
+    document.addEventListener('click', (e)=>{
+      if(!userWdg.contains(e.target)) userMenu.classList.add('hidden')
+    })
+    logoutBtn.addEventListener('click', async (e)=>{
+      e.preventDefault()
+      await supabase.auth.signOut()
+      location.reload()
+    })
   </script>
 </body>
 </html>

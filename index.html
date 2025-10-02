@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>La Otra Tribuna — Tienda de camisetas</title>
   <link rel="stylesheet" href="styles/main.css" />
-  <link rel="stylesheet" href="styles/user-widget.css" /> <!-- CSS del avatar/saludo -->
+  <link rel="stylesheet" href="styles/user-widget.css" />
   <link rel="icon" type="image/png" href="./assets/logo.png" />
 </head>
 <body>
@@ -26,20 +26,20 @@
       <div class="header-messages" id="headerMessage">Envíos seguros y rápidos</div>
 
       <div class="actions" style="display:flex;align-items:center;gap:12px;">
-        <!-- Botón por defecto -->
+        <!-- Botón por defecto (si no hay sesión) -->
         <a id="loginBtn" href="login.html" class="btn-login">Iniciar sesión</a>
 
-        <!-- Widget de usuario (oculto hasta que haya sesión) -->
+        <!-- Widget de usuario (aparece con sesión) -->
         <div id="userWidget" class="user-widget hidden" aria-live="polite">
           <div id="userAvatar" class="user-avatar" title="Mi perfil"></div>
           <span id="greeting" class="user-greeting"></span>
-          <!-- Menú desplegable -->
           <div id="userMenu" class="user-menu hidden">
             <a href="perfil.html">👤 Perfil</a>
             <a href="#" id="logoutBtn">🚪 Cerrar sesión</a>
           </div>
         </div>
-        <!-- Tus botones -->
+
+        <!-- Botones favoritos / carrito -->
         <button class="pill" id="favBtn" aria-label="Abrir favoritos">❤️<span id="favCount">0</span></button>
         <button class="pill" id="cartBtn" aria-label="Abrir carrito">🛒 <span id="cartCount">0</span></button>
       </div>
@@ -148,18 +148,16 @@
     </div>
   </aside>
 
+  <!-- ===== HERO ===== -->
   <main>
-    <!-- HERO con fondos rotativos -->
     <section class="hero">
-  <!-- Flechas -->
-  <button class="hero-nav prev" aria-label="Imagen anterior">‹</button>
-  <button class="hero-nav next" aria-label="Imagen siguiente">›</button>
-
-  <div class="copy">
-    <h1>El mercado de las camisetas</h1>
-    <p class="hero-sub">Publicá, comprá y vendé entre hinchas de verdad.</p>
-  </div>
-</section>
+      <button class="hero-nav prev" aria-label="Imagen anterior">‹</button>
+      <button class="hero-nav next" aria-label="Imagen siguiente">›</button>
+      <div class="copy">
+        <h1>El mercado de las camisetas</h1>
+        <p class="hero-sub">Publicá, comprá y vendé entre hinchas de verdad.</p>
+      </div>
+    </section>
 
     <div class="container">
       <section id="catalogo">
@@ -188,9 +186,49 @@
     </div>
   </main>
 
-  <!-- ===== TU LÓGICA EXISTENTE ===== -->
+  <!-- ===== MODAL PRODUCTO ===== -->
+  <div id="productModal" class="modal product-modal" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal-card product-card">
+      <button class="modal-close" id="closeProduct" aria-label="Cerrar">✕</button>
+
+      <div class="product-grid">
+        <div class="product-media">
+          <img id="pdImage" alt="Imagen de la publicación" />
+        </div>
+
+        <div class="product-info">
+          <h3 id="pdTitle" class="pd-title"></h3>
+          <div class="pd-price" id="pdPrice"></div>
+
+          <dl class="pd-meta">
+            <div><dt>Categoría</dt><dd id="pdCategoria"></dd></div>
+            <div><dt>Talle</dt><dd id="pdTalle"></dd></div>
+            <div><dt>Condición</dt><dd id="pdCondicion"></dd></div>
+            <div><dt>Autenticidad</dt><dd id="pdAuth"></dd></div>
+            <div><dt>Stock</dt><dd id="pdStock"></dd></div>
+          </dl>
+
+          <p id="pdDesc" class="pd-desc"></p>
+
+          <div class="pd-seller">
+            <div id="pdAvatar" class="user-avatar"></div>
+            <div>
+              <div class="pd-seller-name" id="pdSeller">Vendedor</div>
+              <div class="muted" id="pdSellerEmail"></div>
+            </div>
+          </div>
+
+          <div class="pd-actions">
+            <button class="btn primary" id="pdAddCart">Agregar al carrito</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== LÓGICA APP ===== -->
   <script>
-    // ===== Datos demo =====
+    // Datos demo
     const DATA = [
       {id:1,nombre:'Camiseta Local 24/25',club:'Barcelona',pais:'España',categoria:'Club',precio:3290,img:'./assets/camisetas/barcelona-local.jpg'},
       {id:2,nombre:'Camiseta Visitante 24/25',club:'Barcelona',pais:'España',categoria:'Club',precio:3190,img:'./assets/camisetas/barcelona-visitante.jpg'},
@@ -199,23 +237,21 @@
     ];
     const PLACEHOLDER = 'https://placehold.co/600x750?text=Camiseta';
     const uy = new Intl.NumberFormat('es-UY',{style:'currency',currency:'UYU',maximumFractionDigits:0});
-
     const qs = s => document.querySelector(s);
+
     const grid = qs('#grid'), count = qs('#count');
     const price = qs('#price'), priceLabel = qs('#priceLabel');
     const clubSel = qs('#club'), paisSel = qs('#pais'), catSel = qs('#categoria');
     const q = qs('#q');
     document.getElementById('year').textContent = new Date().getFullYear();
 
-        // === Preseleccionar categoría desde ?cat= ===
+    // Preseleccionar categoría desde ?cat=
     const params = new URLSearchParams(window.location.search);
     const catParam = (params.get('cat') || '').toLowerCase();
     const CAT_MAP = { club: 'Club', seleccion: 'Selección', retro: 'Retro' };
-    if (CAT_MAP[catParam]) {
-      catSel.value = CAT_MAP[catParam];        // setea el filtro
-    }
+    if (CAT_MAP[catParam]) catSel.value = CAT_MAP[catParam];
 
-    // ===== Carrito =====
+    // Carrito
     const cartBtn = document.getElementById('cartBtn');
     const cartMenu = document.getElementById('cartMenu');
     const closeCart = document.getElementById('closeCart');
@@ -228,9 +264,8 @@
     function showOverlay(){ overlay.classList.add('show'); }
     function hideOverlay(){ overlay.classList.remove('show'); }
     function hideOverlayIfIdle(){
-      if(!document.querySelector('.cart-menu.open') && !document.getElementById('locationModal').classList.contains('open')){
-        hideOverlay();
-      }
+      const m = document.getElementById('locationModal');
+      if(!document.querySelector('.cart-menu.open') && !m.classList.contains('open')) hideOverlay();
     }
     function openCart(){ cartMenu.classList.add('open'); showOverlay(); }
     function closeCartMenu(){ cartMenu.classList.remove('open'); hideOverlayIfIdle(); }
@@ -278,7 +313,7 @@
       updateCartUI();
     });
 
-    // ===== Favoritos =====
+    // Favoritos
     const favBtn = document.getElementById('favBtn');
     const favMenu = document.getElementById('favMenu');
     const closeFav = document.getElementById('closeFav');
@@ -334,7 +369,7 @@
       }
     });
 
-    // ===== Render catálogo =====
+    // Render catálogo
     function render(){
       priceLabel.textContent = uy.format(Number(price.value));
       const term = (q.value||'').toLowerCase();
@@ -403,7 +438,7 @@
       }
     });
 
-    // ===== Buscador (historial + sugerencias) =====
+    // Buscador (historial + sugerencias)
     const SEARCH_HISTORY_KEY = 'lot_search_history';
     const MAX_HISTORY = 8;
     const qInput = document.getElementById('q');
@@ -478,7 +513,6 @@
       if(!html) html = `<div class="search-empty">Empieza a escribir para buscar</div>`;
       searchMenu.innerHTML = html;
 
-      // handlers
       searchMenu.querySelectorAll('.search-item').forEach(li => {
         li.addEventListener('click', () => {
           const value = li.dataset.value;
@@ -491,12 +525,11 @@
 
     qInput.addEventListener('focus', () => { renderSearchMenu(); openSearchMenu(); });
     qInput.addEventListener('input', () => { renderSearchMenu(); openSearchMenu(); });
-
     document.addEventListener('click', (e)=>{
       if(!searchMenu.hidden && !searchMenu.contains(e.target) && e.target !== qInput){ closeSearchMenu(); }
     });
 
-    // navegación teclado en menú de búsqueda
+    // navegación teclado
     let activeIndex = -1;
     qInput.addEventListener('keydown', (e)=>{
       if(searchMenu.hidden) return;
@@ -513,18 +546,17 @@
       items[activeIndex].scrollIntoView({block:'nearest'});
     });
 
-    // ===== Header scrolled =====
+    // Header scrolled
     const siteHeader = document.getElementById('siteHeader');
     function onScroll(){ siteHeader.classList.toggle('is-scrolled', window.scrollY > 0); }
-    onScroll();
-    window.addEventListener('scroll', onScroll, {passive:true});
+    onScroll(); window.addEventListener('scroll', onScroll, {passive:true});
 
-    // ===== Inicializaciones =====
+    // Inputs => render
     function attachInputs(){ [price, clubSel, paisSel, catSel, q].forEach(el => el.addEventListener('input', render)); }
     attachInputs();
     render(); updateCartUI(); updateFavBadge(); renderFavMenu();
 
-    // ===== Ubicación =====
+    // Ubicación
     const LOCATION_KEY = 'lot_location';
     const openLocationBtn = document.getElementById('openLocation');
     const locationModal = document.getElementById('locationModal');
@@ -533,7 +565,7 @@
     const deptSel = document.getElementById('departamento');
     const locSel = document.getElementById('localidad');
     const acceptLocBtn = document.getElementById('acceptLoc');
-    const locText = document.getElementById('locText'); // FIX: referencia
+    const locText = document.getElementById('locText');
 
     const DEPTS = {
       "Artigas":["Artigas","Bella Unión","Tomás Gomensoro","Baltasar Brum"],
@@ -561,12 +593,9 @@
     function renderLocationText(){
       const raw = localStorage.getItem(LOCATION_KEY);
       if(!raw){ locText.innerHTML = 'Ingresa tu <strong>ubicación</strong>'; return; }
-      try{
-        const {loc} = JSON.parse(raw);
-        locText.textContent = `Enviar a ${loc}`;
-      }catch{ locText.innerHTML = 'Ingresa tu <strong>ubicación</strong>'; }
+      try{ const {loc} = JSON.parse(raw); locText.textContent = `Enviar a ${loc}`; }
+      catch{ locText.innerHTML = 'Ingresa tu <strong>ubicación</strong>'; }
     }
-
     function openLocation(){ locationModal.classList.add('open'); showOverlay(); }
     function closeLocation(){ locationModal.classList.remove('open'); hideOverlayIfIdle(); }
 
@@ -582,57 +611,44 @@
       DEPTS[dept].forEach(loc => locSel.append(new Option(loc,loc)));
       locSel.disabled = false; acceptLocBtn.disabled = true;
     });
-    locSel.addEventListener('change', ()=>{ acceptLocBtn.disabled = !locSel.value; });
-
+    locSel.addEventListener('change', ()=> acceptLocBtn.disabled = !locSel.value);
     document.getElementById('locForm').addEventListener('submit', (e)=>{
       e.preventDefault();
       if(!deptSel.value || !locSel.value) return;
-      const value = { dept: deptSel.value, loc: locSel.value };
-      localStorage.setItem(LOCATION_KEY, JSON.stringify(value));
-      renderLocationText();
-      closeLocation();
+      localStorage.setItem(LOCATION_KEY, JSON.stringify({dept:deptSel.value, loc:locSel.value}));
+      renderLocationText(); closeLocation();
     });
 
     fillDept(); renderLocationText();
 
-    // ===== HERO: fondos rotativos =====
-    // ===== HERO: fondos rotativos + flechas =====
-(function(){
-  const hero = document.querySelector('.hero');
+    // HERO: fondos rotativos + flechas
+    (function(){
+      const hero = document.querySelector('.hero');
+      const fondos = [
+        './assets/fondo1.png',
+        './assets/fondo2.png',
+        './assets/fondo3.png',
+        './assets/fondo4.png'
+      ];
+      let idx = 0;
+      const prevBtn = document.querySelector('.hero-nav.prev');
+      const nextBtn = document.querySelector('.hero-nav.next');
 
-  // Asegurate de tener las 4 imágenes en /assets/
-  const fondos = [
-    './assets/fondo1.png',
-    './assets/fondo2.png',
-    './assets/fondo3.png',
-    './assets/fondo4.png'
-  ];
+      function setBg(){ hero.style.backgroundImage = `url('${fondos[idx]}')`; }
+      function next(){ idx = (idx+1) % fondos.length; setBg(); }
+      function prev(){ idx = (idx-1+fondos.length) % fondos.length; setBg(); }
 
-  let idx = 0;
-  const prevBtn = document.querySelector('.hero-nav.prev');
-  const nextBtn = document.querySelector('.hero-nav.next');
+      setBg();
+      const INTERVAL = 7000;
+      let timer = setInterval(next, INTERVAL);
+      function restart(){ clearInterval(timer); timer = setInterval(next, INTERVAL); }
+      nextBtn.addEventListener('click', ()=>{ next(); restart(); });
+      prevBtn.addEventListener('click', ()=>{ prev(); restart(); });
+      hero.addEventListener('mouseenter', ()=> clearInterval(timer));
+      hero.addEventListener('mouseleave', restart);
+    })();
 
-  function setBg(){ hero.style.backgroundImage = `url('${fondos[idx]}')`; }
-  function next(){ idx = (idx+1) % fondos.length; setBg(); }
-  function prev(){ idx = (idx-1+fondos.length) % fondos.length; setBg(); }
-
-  setBg();
-
-  // autoplay
-  const INTERVAL = 7000;
-  let timer = setInterval(next, INTERVAL);
-  function restart(){ clearInterval(timer); timer = setInterval(next, INTERVAL); }
-
-  // flechas
-  nextBtn.addEventListener('click', ()=>{ next(); restart(); });
-  prevBtn.addEventListener('click', ()=>{ prev(); restart(); });
-
-  // pausa al pasar el mouse (opcional)
-  hero.addEventListener('mouseenter', ()=> clearInterval(timer));
-  hero.addEventListener('mouseleave', restart);
-})();
-
-    // Mensaje rotativo del header (opcional)
+    // Mensaje rotativo del header
     const messages = [
       "Envíos seguros y rápidos",
       "Llevá la historia en tu camiseta",
@@ -645,7 +661,7 @@
       document.getElementById('headerMessage').textContent = messages[msgIndex];
     }, 3000);
 
-    // ==== LÓGICA DEL SUBMENÚ CATEGORÍAS ====
+    // Submenú categorías
     const catsDrop = document.getElementById('catsDrop');
     const catsLink = document.getElementById('catsLink');
     const catsMenu = document.getElementById('catsMenu');
@@ -660,7 +676,6 @@
       catsLink.setAttribute('aria-expanded','false');
     });
 
-    // Mobile: abrir por click (en desktop se abre por hover con CSS)
     catsLink.addEventListener('click', (e)=>{
       if (window.matchMedia('(max-width: 820px)').matches){
         e.preventDefault();
@@ -669,37 +684,27 @@
       }
     });
 
-    // Cerrar si se hace click fuera (mobile + fallback)
     document.addEventListener('click', (e)=>{
       if(!catsDrop.contains(e.target)){
         catsDrop.classList.remove('open');
         catsLink.setAttribute('aria-expanded','false');
       }
     });
-
-    // Link "Favoritos" de la sub-barra abre el panel lateral (en index)
-    (function(){
-      const favLink = document.getElementById('favLink');
-      if(favLink && typeof openFav === 'function'){
-        favLink.addEventListener('click', (e)=>{
-          e.preventDefault();
-          openFav();
-        });
-      }
-    })();
   </script>
 
-  <!-- ===== SUPABASE: widget de usuario ===== -->
+  <!-- ===== SUPABASE: widget de usuario (Hola, Ignacio!) ===== -->
   <script type="module">
     import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
     const SUPABASE_URL = 'https://imexctmcesopdfdebsgo.supabase.co'
-    const SUPABASE_ANON_KEY = 'xxxxxx'
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImltZXhjdG1jZXNvcGRmZGVic2dvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzMDczMDIsImV4cCI6MjA3NDg4MzMwMn0.g1lziVKAuUvMEOkYxJhe2D2z8PlwGJ6xcXo_SSpTj7Q'
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
     const loginBtn   = document.getElementById('loginBtn')
     const userWidget = document.getElementById('userWidget')
     const avatarEl   = document.getElementById('userAvatar')
     const greetEl    = document.getElementById('greeting')
+    const userMenu   = document.getElementById('userMenu')
+    const logoutBtn  = document.getElementById('logoutBtn')
 
     const initialsFrom = (nombre='', apellido='', email='')=>{
       const n = (nombre||'').trim().split(/\s+/)[0] || ''
@@ -745,27 +750,110 @@
     }
 
     await refreshHeader()
-    supabase.auth.onAuthStateChange((_event, _session) => { refreshHeader() })
+    supabase.auth.onAuthStateChange(() => { refreshHeader() })
 
-    // === Menú de usuario ===
-    const userMenu   = document.getElementById('userMenu')
-    const logoutBtn  = document.getElementById('logoutBtn')
-
+    // Toggle menú usuario
     userWidget.addEventListener('click', (e)=>{
       if(e.target.closest('#userMenu')) return
       userMenu.classList.toggle('hidden')
     })
-
     document.addEventListener('click', (e)=>{
-      if(!userWidget.contains(e.target)){
-        userMenu.classList.add('hidden')
-      }
+      if(!userWidget.contains(e.target)) userMenu.classList.add('hidden')
     })
 
-    logoutBtn.addEventListener('click', async ()=>{
+    // Logout
+    logoutBtn.addEventListener('click', async (e)=>{
+      e.preventDefault()
       await supabase.auth.signOut()
       location.reload()
     })
+
+    // MODAL PRODUCTO (usar datos demo para vendedor si querés)
+    const SELLERS = {
+      1: { nombre:'Ignacio Iglesia', email:'iaioiglesia@icloud.com' },
+      2: { nombre:'María Pérez', email:'maria@example.com' }
+    };
+    const productModal = document.getElementById('productModal');
+    const closeProduct = document.getElementById('closeProduct');
+    const pdImage = document.getElementById('pdImage');
+    const pdTitle = document.getElementById('pdTitle');
+    const pdPrice = document.getElementById('pdPrice');
+    const pdCategoria = document.getElementById('pdCategoria');
+    const pdTalle = document.getElementById('pdTalle');
+    const pdCondicion = document.getElementById('pdCondicion');
+    const pdAuth = document.getElementById('pdAuth');
+    const pdStock = document.getElementById('pdStock');
+    const pdDesc = document.getElementById('pdDesc');
+    const pdSeller = document.getElementById('pdSeller');
+    const pdSellerEmail = document.getElementById('pdSellerEmail');
+    const pdAvatar = document.getElementById('pdAvatar');
+    const pdAddCart = document.getElementById('pdAddCart');
+
+    function initialsFromFull(full=''){
+      const [a='',b=''] = full.trim().split(/\s+/);
+      return (a[0]||'?') + (b[0]||'');
+    }
+
+    function openProductModal(item){
+      pdImage.src = item.img || PLACEHOLDER;
+      pdImage.onerror = ()=>{ pdImage.src = PLACEHOLDER; }
+      pdTitle.textContent = item.nombre || 'Publicación';
+      pdPrice.textContent = new Intl.NumberFormat('es-UY',{style:'currency',currency:'UYU',maximumFractionDigits:0}).format(item.precio || 0);
+      pdCategoria.textContent = item.categoria || '-';
+      pdTalle.textContent = item.talle || '—';
+      pdCondicion.textContent = item.condicion || '—';
+      pdAuth.textContent = item.autenticidad || '—';
+      pdStock.textContent = (item.stock ?? '—');
+      pdDesc.textContent = item.descripcion || '—';
+
+      let sellerName = 'Usuario';
+      let sellerEmail = '';
+      if (item.sellerId && SELLERS[item.sellerId]){
+        sellerName = SELLERS[item.sellerId].nombre;
+        sellerEmail = SELLERS[item.sellerId].email || '';
+      }
+      pdSeller.textContent = sellerName;
+      pdSellerEmail.textContent = sellerEmail;
+      pdAvatar.textContent = initialsFromFull(sellerName).toUpperCase();
+
+      pdAddCart.onclick = ()=>{
+        const entry = cart.get(item.id) || { item, qty: 0 };
+        entry.qty += 1; cart.set(item.id, entry);
+        updateCartUI();
+        productModal.classList.remove('open');
+        document.getElementById('cartMenu').classList.add('open');
+        document.getElementById('overlay').classList.add('show');
+      };
+
+      productModal.classList.add('open');
+      document.getElementById('overlay').classList.add('show');
+    }
+
+    closeProduct.addEventListener('click', ()=>{
+      productModal.classList.remove('open');
+      document.getElementById('overlay').classList.remove('show');
+    });
+    document.addEventListener('keydown', (e)=>{ if(e.key==='Escape'){ productModal.classList.remove('open'); document.getElementById('overlay').classList.remove('show'); }});
+    document.getElementById('overlay')?.addEventListener('click', ()=>{
+      productModal.classList.remove('open');
+      document.getElementById('overlay').classList.remove('show');
+    });
+
+    // Abrir modal al clickear card (excepto botones)
+    const gridEl = document.getElementById('grid');
+    gridEl.addEventListener('click', (e)=>{
+      const btnAdd = e.target.closest('button[data-id]');
+      const fav = e.target.closest('.fav-toggle');
+      if (btnAdd || fav) return;
+      const card = e.target.closest('.card');
+      if(!card) return;
+      const idAttrBtn = card.querySelector('button[data-id]');
+      const id = idAttrBtn ? Number(idAttrBtn.dataset.id) : null;
+      if(!id) return;
+      const item = DATA.find(p => p.id === id);
+      if(!item) return;
+      openProductModal(item);
+    });
   </script>
 </body>
 </html>

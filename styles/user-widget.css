@@ -72,3 +72,22 @@
   .note{font-size:13px;margin-top:6px}
   .toast{position:fixed;right:16px;bottom:16px;background:#111827;color:#fff;padding:10px 14px;border-radius:10px;opacity:0;transform:translateY(8px);transition:.25s;z-index:50}
   .toast.show{opacity:1;transform:none}
+
+  .user-widget{ position:relative; display:flex; align-items:center; gap:8px; cursor:pointer; }
+.user-avatar{
+  width:28px; height:28px; border-radius:50%;
+  display:grid; place-items:center; font-weight:700; font-size:12px;
+  background:#0f3d26; color:#fff;
+}
+.user-greeting{ font-size:14px; color:#111; }
+
+.user-menu{
+  position:absolute; right:0; top:calc(100% + 8px);
+  background:#fff; border:1px solid #e5e7eb; border-radius:10px;
+  box-shadow:0 10px 30px rgba(0,0,0,.08);
+  padding:6px; min-width:160px; z-index:90;
+}
+.user-menu a{ display:block; padding:8px 10px; border-radius:8px; }
+.user-menu a:hover{ background:#f5f6f7; }
+
+.hidden{ display:none !important; }

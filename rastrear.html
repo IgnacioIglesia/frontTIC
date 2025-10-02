@@ -6,8 +6,11 @@
   <title>Rastrear Pedido — La Otra Tribuna</title>
   <link rel="stylesheet" href="styles/main.css">
   <link rel="icon" type="image/png" href="./assets/logo.png">
+  <link rel="stylesheet" href="styles/rastrear.css">
+  <link rel="stylesheet" href="styles/user-widget.css" />
 </head>
-<body>
+
+<body class="bg-pedido">
   <!-- ===== HEADER ===== -->
   <header id="siteHeader">
     <div class="top container">
@@ -24,8 +27,20 @@
 
       <div class="header-messages">Envíos seguros y rápidos</div>
 
-      <div class="actions">
-        <a href="login.html" class="btn-login">Iniciar sesión</a>
+      <div class="actions" style="display:flex;align-items:center;gap:12px;">
+        <!-- Botón por defecto si NO hay sesión -->
+        <a id="loginBtn" href="login.html" class="btn-login">Iniciar sesión</a>
+
+        <!-- Widget usuario (aparece con sesión) -->
+        <div id="userWidget" class="user-widget hidden" aria-live="polite">
+          <div id="userAvatar" class="user-avatar" title="Mi perfil"></div>
+          <span id="greeting" class="user-greeting"></span>
+          <!-- Menú -->
+          <div id="userMenu" class="user-menu hidden">
+            <a href="perfil.html">👤 Perfil</a>
+            <a href="#" id="logoutBtn">🚪 Cerrar sesión</a>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -41,7 +56,7 @@
             <span class="loc-line" id="locText">Enviar a <strong>Montevideo</strong></span>
           </a>
         </div>
-    
+
         <div class="subnav-center">
           <div class="has-submenu" id="catsDrop">
             <a href="index.html" class="subnav-link" id="catsLink" aria-haspopup="true" aria-expanded="false">
@@ -57,11 +72,11 @@
           <a href="vender.html" class="subnav-link">Vender</a>
           <a href="rastrear.html" class="subnav-link">Rastrear Pedido</a>
         </div>
-    
+
         <div class="subnav-right">
           <a href="favoritos.html" class="subnav-link">Favoritos</a>
           <a href="como-funciona.html" class="subnav-link">Cómo funciona</a>
-          <a href="Autenticidad.html" class="subnav-link">Autenticidad</a>
+          <a href="autenticidad.html" class="subnav-link">Autenticidad</a>
           <a href="ayuda.html" class="subnav-link">Ayuda</a>
         </div>
       </div>
@@ -104,7 +119,7 @@
     <div class="track-card">
       <div class="track-title">
         <img src="./assets/imagen.png" alt="" style="width:40px; height:40px; border-radius:8px;">
-        <h2 style="margin:0; font-size:22px">Rastrear Pedido</h2>
+        <h2>Rastrear Pedido</h2>
       </div>
 
       <form id="trackForm" class="track-form">
@@ -138,69 +153,25 @@
     const locationModal = document.getElementById('locationModal');
 
     const DEPTS = {
-      "Artigas": [
-        "Artigas", "Bella Unión", "Tomás Gomensoro", "Baltasar Brum"
-      ],
-      "Canelones": [
-        "Canelones", "Ciudad de la Costa", "Las Piedras", "Pando", "La Paz",
-        "Progreso", "Santa Lucía", "Atlántida", "Parque del Plata", "Sauce",
-        "San Ramón", "Empalme Olmos", "Toledo"
-      ],
-      "Cerro Largo": [
-        "Melo", "Río Branco", "Fraile Muerto", "Tupambaé", "Isidoro Noblía"
-      ],
-      "Colonia": [
-        "Colonia del Sacramento", "Carmelo", "Nueva Helvecia", "Juan Lacaze",
-        "Rosario", "Tarariras", "Ombúes de Lavalle"
-      ],
-      "Durazno": [
-        "Durazno", "Sarandí del Yí", "Carmen", "Centenario"
-      ],
-      "Flores": [
-        "Trinidad", "Ismael Cortinas"
-      ],
-      "Florida": [
-        "Florida", "Sarandí Grande", "Casupá", "25 de Mayo"
-      ],
-      "Lavalleja": [
-        "Minas", "José Pedro Varela", "Solís de Mataojo", "Mariscala"
-      ],
-      "Maldonado": [
-        "Maldonado", "Punta del Este", "San Carlos", "Piriápolis",
-        "Pan de Azúcar", "Aiguá", "La Barra"
-      ],
-      "Montevideo": [
-        "Montevideo" // se maneja por barrios normalmente
-      ],
-      "Paysandú": [
-        "Paysandú", "Guichón", "Quebracho", "Piedras Coloradas"
-      ],
-      "Río Negro": [
-        "Fray Bentos", "Young", "Nuevo Berlín", "San Javier"
-      ],
-      "Rivera": [
-        "Rivera", "Tranqueras", "Minas de Corrales", "Vichadero", "Mandubí"
-      ],
-      "Rocha": [
-        "Rocha", "Chuy", "Castillos", "Lascano", "La Paloma", "Punta del Diablo"
-      ],
-      "Salto": [
-        "Salto", "Constitución", "Belén", "Daymán", "San Antonio"
-      ],
-      "San José": [
-        "San José de Mayo", "Ciudad del Plata", "Libertad", "Ecilda Paullier",
-        "Delta El Tigre", "Raigón"
-      ],
-      "Soriano": [
-        "Mercedes", "Dolores", "Cardona", "José Enrique Rodó", "Palmitas"
-      ],
-      "Tacuarembó": [
-        "Tacuarembó", "Paso de los Toros", "San Gregorio de Polanco",
-        "Curtina", "Ansina"
-      ],
-      "Treinta y Tres": [
-        "Treinta y Tres", "Vergara", "Santa Clara de Olimar", "Villa Sara"
-      ]
+      "Artigas": ["Artigas","Bella Unión","Tomás Gomensoro","Baltasar Brum"],
+      "Canelones": ["Canelones","Ciudad de la Costa","Las Piedras","Pando","La Paz","Progreso","Santa Lucía","Atlántida","Parque del Plata","Sauce","San Ramón","Empalme Olmos","Toledo"],
+      "Cerro Largo": ["Melo","Río Branco","Fraile Muerto","Tupambaé","Isidoro Noblía"],
+      "Colonia": ["Colonia del Sacramento","Carmelo","Nueva Helvecia","Juan Lacaze","Rosario","Tarariras","Ombúes de Lavalle"],
+      "Durazno": ["Durazno","Sarandí del Yí","Carmen","Centenario"],
+      "Flores": ["Trinidad","Ismael Cortinas"],
+      "Florida": ["Florida","Sarandí Grande","Casupá","25 de Mayo"],
+      "Lavalleja": ["Minas","José Pedro Varela","Solís de Mataojo","Mariscala"],
+      "Maldonado": ["Maldonado","Punta del Este","San Carlos","Piriápolis","Pan de Azúcar","Aiguá","La Barra"],
+      "Montevideo": ["Montevideo"],
+      "Paysandú": ["Paysandú","Guichón","Quebracho","Piedras Coloradas"],
+      "Río Negro": ["Fray Bentos","Young","Nuevo Berlín","San Javier"],
+      "Rivera": ["Rivera","Tranqueras","Minas de Corrales","Vichadero","Mandubí"],
+      "Rocha": ["Rocha","Chuy","Castillos","Lascano","La Paloma","Punta del Diablo"],
+      "Salto": ["Salto","Constitución","Belén","Daymán","San Antonio"],
+      "San José": ["San José de Mayo","Ciudad del Plata","Libertad","Ecilda Paullier","Delta El Tigre","Raigón"],
+      "Soriano": ["Mercedes","Dolores","Cardona","José Enrique Rodó","Palmitas"],
+      "Tacuarembó": ["Tacuarembó","Paso de los Toros","San Gregorio de Polanco","Curtina","Ansina"],
+      "Treinta y Tres": ["Treinta y Tres","Vergara","Santa Clara de Olimar","Villa Sara"]
     };
 
     function fillDept(){ Object.keys(DEPTS).forEach(d => deptSel.append(new Option(d,d))); }
@@ -241,7 +212,7 @@
 
     fillDept(); renderLocationText();
 
-    // ===== Rastrear Pedido (simulado)
+    // ===== Rastrear Pedido (demo)
     document.getElementById('trackForm').addEventListener('submit', e=>{
       e.preventDefault();
       const code = document.getElementById('tracking').value.trim();
@@ -249,6 +220,81 @@
       document.getElementById('trackResultText').textContent = `Seguimiento del pedido ${code} (demo)`;
       document.getElementById('trackResult').hidden = false;
     });
+  </script>
+
+  <!-- ===== SUPABASE: widget de usuario (saludo + menú) ===== -->
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+    const SUPABASE_URL = 'https://imexctmcesopdfdebsgo.supabase.co'
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImltZXhjdG1jZXNvcGRmZGVic2dvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzMDczMDIsImV4cCI6MjA3NDg4MzMwMn0.g1lziVKAuUvMEOkYxJhe2D2z8PlwGJ6xcXo_SSpTj7Q'
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+    const loginBtn   = document.getElementById('loginBtn')
+    const userWidget = document.getElementById('userWidget')
+    const avatarEl   = document.getElementById('userAvatar')
+    const greetEl    = document.getElementById('greeting')
+    const userMenu   = document.getElementById('userMenu')
+    const logoutBtn  = document.getElementById('logoutBtn')
+
+    const initialsFrom = (nombre='', apellido='', email='')=>{
+      const n = (nombre||'').trim().split(/\s+/)[0] || ''
+      const a = (apellido||'').trim().split(/\s+/)[0] || ''
+      const ini = (n[0]||'') + (a[0]||'')
+      return (ini || (email[0]||'?')).toUpperCase()
+    }
+    const firstNameFrom = (nombre='', email='')=>{
+      const n = (nombre||'').trim().split(/\s+/)[0]
+      return n || (email || '').split('@')[0]
+    }
+
+    async function refreshHeader(){
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session){
+        userWidget.classList.add('hidden')
+        loginBtn.classList.remove('hidden')
+        return
+      }
+      const uid = session.user.id
+      let nombre = '', apellido = '', email = session.user.email || ''
+      try{
+        const { data: perfil } = await supabase
+          .from('usuario')
+          .select('nombre, apellido, email')
+          .eq('id_auth', uid)
+          .maybeSingle()
+        if (perfil){
+          nombre   = perfil.nombre   || session.user.user_metadata?.nombre   || ''
+          apellido = perfil.apellido || session.user.user_metadata?.apellido || ''
+          email    = perfil.email    || email
+        }else{
+          nombre = session.user.user_metadata?.nombre || ''
+          apellido = session.user.user_metadata?.apellido || ''
+        }
+      }catch(_){}
+
+      avatarEl.textContent = initialsFrom(nombre, apellido, email)
+      greetEl.textContent  = `Hola, ${firstNameFrom(nombre, email)}!`
+
+      loginBtn.classList.add('hidden')
+      userWidget.classList.remove('hidden')
+    }
+
+    await refreshHeader()
+    supabase.auth.onAuthStateChange((_event, _session) => { refreshHeader() })
+
+    // === Menú desplegable ===
+    userWidget.addEventListener('click', (e)=>{
+      if(e.target.closest('#userMenu')) return
+      userMenu.classList.toggle('hidden')
+    })
+    document.addEventListener('click', (e)=>{
+      if(!userWidget.contains(e.target)){ userMenu.classList.add('hidden') }
+    })
+    logoutBtn.addEventListener('click', async (e)=>{
+      e.preventDefault()
+      await supabase.auth.signOut()
+      location.reload()
+    })
   </script>
 </body>
 </html>

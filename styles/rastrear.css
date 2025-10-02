@@ -1,0 +1,54 @@
+/* ===== Fondo exclusivo de rastrear.html ===== */
+body.bg-pedido::before {
+    content:"";
+    position:fixed;
+    inset:0;
+    background:url("../assets/pedido.png") center / cover no-repeat fixed;
+    opacity:0.16;          /* ajustá si querés más/menos fuerza */
+    z-index:-1;            /* por detrás de todo */
+    pointer-events:none;
+  }
+  
+  /* Asegurar que el “lienzo” no tape el fondo */
+  .track-full { background: transparent !important; }
+  
+  /* El card queda legible arriba del fondo */
+  .track-card {
+    background:#fff;
+    border:1px solid var(--ring, #e5e7eb);
+    border-radius:16px;
+    box-shadow:0 6px 20px rgba(16,24,40,.08);
+    max-width:560px;
+    margin:40px auto;
+    padding:22px;
+  }
+  
+  /* Título del card */
+  .track-title {
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:14px;
+  }
+  
+  /* Bloquear scroll de la página */
+  html, body {
+    height: 100%;
+    margin: 0;
+    overflow: hidden; /* No scroll */
+  }
+  
+  /* Centrar el card */
+  main.track-full {
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: transparent !important;
+  }
+
+  .track-title h2 {
+    margin: 0;
+    font-size: 18px;  /* igual que Ayuda */
+    font-weight: 600; /* opcional, para destacar */
+  }

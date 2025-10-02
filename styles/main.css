@@ -297,6 +297,7 @@ select, .range{ width:100%; padding:10px; border:1px solid var(--ring); border-r
   min-height: calc(100vh - 120px);
   display:flex; justify-content:center; align-items:center;
   padding:40px 20px; background:var(--bg);
+  background: transparent !important;
 }
 .track-card{
   background:#fff; border:1px solid var(--ring); border-radius:16px;
@@ -314,16 +315,51 @@ select, .range{ width:100%; padding:10px; border:1px solid var(--ring); border-r
 .track-form textarea{ min-height:140px; resize:vertical; }
 
 /* ===== Subir imagen ===== */
-.image-field{ display:flex; flex-direction:column; align-items:flex-start; }
-.image-drop{
-  width:min(520px, 100%); height:360px; border:2px dashed #d8dde3;
-  border-radius:16px; background:#f7f9fb; display:grid; place-items:center;
-  position:relative; overflow:hidden; transition:border-color .2s ease, background .2s ease;
+.image-field{
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;      /* ocupar ancho completo del card */
+  gap:8px;
 }
-.image-drop.drag{ border-color: var(--brand); background:#eef6f1; }
-.image-drop label.btn{ position:absolute; inset:auto auto 16px 16px; background:#fff; border:1px solid var(--ring); }
-.image-drop img{ max-width:100%; max-height:100%; object-fit:contain; display:none; }
-.helper{ margin-top:8px; }
+
+.image-drop{
+  position: relative;
+  width:100%;
+  min-height: 260px;        /* alto cómodo para centrar */
+  padding: 16px;
+  border: 2px dashed #e5e7eb;
+  border-radius: 12px;
+  background: #fafafa;      /* o transparent si querés ver el fondo */
+  display: flex;
+  align-items: center;      /* centra vertical */
+  justify-content: center;  /* centra horizontal */
+  text-align: center;
+  overflow: hidden;
+}
+
+.image-drop.drag{
+  border-color: var(--brand);
+  background:#eef6f1;
+}
+
+.image-drop img{
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: none;            /* se muestra al tener preview */
+  margin: 0 auto;
+}
+
+.image-drop.has-image img{
+  display: block;
+}
+
+/* Botón de subir imagen: centrado debajo del área */
+.image-field .btn{
+  align-self: center;
+}
+
+.helper{ margin-top:4px; text-align:center; }
 
 /* ===== Segmented ===== */
 .segmented{
@@ -387,3 +423,4 @@ select, .range{ width:100%; padding:10px; border:1px solid var(--ring); border-r
 .user-greeting{
   font-weight:600; color:#0f172a; /* slate-900 */
 }
+

@@ -5,44 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Ofertas — La Otra Tribuna</title>
   <link rel="stylesheet" href="styles/main.css" />
+  <link rel="stylesheet" href="styles/user-widget.css" />
   <link rel="icon" type="image/png" href="./assets/logo.png" />
   <style>
     /* Para que la barra llegue completa al máximo */
-#price.range {
-    width: 100%;
-    background: linear-gradient(to right, #064e3b 100%, #e5e7eb 0%);
-  }
+    #price.range{ width:100%; background:linear-gradient(to right,#064e3b 100%,#e5e7eb 0%) }
+    #price.range::-webkit-slider-runnable-track{ background:linear-gradient(to right,#064e3b var(--percent,100%),#e5e7eb var(--percent,100%)) }
+    #price.range::-moz-range-track{ background:linear-gradient(to right,#064e3b var(--percent,100%),#e5e7eb var(--percent,100%)) }
 
-  #price.range::-webkit-slider-runnable-track {
-    background: linear-gradient(to right, #064e3b var(--percent,100%), #e5e7eb var(--percent,100%));
-  }
-
-  #price.range::-moz-range-track {
-    background: linear-gradient(to right, #064e3b var(--percent,100%), #e5e7eb var(--percent,100%));
-  }
-  /* ===== Hero Ofertas ===== */
-  .hero-ofertas{
-    background: url('./assets/oferta3.png') center/cover no-repeat;
-    min-height: 280px;
-    display:flex;
-    flex-direction: column;    /* apila en columna */
-    align-items:center;
-    justify-content:flex-end;  /* baja el texto al fondo */
-    text-align:center;
-    color:#fff;
-    padding-bottom: 20px;      /* espacio del borde inferior */
-  }
-  .hero-ofertas .copy h1{
-    margin:0;
-    font-weight:800;
-    font-size:clamp(24px,4vw,40px);
-  }
-  .hero-ofertas .hero-sub{
-    margin-top:6px;
-    opacity:.95;
-    font-size:clamp(14px,2.2vw,18px);
-  }
-</style>
+    /* ===== Hero Ofertas ===== */
+    .hero-ofertas{
+      background:url('./assets/oferta3.png') center/cover no-repeat;
+      min-height:280px; display:flex; flex-direction:column; align-items:center; justify-content:flex-end;
+      text-align:center; color:#fff; padding-bottom:20px;
+    }
+    .hero-ofertas .copy h1{ margin:0; font-weight:800; font-size:clamp(24px,4vw,40px) }
+    .hero-ofertas .hero-sub{ margin-top:6px; opacity:.95; font-size:clamp(14px,2.2vw,18px) }
+  </style>
 </head>
 <body>
   <!-- ===== HEADER ===== -->
@@ -60,8 +39,21 @@
 
       <div class="header-messages" id="headerMessage">Aprovechá las mejores ofertas</div>
 
-      <div class="actions">
-        <a href="login.html" class="btn-login">Iniciar sesión</a>
+      <div class="actions" style="display:flex;align-items:center;gap:12px;">
+        <!-- Botón por defecto (si NO hay sesión) -->
+        <a id="loginBtn" href="login.html" class="btn-login">Iniciar sesión</a>
+
+        <!-- Widget de usuario (oculto hasta que haya sesión) -->
+        <div id="userWidget" class="user-widget hidden" aria-live="polite" style="position:relative;">
+          <div id="userAvatar" class="user-avatar" title="Mi perfil"></div>
+          <span id="greeting" class="user-greeting"></span>
+          <div id="userMenu" class="user-menu hidden">
+            <a href="perfil.html">👤 Perfil</a>
+            <a href="#" id="logoutBtn">🚪 Cerrar sesión</a>
+          </div>
+        </div>
+
+        <!-- Tus botones existentes -->
         <button class="pill" id="favBtn" aria-label="Abrir favoritos">❤️<span id="favCount">0</span></button>
         <button class="pill" id="cartBtn" aria-label="Abrir carrito">🛒 <span id="cartCount">0</span></button>
       </div>
@@ -106,7 +98,7 @@
     </nav>
   </header>
 
-  <!-- ===== HERO OFERTAS (nuevo) ===== -->
+  <!-- ===== HERO OFERTAS ===== -->
   <section class="hero hero-ofertas">
     <div class="copy">
       <h1>Los mejores descuentos</h1>
@@ -149,8 +141,6 @@
       <section id="catalogo" style="padding-top:20px">
         <h2>Ofertas</h2>
         <p class="muted">Resultados: <span id="count">0</span></p>
-
-        <!-- SIN FILTROS: solo la grilla -->
         <div id="grid" class="grid"></div>
       </section>
 
@@ -159,7 +149,7 @@
   </main>
 
   <script>
-    // ===== Datos demo (agregamos banderita de oferta y descuento) =====
+    // ===== Datos demo =====
     const DATA = [
       {id:1,nombre:'Camiseta Local 24/25',club:'Barcelona',pais:'España',categoria:'Club',precio:3290,oferta:true,desc:15,img:'./assets/camisetas/barcelona-local.jpg'},
       {id:2,nombre:'Camiseta Visitante 24/25',club:'Barcelona',pais:'España',categoria:'Club',precio:3190,oferta:false,desc:0,img:'./assets/camisetas/barcelona-visitante.jpg'},
@@ -228,14 +218,13 @@
 
       if(addBtn){
         const id = Number(addBtn.dataset.id);
-        // carrito demo en localStorage
         const key = 'lot_cart_demo';
         const cart = new Map(Object.entries(JSON.parse(localStorage.getItem(key) || '{}')).map(([k,v])=>[+k,v]));
         cart.set(id, (cart.get(id)||0)+1);
         localStorage.setItem(key, JSON.stringify(Object.fromEntries(cart)));
         addBtn.textContent = 'Agregado ✓';
         setTimeout(()=> addBtn.textContent = 'Agregar al carrito', 900);
-        alert('Agregado al carrito (demo)'); 
+        alert('Agregado al carrito (demo)');
         return;
       }
       if(favBtn){
@@ -247,7 +236,7 @@
 
     render(); updateGridFavIcons();
 
-    // ===== Ubicación (mismo storage simple) =====
+    // ===== Ubicación =====
     const LOCATION_KEY = 'lot_location';
     const overlay = document.getElementById('overlay');
     const locationModal = document.getElementById('locationModal');
@@ -309,11 +298,79 @@
 
     fillDept(); renderLocationText();
 
-    // abrir favoritos (si querés reutilizar en esta página)
-    (function(){
-      const favLink = document.getElementById('favLink');
-      favLink?.addEventListener('click', (e)=>{ /* en ofertas no hay panel, solo guardamos */ });
-    })();
+    // (En ofertas no abrimos panel de favoritos — solo persistimos la lista)
+  </script>
+
+  <!-- ===== SUPABASE: saludo “Hola, Ignacio!” ===== -->
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+    const SUPABASE_URL = 'https://imexctmcesopdfdebsgo.supabase.co'
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImltZXhjdG1jZXNvcGRmZGVic2dvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzMDczMDIsImV4cCI6MjA3NDg4MzMwMn0.g1lziVKAuUvMEOkYxJhe2D2z8PlwGJ6xcXo_SSpTj7Q'
+
+    const supabase  = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    const loginBtn  = document.getElementById('loginBtn')
+    const userWdg   = document.getElementById('userWidget')
+    const avatarEl  = document.getElementById('userAvatar')
+    const greetEl   = document.getElementById('greeting')
+    const userMenu  = document.getElementById('userMenu')
+    const logoutBtn = document.getElementById('logoutBtn')
+
+    const initialsFrom = (n='',a='',e='')=>{
+      const ini = (n.trim().split(/\s+/)[0]?.[0]||'') + (a.trim().split(/\s+/)[0]?.[0]||'')
+      return (ini || (e?.[0]||'?')).toUpperCase()
+    }
+    const firstNameFrom = (n='',e='')=>{
+      const f = n.trim().split(/\s+/)[0]
+      return f || (e||'').split('@')[0]
+    }
+
+    async function refreshHeader(){
+      const { data:{ session } } = await supabase.auth.getSession()
+      if(!session){
+        userWdg.classList.add('hidden')
+        loginBtn.classList.remove('hidden')
+        return
+      }
+      const uid = session.user.id
+      let nombre='', apellido='', email=session.user.email||''
+      try{
+        const { data: perfil } = await supabase
+          .from('usuario')
+          .select('nombre, apellido, email')
+          .eq('id_auth', uid)
+          .maybeSingle()
+        if(perfil){
+          nombre  = perfil.nombre   || session.user.user_metadata?.nombre   || ''
+          apellido= perfil.apellido || session.user.user_metadata?.apellido || ''
+          email   = perfil.email    || email
+        }else{
+          nombre   = session.user.user_metadata?.nombre   || ''
+          apellido = session.user.user_metadata?.apellido || ''
+        }
+      }catch(_){}
+
+      avatarEl.textContent = initialsFrom(nombre, apellido, email)
+      greetEl.textContent  = `Hola, ${firstNameFrom(nombre, email)}!`
+      loginBtn.classList.add('hidden')
+      userWdg.classList.remove('hidden')
+    }
+
+    await refreshHeader()
+    supabase.auth.onAuthStateChange(()=>refreshHeader())
+
+    // Menú del usuario
+    userWdg.addEventListener('click', (e)=>{
+      if(e.target.closest('#userMenu')) return
+      userMenu.classList.toggle('hidden')
+    })
+    document.addEventListener('click', (e)=>{
+      if(!userWdg.contains(e.target)) userMenu.classList.add('hidden')
+    })
+    logoutBtn.addEventListener('click', async (e)=>{
+      e.preventDefault()
+      await supabase.auth.signOut()
+      location.reload()
+    })
   </script>
 </body>
 </html>
