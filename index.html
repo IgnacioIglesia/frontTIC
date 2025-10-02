@@ -228,13 +228,7 @@
 
   <!-- ===== LÓGICA APP ===== -->
   <script>
-    // Datos demo
-    const DATA = [
-      {id:1,nombre:'Camiseta Local 24/25',club:'Barcelona',pais:'España',categoria:'Club',precio:3290,img:'./assets/camisetas/barcelona-local.jpg'},
-      {id:2,nombre:'Camiseta Visitante 24/25',club:'Barcelona',pais:'España',categoria:'Club',precio:3190,img:'./assets/camisetas/barcelona-visitante.jpg'},
-      {id:3,nombre:'Camiseta Titular 24/25',club:'Real Madrid',pais:'España',categoria:'Club',precio:3490,img:'./assets/camisetas/real-madrid-titular.jpg'},
-      {id:4,nombre:'Camiseta Selección 24/25',club:'Uruguay',pais:'Uruguay',categoria:'Selección',precio:2990,img:'./assets/camisetas/uruguay-seleccion.jpg'}
-    ];
+    let DATA = [];
     const PLACEHOLDER = 'https://placehold.co/600x750?text=Camiseta';
     const uy = new Intl.NumberFormat('es-UY',{style:'currency',currency:'UYU',maximumFractionDigits:0});
     const qs = s => document.querySelector(s);
@@ -692,20 +686,20 @@
     });
   </script>
 
-  <!-- ===== SUPABASE: widget de usuario (Hola, Ignacio!) ===== -->
+  <!-- ===== SUPABASE: widget de usuario y cargar publicaciones ===== -->
   <script type="module">
     import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
     const SUPABASE_URL = 'https://imexctmcesopdfdebsgo.supabase.co'
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImltZXhjdG1jZXNvcGRmZGVic2dvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzMDczMDIsImV4cCI6MjA3NDg4MzMwMn0.g1lziVKAuUvMEOkYxJhe2D2z8PlwGJ6xcXo_SSpTj7Q'
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-
+    
     const loginBtn   = document.getElementById('loginBtn')
     const userWidget = document.getElementById('userWidget')
     const avatarEl   = document.getElementById('userAvatar')
     const greetEl    = document.getElementById('greeting')
     const userMenu   = document.getElementById('userMenu')
     const logoutBtn  = document.getElementById('logoutBtn')
-
+  
     const initialsFrom = (nombre='', apellido='', email='')=>{
       const n = (nombre||'').trim().split(/\s+/)[0] || ''
       const a = (apellido||'').trim().split(/\s+/)[0] || ''
@@ -716,7 +710,97 @@
       const n = (nombre||'').trim().split(/\s+/)[0]
       return n || (email || '').split('@')[0]
     }
-
+  
+    // ===== CARGAR PUBLICACIONES DESDE SUPABASE =====
+    async function cargarPublicaciones() {
+      try {
+        console.log('🔍 Cargando publicaciones desde Supabase...');
+        
+        // Cargar publicaciones con sus fotos
+        const { data: publicaciones, error } = await supabase
+          .from('publicacion')
+          .select(`
+            *,
+            foto (*)
+          `)
+          .eq('estado', 'Activa');
+  
+        if (error) {
+          console.error('❌ Error cargando publicaciones:', error);
+          return;
+        }
+  
+        console.log('✅ Publicaciones cargadas con fotos:', publicaciones);
+        procesarPublicaciones(publicaciones);
+        
+      } catch (error) {
+        console.error('💥 Error al cargar publicaciones:', error);
+      }
+    }
+  
+    function procesarPublicaciones(publicaciones) {
+      // Transformar los datos al formato que espera tu frontend
+      DATA = publicaciones.map(pub => {
+        // Obtener la primera foto (si existe)
+        const primeraFoto = pub.foto && pub.foto.length > 0 ? pub.foto[0].url : null;
+        
+        return {
+          id: pub.id_publicacion,
+          nombre: pub.titulo,
+          precio: pub.precio,
+          club: 'Peñarol', // Temporal - deberías tener esta info en PRODUCTO_BASE
+          pais: 'Uruguay', // Temporal
+          categoria: formatCategoria(pub.categoria),
+          img: primeraFoto || PLACEHOLDER, // Usar la foto real o el placeholder
+          talle: pub.talle,
+          condicion: pub.condicion,
+          autenticidad: pub.autenticidad,
+          stock: pub.stock,
+          descripcion: pub.descripcion,
+          sellerId: pub.id_usuario,
+          // Guardar todas las fotos por si las necesitas después
+          fotos: pub.foto || []
+        }
+      });
+      
+      console.log('🔄 DATA transformada con imágenes:', DATA);
+      
+      // Llenar los filtros de club y país
+      llenarFiltros();
+      
+      // Renderizar el catálogo
+      render();
+    }
+  
+    function formatCategoria(cat) {
+      if (!cat) return 'Club';
+      if (cat === 'Seleccion') return 'Selección';
+      return cat;
+    }
+  
+    // Función para llenar los select de filtros
+    function llenarFiltros() {
+      const clubs = [...new Set(DATA.map(p => p.club).filter(Boolean))];
+      const paises = [...new Set(DATA.map(p => p.pais).filter(Boolean))];
+      
+      // Limpiar selects
+      const clubSel = document.getElementById('club');
+      const paisSel = document.getElementById('pais');
+      
+      clubSel.innerHTML = '<option value="">Todos los clubes</option>';
+      paisSel.innerHTML = '<option value="">Todos los países</option>';
+      
+      // Llenar clubes
+      clubs.forEach(club => {
+        clubSel.appendChild(new Option(club, club));
+      });
+      
+      // Llenar países
+      paises.forEach(pais => {
+        paisSel.appendChild(new Option(pais, pais));
+      });
+    }
+  
     async function refreshHeader(){
       const { data: { session } } = await supabase.auth.getSession()
       if (!session){
@@ -726,32 +810,49 @@
       }
       const uid = session.user.id
       let nombre = '', apellido = '', email = session.user.email || ''
+      
       try{
-        const { data: perfil } = await supabase
+        const { data: perfil, error } = await supabase
           .from('usuario')
           .select('nombre, apellido, email')
           .eq('id_auth', uid)
           .maybeSingle()
-        if (perfil){
+          
+        if (error) {
+          console.log('⚠️ Error cargando perfil:', error);
+          nombre = session.user.user_metadata?.nombre || ''
+          apellido = session.user.user_metadata?.apellido || ''
+        } else if (perfil) {
           nombre = perfil.nombre || session.user.user_metadata?.nombre || ''
           apellido = perfil.apellido || session.user.user_metadata?.apellido || ''
           email = perfil.email || email
-        }else{
+        } else {
           nombre = session.user.user_metadata?.nombre || ''
           apellido = session.user.user_metadata?.apellido || ''
         }
-      }catch(_){}
-
+      } catch(error) {
+        console.error('Error cargando perfil:', error);
+        nombre = session.user.user_metadata?.nombre || ''
+        apellido = session.user.user_metadata?.apellido || ''
+      }
+  
       avatarEl.textContent = initialsFrom(nombre, apellido, email)
       greetEl.textContent  = `Hola, ${firstNameFrom(nombre, email)}!`
-
+  
       loginBtn.classList.add('hidden')
       userWidget.classList.remove('hidden')
     }
-
-    await refreshHeader()
-    supabase.auth.onAuthStateChange(() => { refreshHeader() })
-
+  
+    // Inicializar la aplicación
+    await refreshHeader();
+    
+    // CARGAR LAS PUBLICACIONES DESDE SUPABASE
+    await cargarPublicaciones();
+  
+    supabase.auth.onAuthStateChange(() => { 
+      refreshHeader(); 
+    })
+  
     // Toggle menú usuario
     userWidget.addEventListener('click', (e)=>{
       if(e.target.closest('#userMenu')) return
@@ -760,15 +861,15 @@
     document.addEventListener('click', (e)=>{
       if(!userWidget.contains(e.target)) userMenu.classList.add('hidden')
     })
-
+  
     // Logout
     logoutBtn.addEventListener('click', async (e)=>{
       e.preventDefault()
       await supabase.auth.signOut()
       location.reload()
     })
-
-    // MODAL PRODUCTO (usar datos demo para vendedor si querés)
+  
+    // MODAL PRODUCTO - ACTUALIZADO PARA MOSTRAR MÚLTIPLES FOTOS
     const SELLERS = {
       1: { nombre:'Ignacio Iglesia', email:'iaioiglesia@icloud.com' },
       2: { nombre:'María Pérez', email:'maria@example.com' }
@@ -788,14 +889,15 @@
     const pdSellerEmail = document.getElementById('pdSellerEmail');
     const pdAvatar = document.getElementById('pdAvatar');
     const pdAddCart = document.getElementById('pdAddCart');
-
+  
     function initialsFromFull(full=''){
       const [a='',b=''] = full.trim().split(/\s+/);
       return (a[0]||'?') + (b[0]||'');
     }
-
+  
     function openProductModal(item){
-      pdImage.src = item.img || PLACEHOLDER;
+      // Usar la imagen real en lugar del placeholder
+      pdImage.src = item.img;
       pdImage.onerror = ()=>{ pdImage.src = PLACEHOLDER; }
       pdTitle.textContent = item.nombre || 'Publicación';
       pdPrice.textContent = new Intl.NumberFormat('es-UY',{style:'currency',currency:'UYU',maximumFractionDigits:0}).format(item.precio || 0);
@@ -805,7 +907,7 @@
       pdAuth.textContent = item.autenticidad || '—';
       pdStock.textContent = (item.stock ?? '—');
       pdDesc.textContent = item.descripcion || '—';
-
+  
       let sellerName = 'Usuario';
       let sellerEmail = '';
       if (item.sellerId && SELLERS[item.sellerId]){
@@ -815,7 +917,7 @@
       pdSeller.textContent = sellerName;
       pdSellerEmail.textContent = sellerEmail;
       pdAvatar.textContent = initialsFromFull(sellerName).toUpperCase();
-
+  
       pdAddCart.onclick = ()=>{
         const entry = cart.get(item.id) || { item, qty: 0 };
         entry.qty += 1; cart.set(item.id, entry);
@@ -824,11 +926,11 @@
         document.getElementById('cartMenu').classList.add('open');
         document.getElementById('overlay').classList.add('show');
       };
-
+  
       productModal.classList.add('open');
       document.getElementById('overlay').classList.add('show');
     }
-
+  
     closeProduct.addEventListener('click', ()=>{
       productModal.classList.remove('open');
       document.getElementById('overlay').classList.remove('show');
@@ -838,7 +940,7 @@
       productModal.classList.remove('open');
       document.getElementById('overlay').classList.remove('show');
     });
-
+  
     // Abrir modal al clickear card (excepto botones)
     const gridEl = document.getElementById('grid');
     gridEl.addEventListener('click', (e)=>{

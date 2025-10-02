@@ -6,33 +6,15 @@
   <title>Vender — La Otra Tribuna</title>
   <link rel="stylesheet" href="styles/main.css" />
   <link rel="stylesheet" href="styles/vender.css" />
-  <link rel="stylesheet" href="styles/user-widget.css" /> 
+  <link rel="stylesheet" href="styles/user-widget.css" />
   <style>
     body {
-    background: url('./assets/venta.png') no-repeat center top;
-    background-size: cover;
-    background-attachment: fixed;
-  }
-
-  /* Capa blanca translúcida encima del fondo */
-  body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    background: rgba(255,255,255,0.4);
-    z-index: -1;
-  }
-
-  /* Tarjeta */
-  .sell-card {
-    background: #fff;
-    border-radius: 12px;
-    border: 1px solid #e5e7eb;
-    padding: 24px;
-    max-width: 640px;
-    margin: auto;
-    box-shadow: 0 4px 12px rgba(0,0,0,.08);
-  }
+      background: url('./assets/venta.png') no-repeat center top;
+      background-size: cover;
+      background-attachment: fixed;
+    }
+    body::before { content:""; position:fixed; inset:0; background:rgba(255,255,255,.4); z-index:-1; }
+    .sell-card { background:#fff; border-radius:12px; border:1px solid #e5e7eb; padding:24px; max-width:640px; margin:auto; box-shadow:0 4px 12px rgba(0,0,0,.08); }
   </style>
 </head>
 <body>
@@ -53,10 +35,9 @@
       <div class="header-messages">Publicá tu camiseta en segundos</div>
 
       <div class="actions" style="display:flex;align-items:center;gap:12px;">
-        <!-- Botón por defecto -->
         <a id="loginBtn" href="login.html" class="btn-login">Iniciar sesión</a>
 
-        <!-- Widget de usuario (oculto hasta que haya sesión) -->
+        <!-- Widget de usuario -->
         <div id="userWidget" class="user-widget hidden" aria-live="polite" style="position:relative;">
           <div id="userAvatar" class="user-avatar" title="Mi perfil"></div>
           <span id="greeting" class="user-greeting"></span>
@@ -290,7 +271,7 @@
     deptSel.addEventListener('change', ()=>{
       locSel.innerHTML = '<option value="">Elija una opción</option>';
       if(!deptSel.value){ locSel.disabled = true; acceptLocBtn.disabled = true; return; }
-      DEPTS[deptSel.value].forEach(l => locSel.append(new Option(l,l)));
+      (DEPTS[deptSel.value]||[]).forEach(l => locSel.append(new Option(l,l)));
       locSel.disabled = false; acceptLocBtn.disabled = true;
     });
     locSel.addEventListener('change', ()=>{ acceptLocBtn.disabled = !locSel.value; });
@@ -305,25 +286,26 @@
 
     fillDept(); renderLocationText();
 
-    // ===== Imagen: preview + drag & drop
-    const fileInput = document.getElementById('imagen');
-    const preview   = document.getElementById('preview');
-    const dropArea  = document.getElementById('dropArea');
-    fileInput?.addEventListener('change', e=>{
+    // ===== Imagen: preview + drag & drop (sin colisiones de nombres)
+    const imgInput = document.getElementById('imagen');
+    const imgPreview = document.getElementById('preview');
+    const imgDropArea = document.getElementById('dropArea');
+
+    imgInput?.addEventListener('change', e=>{
       const file = e.target.files?.[0]; if(!file) return;
       const reader = new FileReader();
-      reader.onload = ev => { preview.src = ev.target.result; preview.style.display='block'; };
+      reader.onload = ev => { imgPreview.src = ev.target.result; imgPreview.style.display='block'; };
       reader.readAsDataURL(file);
     });
     ['dragenter','dragover'].forEach(evt =>
-      dropArea?.addEventListener(evt, e=>{ e.preventDefault(); dropArea.classList.add('drag'); })
+      imgDropArea?.addEventListener(evt, e=>{ e.preventDefault(); imgDropArea.classList.add('drag'); })
     );
     ['dragleave','drop'].forEach(evt =>
-      dropArea?.addEventListener(evt, e=>{ e.preventDefault(); dropArea.classList.remove('drag'); })
+      imgDropArea?.addEventListener(evt, e=>{ e.preventDefault(); imgDropArea.classList.remove('drag'); })
     );
-    dropArea?.addEventListener('drop', e=>{
+    imgDropArea?.addEventListener('drop', e=>{
       const f = e.dataTransfer.files && e.dataTransfer.files[0];
-      if(f){ fileInput.files = e.dataTransfer.files; fileInput.dispatchEvent(new Event('change')); }
+      if(f){ imgInput.files = e.dataTransfer.files; imgInput.dispatchEvent(new Event('change')); }
     });
 
     // Submenú mobile
@@ -344,13 +326,18 @@
     });
   </script>
 
-  <!-- ===== SUPABASE: saludo “Hola, Ignacio!” ===== -->
+  <!-- ===== SUPABASE: cliente único global + saludo “Hola, Ignacio!” ===== -->
   <script type="module">
     import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-    const SUPABASE_URL = 'https://imexctmcesopdfdebsgo.supabase.co'
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImltZXhjdG1jZXNvcGRmZGVic2dvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzMDczMDIsImV4cCI6MjA3NDg4MzMwMn0.g1lziVKAuUvMEOkYxJhe2D2z8PlwGJ6xcXo_SSpTj7Q'
+    // Cliente global único
+    if (!window.sb) {
+      window.sb = createClient(
+        'https://imexctmcesopdfdebsgo.supabase.co',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImltZXhjdG1jZXNvcGRmZGVic2dvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzMDczMDIsImV4cCI6MjA3NDg4MzMwMn0.g1lziVKAuUvMEOkYxJhe2D2z8PlwGJ6xcXo_SSpTj7Q'
+      );
+    }
+    const sb = window.sb;
 
-    const supabase  = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
     const loginBtn  = document.getElementById('loginBtn')
     const userWdg   = document.getElementById('userWidget')
     const avatarEl  = document.getElementById('userAvatar')
@@ -368,41 +355,30 @@
     }
 
     async function refreshHeader(){
-      const { data:{ session } } = await supabase.auth.getSession()
+      const { data:{ session } } = await sb.auth.getSession()
       if(!session){
         userWdg.classList.add('hidden')
         loginBtn.classList.remove('hidden')
         return
       }
-      const uid = session.user.id
       let nombre='', apellido='', email=session.user.email||''
       try{
-        const { data: perfil } = await supabase
+        const { data: perfil } = await sb
           .from('usuario')
           .select('nombre, apellido, email')
-          .eq('id_auth', uid)
+          .eq('email', email)
           .maybeSingle()
-        if(perfil){
-          nombre  = perfil.nombre   || session.user.user_metadata?.nombre   || ''
-          apellido= perfil.apellido || session.user.user_metadata?.apellido || ''
-          email   = perfil.email    || email
-        }else{
-          nombre   = session.user.user_metadata?.nombre   || ''
-          apellido = session.user.user_metadata?.apellido || ''
-        }
+        if(perfil){ nombre = perfil.nombre||''; apellido = perfil.apellido||''; }
       }catch(_){}
-
       avatarEl.textContent = initialsFrom(nombre, apellido, email)
       greetEl.textContent  = `Hola, ${firstNameFrom(nombre, email)}!`
-
       loginBtn.classList.add('hidden')
       userWdg.classList.remove('hidden')
     }
 
     await refreshHeader()
-    supabase.auth.onAuthStateChange(()=>refreshHeader())
+    sb.auth.onAuthStateChange(()=>refreshHeader())
 
-    // Menú del usuario
     userWdg.addEventListener('click', (e)=>{
       if(e.target.closest('#userMenu')) return
       userMenu.classList.toggle('hidden')
@@ -412,8 +388,117 @@
     })
     logoutBtn.addEventListener('click', async (e)=>{
       e.preventDefault()
-      await supabase.auth.signOut()
+      await sb.auth.signOut()
       location.reload()
+    })
+  </script>
+
+  <!-- ===== SUPABASE: crear PRODUCTO_BASE + PUBLICACION + FOTO ===== -->
+  <script type="module">
+    // Reutiliza el cliente global
+    const sbAuth = window.sb;
+
+    const BUCKET_NAME = 'publicaciones'  // debe existir y ser público
+
+    // Mapeos de enums (acentos vs Postgres)
+    const mapCatPub = (v)=> v === 'Selección' ? 'Seleccion' : v
+    const mapAuth   = (v)=> v === 'Replica'   ? 'Réplica'   : 'Original'
+    const mapEstado = (v)=> v === 'En conversación' ? 'En conversacion' : v
+
+    const sellForm  = document.getElementById('sellForm')
+    const sellFileInput = document.getElementById('imagen')
+
+    sellForm.addEventListener('submit', async (e)=>{
+      e.preventDefault()
+
+      // 1) Sesión
+      const { data:{ session } } = await sb.auth.getSession()
+      if(!session){ alert('Tenés que iniciar sesión para publicar.'); location.href='login.html'; return }
+
+      // 2) id_usuario por email
+      const email = session.user.email
+      const { data: usuario, error: errUser } = await sb
+        .from('usuario')
+        .select('id_usuario, nombre, apellido, email')
+        .eq('email', email)
+        .maybeSingle()
+      if(errUser){ console.error(errUser); alert('Error buscando tu usuario.'); return }
+      if(!usuario){ alert('No se encontró tu usuario en la tabla usuario (email).'); return }
+      const id_usuario = usuario.id_usuario
+
+      // 3) Datos del form
+      const titulo = document.getElementById('titulo').value.trim()
+      const descripcion = document.getElementById('descripcion').value.trim()
+      const precio = parseFloat(document.getElementById('precio').value)
+      const moneda = document.getElementById('moneda').value
+      const condicion = document.getElementById('condicion').value
+      const autenticidad = mapAuth(document.getElementById('auth').value)
+      const talle = document.getElementById('talle').value
+      const stock = parseInt(document.getElementById('stock').value, 10)
+
+      if (!titulo || Number.isNaN(precio) || Number.isNaN(stock)) {
+        alert('Completá título, precio y stock correctamente.'); return
+      }
+
+      const categoriaSel = document.querySelector('input[name="categoria"]:checked')?.value || 'Club'
+      const categoria_pub = mapCatPub(categoriaSel)
+
+      const estadoSel = document.querySelector('input[name="estado"]:checked')?.value || 'Activa'
+      const estado_pub = mapEstado(estadoSel)
+
+      if(!sellFileInput.files || !sellFileInput.files[0]){ alert('Subí al menos una imagen.'); return }
+      const file = sellFileInput.files[0]
+
+      // 4) Subir imagen
+      const path = `${id_usuario}/${Date.now()}-${file.name}`
+      const { error: upErr } = await sb.storage.from(BUCKET_NAME)
+        .upload(path, file, { upsert:false, contentType: file.type || 'image/jpeg' })
+      if(upErr){ console.error(upErr); alert('Error subiendo imagen.'); return }
+      const { data: pubUrl } = sb.storage.from(BUCKET_NAME).getPublicUrl(path)
+      const fotoURL = pubUrl.publicUrl
+
+      // 5) PRODUCTO_BASE mínimo
+      let categoria_prod = null
+      if(categoria_pub === 'Club' || categoria_pub === 'Seleccion'){ categoria_prod = categoria_pub }
+      const { data: prod, error: prodErr } = await sb
+        .from('producto_base')
+        .insert([{ equipo: titulo, categoria: categoria_prod }])
+        .select('id_producto')
+        .single()
+      if(prodErr){ console.error(prodErr); alert('Error creando el producto base.'); return }
+      const id_producto = prod.id_producto
+
+      // 6) PUBLICACION
+      const pubRow = {
+        id_usuario,
+        id_producto,
+        titulo,
+        descripcion,
+        precio,
+        moneda,
+        condicion,
+        autenticidad,            // 'Original' | 'Réplica'
+        categoria: categoria_pub, // 'Club' | 'Seleccion' | 'Retro'
+        talle,
+        stock,
+        estado: estado_pub
+      }
+      const { data: pub, error: pubErr } = await sb
+        .from('publicacion')
+        .insert([pubRow])
+        .select('id_publicacion')
+        .single()
+      if(pubErr){ console.error(pubErr); alert('Error creando la publicación.'); return }
+      const id_publicacion = pub.id_publicacion
+
+      // 7) FOTO
+      const { error: fotoErr } = await sb
+        .from('foto')
+        .insert([{ id_publicacion, url: fotoURL, orden_foto: 1 }])
+      if(fotoErr){ console.error(fotoErr); alert('La publicación se creó, pero falló guardar la foto.'); return }
+
+      alert('¡Publicación creada con éxito!')
+      window.location.href = 'index.html'
     })
   </script>
 </body>
