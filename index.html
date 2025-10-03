@@ -246,15 +246,34 @@
     const CAT_MAP = { club: 'Club', seleccion: 'Selección', retro: 'Retro' };
     if (CAT_MAP[catParam]) catSel.value = CAT_MAP[catParam];
 
-    // Carrito
+    // ===== FAVORITOS PERSISTENTES =====
+    const favorites = new Set(JSON.parse(localStorage.getItem('lot_favorites') || '[]'));
+    function saveFavorites(){ localStorage.setItem('lot_favorites', JSON.stringify([...favorites])); }
+
+    // ===== CARRITO PERSISTENTE =====
+    const cart = new Map(Object.entries(JSON.parse(localStorage.getItem('lot_cart') || '{}')).map(([k,v]) => [+k, v]));
+    function saveCart(){ localStorage.setItem('lot_cart', JSON.stringify(Object.fromEntries(cart))); }
+
+    // ===== ACTUALIZAR BADGES =====
+    function updateFavBadge(){
+      const favCountBadge = document.getElementById('favCount');
+      if (favCountBadge) favCountBadge.textContent = favorites.size;
+    }
+
+    function updateCartBadge(){
+      const cartCountBadge = document.getElementById('cartCount');
+      if (cartCountBadge) {
+        let totalQty = 0;
+        cart.forEach(qty => totalQty += qty);
+        cartCountBadge.textContent = totalQty;
+      }
+    }
+
+    // ===== PANEL CARRITO =====
     const cartBtn = document.getElementById('cartBtn');
-    const cartMenu = document.getElementById('cartMenu');
     const closeCart = document.getElementById('closeCart');
-    const overlay = document.getElementById('overlay');
     const cartItemsDiv = document.getElementById('cartItems');
     const cartTotal = document.getElementById('cartTotal');
-    const cartCountBadge = document.getElementById('cartCount');
-    const cart = new Map();
 
     function showOverlay(){ overlay.classList.add('show'); }
     function hideOverlay(){ overlay.classList.remove('show'); }
@@ -264,47 +283,74 @@
     }
     function openCart(){ cartMenu.classList.add('open'); showOverlay(); }
     function closeCartMenu(){ cartMenu.classList.remove('open'); hideOverlayIfIdle(); }
+
     cartBtn.addEventListener('click', openCart);
     closeCart.addEventListener('click', closeCartMenu);
 
     function updateCartUI(){
-      let totalQty = 0, totalPrice = 0;
-      cart.forEach(({item, qty}) => { totalQty += qty; totalPrice += item.precio * qty; });
-      cartCountBadge.textContent = totalQty;
-
+      let totalPrice = 0;
+      let totalQty = 0;
+      
       cartItemsDiv.innerHTML = '';
-      if(!totalQty){
+      
+      if (cart.size === 0) {
         cartItemsDiv.innerHTML = '<p class="muted">Tu carrito está vacío</p>';
         cartTotal.textContent = '$ 0';
+        updateCartBadge();
         return;
       }
-      cart.forEach(({item, qty}) => {
-        const row = document.createElement('div');
-        row.className = 'cart-item';
-        row.innerHTML = `
-          <img src="${item.img}" alt="${item.nombre}" onerror="this.src='${PLACEHOLDER}'">
-          <div class="meta">
-            <strong>${item.nombre}</strong>
-            <span class="muted">${uy.format(item.precio)} c/u</span>
-            <div class="qty">
-              <button class="icon" data-act="dec" data-id="${item.id}">−</button>
-              <span>${qty}</span>
-              <button class="icon" data-act="inc" data-id="${item.id}">＋</button>
-              <button class="icon" data-act="rm"  data-id="${item.id}" title="Quitar">🗑</button>
+
+      cart.forEach((qty, id) => {
+        const prod = DATA.find(p => p.id === id);
+        if (prod) {
+          totalQty += qty;
+          const itemTotal = prod.precio * qty;
+          totalPrice += itemTotal;
+          
+          const row = document.createElement('div');
+          row.className = 'cart-item';
+          row.innerHTML = `
+            <img src="${prod.img}" alt="${prod.nombre}" onerror="this.src='${PLACEHOLDER}'">
+            <div class="meta">
+              <strong>${prod.nombre}</strong>
+              <span class="muted">${uy.format(prod.precio)} c/u</span>
+              <div class="qty">
+                <button class="icon" data-act="dec" data-id="${id}">−</button>
+                <span>${qty}</span>
+                <button class="icon" data-act="inc" data-id="${id}">＋</button>
+                <button class="icon" data-act="rm" data-id="${id}" title="Quitar">🗑</button>
+              </div>
             </div>
-          </div>
-          <div><strong>${uy.format(item.precio * qty)}</strong></div>`;
-        cartItemsDiv.appendChild(row);
+            <div><strong>${uy.format(itemTotal)}</strong></div>`;
+          cartItemsDiv.appendChild(row);
+        }
       });
+      
       cartTotal.textContent = uy.format(totalPrice);
+      updateCartBadge();
     }
 
     cartItemsDiv.addEventListener('click', (e)=>{
-      const btn = e.target.closest('button.icon'); if(!btn) return;
-      const id = Number(btn.dataset.id), act = btn.dataset.act, entry = cart.get(id); if(!entry) return;
-      if(act==='inc') entry.qty += 1;
-      else if(act==='dec'){ entry.qty = Math.max(0, entry.qty - 1); if(!entry.qty) cart.delete(id); }
-      else if(act==='rm') cart.delete(id);
+      const btn = e.target.closest('button.icon');
+      if (!btn) return;
+      
+      const id = Number(btn.dataset.id);
+      const act = btn.dataset.act;
+      
+      if (act === 'inc') {
+        cart.set(id, (cart.get(id) || 0) + 1);
+      } else if (act === 'dec') {
+        const current = cart.get(id) || 0;
+        if (current > 1) {
+          cart.set(id, current - 1);
+        } else {
+          cart.delete(id);
+        }
+      } else if (act === 'rm') {
+        cart.delete(id);
+      }
+      
+      saveCart();
       updateCartUI();
     });
 
@@ -313,12 +359,8 @@
     const favMenu = document.getElementById('favMenu');
     const closeFav = document.getElementById('closeFav');
     const favItemsDiv = document.getElementById('favItems');
-    const favCountBadge = document.getElementById('favCount');
     const favGoCartBtn = document.getElementById('favGoCart');
-    const favorites = new Set(JSON.parse(localStorage.getItem('lot_favorites') || '[]'));
 
-    function saveFavorites(){ localStorage.setItem('lot_favorites', JSON.stringify([...favorites])); }
-    function updateFavBadge(){ favCountBadge.textContent = favorites.size; favBtn.classList.toggle('active', favorites.size>0); }
     function openFav(){ favMenu.classList.add('open'); showOverlay(); }
     function closeFavMenu(){ favMenu.classList.remove('open'); hideOverlayIfIdle(); }
 
@@ -327,9 +369,11 @@
     favGoCartBtn.addEventListener('click', ()=>{
       favorites.forEach(id=>{
         const prod = DATA.find(p=>p.id===id); if(!prod) return;
-        const entry = cart.get(id) || { item: prod, qty: 0 }; entry.qty += 1; cart.set(id, entry);
+        cart.set(id, (cart.get(id) || 0) + 1);
       });
-      updateCartUI(); openCart();
+      saveCart();
+      updateCartUI(); 
+      openCart();
     });
 
     function renderFavMenu(){
@@ -358,7 +402,10 @@
       const id = Number(btn.dataset.id), act = btn.dataset.act;
       const prod = DATA.find(p => p.id === id); if(!prod) return;
       if(act==='addcart'){
-        const entry = cart.get(id) || { item: prod, qty: 0 }; entry.qty += 1; cart.set(id, entry); updateCartUI(); openCart();
+        cart.set(id, (cart.get(id) || 0) + 1);
+        saveCart();
+        updateCartUI(); 
+        openCart();
       }else if(act==='rmfav'){
         favorites.delete(id); saveFavorites(); updateFavBadge(); renderFavMenu(); updateGridFavIcons();
       }
@@ -420,11 +467,12 @@
 
       if(addBtn){
         const id = Number(addBtn.dataset.id);
-        const prod = DATA.find(p => p.id === id);
-        const entry = cart.get(id) || { item: prod, qty: 0 };
-        entry.qty += 1; cart.set(id, entry);
-        addBtn.textContent = 'Agregado ✓'; setTimeout(()=> addBtn.textContent = 'Agregar al carrito', 900);
-        updateCartUI(); openCart(); return;
+        cart.set(id, (cart.get(id) || 0) + 1);
+        saveCart();
+        updateCartUI();
+        addBtn.textContent = 'Agregado ✓'; 
+        setTimeout(()=> addBtn.textContent = 'Agregar al carrito', 900);
+        return;
       }
       if(favBtnEl){
         const id = Number(favBtnEl.dataset.favId);
@@ -549,7 +597,6 @@
     // Inputs => render
     function attachInputs(){ [price, clubSel, paisSel, catSel, q].forEach(el => el.addEventListener('input', render)); }
     attachInputs();
-    render(); updateCartUI(); updateFavBadge(); renderFavMenu();
 
     // Ubicación
     const LOCATION_KEY = 'lot_location';
@@ -685,6 +732,12 @@
         catsLink.setAttribute('aria-expanded','false');
       }
     });
+
+    // ===== INICIALIZAR =====
+    updateFavBadge();
+    updateCartBadge();
+    updateCartUI();
+    renderFavMenu();
   </script>
 
   <!-- ===== SUPABASE: widget de usuario y cargar publicaciones ===== -->
@@ -920,8 +973,8 @@
       pdAvatar.textContent = initialsFromFull(sellerName).toUpperCase();
   
       pdAddCart.onclick = ()=>{
-        const entry = cart.get(item.id) || { item, qty: 0 };
-        entry.qty += 1; cart.set(item.id, entry);
+        cart.set(item.id, (cart.get(item.id) || 0) + 1);
+        saveCart();
         updateCartUI();
         productModal.classList.remove('open');
         document.getElementById('cartMenu').classList.add('open');
