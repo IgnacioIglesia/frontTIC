@@ -17,28 +17,38 @@
     body::before { content:""; position:fixed; inset:0; background:rgba(255,255,255,.4); z-index:-1; }
     .sell-card { background:#fff; border-radius:12px; border:1px solid #e5e7eb; padding:24px; max-width:640px; margin:auto; box-shadow:0 4px 12px rgba(0,0,0,.08); }
     
-    /* Estilos para la protección de autenticación */
-    .auth-protection {
-      display: none;
-      text-align: center;
-      padding: 40px 20px;
+    /* Loading spinner */
+    .loading-spinner {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      flex-direction: column;
+      gap: 16px;
     }
-    .auth-protection.show {
-      display: block;
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #007bff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
     }
-    .auth-message {
-      background: white;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      max-width: 400px;
-      margin: 0 auto;
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
   </style>
 </head>
 <body>
+  <!-- ===== LOADING ===== -->
+  <div id="loading" class="loading-spinner">
+    <div class="spinner"></div>
+    <p>Verificando acceso...</p>
+  </div>
+
   <!-- ===== HEADER ===== -->
-  <header id="siteHeader">
+  <header id="siteHeader" style="display:none;">
     <div class="top container">
       <div class="brand-wrap">
         <a href="index.html" class="logo-link" aria-label="Ir al inicio">
@@ -138,19 +148,8 @@
     </div>
   </div>
 
-  <!-- ===== PROTECCIÓN DE AUTENTICACIÓN ===== -->
-  <div id="authProtection" class="auth-protection">
-    <div class="auth-message">
-      <h2 style="margin-bottom: 16px;">🔒 Acceso restringido</h2>
-      <p style="margin-bottom: 20px; color: #666;">Debes iniciar sesión para acceder a esta página</p>
-      <a href="login.html?return=vender.html" class="btn primary" style="display: inline-block; text-decoration: none;">
-        Iniciar sesión
-      </a>
-    </div>
-  </div>
-
-  <!-- ===== CONTENIDO ===== -->
-  <main class="track-full" id="mainContent">
+  <!-- ===== CONTENIDO (SOLO PARA USUARIOS AUTENTICADOS) ===== -->
+  <main class="track-full" id="mainContent" style="display:none;">
     <div class="track-card sell-card">
       <div class="track-title">
         <img src="./assets/imagen.png" alt="" style="width:40px;height:40px;border-radius:8px;">
@@ -262,15 +261,15 @@
     </div>
   </main>
 
-  <footer class="site-footer">© <span id="year"></span> La Otra Tribuna.</footer>
+  <footer class="site-footer" style="display:none;">© <span id="year"></span> La Otra Tribuna.</footer>
 
   <!-- ===== SCRIPTS BASE ===== -->
   <script src="scripts/uy-depts.js"></script>
   <script>
     // Año + sombra header
     document.getElementById('year').textContent = new Date().getFullYear();
-    const siteHeader = document.getElementById('siteHeader');
-    function onScroll(){ siteHeader.classList.toggle('is-scrolled', window.scrollY > 0); }
+    const siteHeaderElement = document.getElementById('siteHeader'); // Cambié el nombre aquí
+    function onScroll(){ siteHeaderElement.classList.toggle('is-scrolled', window.scrollY > 0); }
     onScroll(); window.addEventListener('scroll', onScroll, {passive:true});
 
     // ===== Ubicación =====
@@ -356,9 +355,10 @@
     });
   </script>
 
-  <!-- ===== SUPABASE: cliente único global + saludo "Hola, Ignacio!" ===== -->
+  <!-- ===== SUPABASE: VERIFICACIÓN DE AUTENTICACIÓN ===== -->
   <script type="module">
     import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+    
     // Cliente global único
     if (!window.sb) {
       window.sb = createClient(
@@ -368,16 +368,38 @@
     }
     const sb = window.sb;
 
-    const loginBtn  = document.getElementById('loginBtn')
-    const userWdg   = document.getElementById('userWidget')
-    const avatarEl  = document.getElementById('userAvatar')
-    const greetEl   = document.getElementById('greeting')
-    const userMenu  = document.getElementById('userMenu')
+    const loginBtn = document.getElementById('loginBtn')
+    const userWdg = document.getElementById('userWidget')
+    const avatarEl = document.getElementById('userAvatar')
+    const greetEl = document.getElementById('greeting')
+    const userMenu = document.getElementById('userMenu')
     const logoutBtn = document.getElementById('logoutBtn')
-
-    // Elementos para la protección
-    const authProtection = document.getElementById('authProtection')
+    const loadingEl = document.getElementById('loading')
+    const siteHeader = document.getElementById('siteHeader') // Esta es la segunda declaración
     const mainContent = document.getElementById('mainContent')
+    const footer = document.querySelector('.site-footer')
+
+    async function checkAuthAndRedirect() {
+      const { data: { session } } = await sb.auth.getSession()
+      
+      if (!session) {
+        // No hay sesión - redirigir inmediatamente a login
+        const currentPage = encodeURIComponent(window.location.pathname + window.location.search);
+        window.location.href = `login.html?return=${currentPage}`;
+        return;
+      }
+      
+      // Hay sesión - mostrar contenido
+      showContent();
+      await refreshHeader();
+    }
+
+    function showContent() {
+      loadingEl.style.display = 'none';
+      siteHeader.style.display = 'block';
+      mainContent.style.display = 'block';
+      footer.style.display = 'block';
+    }
 
     const initialsFrom = (n='',a='',e='')=>{
       const ini = (n.trim().split(/\s+/)[0]?.[0]||'') + (a.trim().split(/\s+/)[0]?.[0]||'')
@@ -391,20 +413,6 @@
     async function refreshHeader(){
       const { data:{ session } } = await sb.auth.getSession()
       
-      // Protección de autenticación - MOSTRAR/OCULTAR CONTENIDO
-      if(!session){
-        // No hay sesión - mostrar protección y ocultar contenido
-        authProtection.classList.add('show')
-        mainContent.style.display = 'none'
-        userWdg.classList.add('hidden')
-        loginBtn.classList.remove('hidden')
-        return
-      } else {
-        // Hay sesión - mostrar contenido y ocultar protección
-        authProtection.classList.remove('show')
-        mainContent.style.display = 'block'
-      }
-      
       let nombre='', apellido='', email=session.user.email||''
       try{
         const { data: perfil } = await sb
@@ -415,14 +423,15 @@
         if(perfil){ nombre = perfil.nombre||''; apellido = perfil.apellido||''; }
       }catch(_){}
       avatarEl.textContent = initialsFrom(nombre, apellido, email)
-      greetEl.textContent  = `Hola, ${firstNameFrom(nombre, email)}!`
+      greetEl.textContent = `Hola, ${firstNameFrom(nombre, email)}!`
       loginBtn.classList.add('hidden')
       userWdg.classList.remove('hidden')
     }
 
-    await refreshHeader()
-    sb.auth.onAuthStateChange(()=>refreshHeader())
+    // Verificar autenticación al cargar
+    await checkAuthAndRedirect();
 
+    // Configurar listeners del header
     userWdg.addEventListener('click', (e)=>{
       if(e.target.closest('#userMenu')) return
       userMenu.classList.toggle('hidden')
@@ -433,7 +442,7 @@
     logoutBtn.addEventListener('click', async (e)=>{
       e.preventDefault()
       await sb.auth.signOut()
-      location.reload()
+      window.location.href = 'index.html'
     })
   </script>
 
@@ -442,14 +451,14 @@
     // Reutiliza el cliente global
     const sbAuth = window.sb;
 
-    const BUCKET_NAME = 'publicaciones'  // debe existir y ser público
+    const BUCKET_NAME = 'publicaciones'
 
     // Mapeos de enums (acentos vs Postgres)
     const mapCatPub = (v)=> v === 'Selección' ? 'Seleccion' : v
-    const mapAuth   = (v)=> v === 'Replica'   ? 'Réplica'   : 'Original'
+    const mapAuth = (v)=> v === 'Replica' ? 'Réplica' : 'Original'
     const mapEstado = (v)=> v === 'En conversación' ? 'En conversacion' : v
 
-    const sellForm  = document.getElementById('sellForm')
+    const sellForm = document.getElementById('sellForm')
     const sellFileInput = document.getElementById('imagen')
 
     sellForm.addEventListener('submit', async (e)=>{
@@ -457,7 +466,11 @@
 
       // 1) Sesión
       const { data:{ session } } = await sb.auth.getSession()
-      if(!session){ alert('Tenés que iniciar sesión para publicar.'); location.href='login.html'; return }
+      if(!session){ 
+        alert('Tenés que iniciar sesión para publicar.'); 
+        window.location.href = 'login.html'; 
+        return 
+      }
 
       // 2) id_usuario por email
       const email = session.user.email
@@ -521,8 +534,8 @@
         precio,
         moneda,
         condicion,
-        autenticidad,            // 'Original' | 'Réplica'
-        categoria: categoria_pub, // 'Club' | 'Seleccion' | 'Retro'
+        autenticidad,
+        categoria: categoria_pub,
         talle,
         stock,
         estado: estado_pub
