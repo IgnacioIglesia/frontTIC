@@ -4,9 +4,10 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Vender — La Otra Tribuna</title>
+  <base href="https://la-otra-tribuna.netlify.app/" />
   <link rel="stylesheet" href="styles/main.css" />
-  <link rel="stylesheet" href="styles/vender.css" />
   <link rel="stylesheet" href="styles/user-widget.css" />
+  <link rel="stylesheet" href="styles/rastrear.css" />
   <style>
     body {
       background: url('./assets/venta.png') no-repeat center top;
@@ -15,6 +16,24 @@
     }
     body::before { content:""; position:fixed; inset:0; background:rgba(255,255,255,.4); z-index:-1; }
     .sell-card { background:#fff; border-radius:12px; border:1px solid #e5e7eb; padding:24px; max-width:640px; margin:auto; box-shadow:0 4px 12px rgba(0,0,0,.08); }
+    
+    /* Estilos para la protección de autenticación */
+    .auth-protection {
+      display: none;
+      text-align: center;
+      padding: 40px 20px;
+    }
+    .auth-protection.show {
+      display: block;
+    }
+    .auth-message {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      max-width: 400px;
+      margin: 0 auto;
+    }
   </style>
 </head>
 <body>
@@ -119,8 +138,19 @@
     </div>
   </div>
 
+  <!-- ===== PROTECCIÓN DE AUTENTICACIÓN ===== -->
+  <div id="authProtection" class="auth-protection">
+    <div class="auth-message">
+      <h2 style="margin-bottom: 16px;">🔒 Acceso restringido</h2>
+      <p style="margin-bottom: 20px; color: #666;">Debes iniciar sesión para acceder a esta página</p>
+      <a href="login.html?return=vender.html" class="btn primary" style="display: inline-block; text-decoration: none;">
+        Iniciar sesión
+      </a>
+    </div>
+  </div>
+
   <!-- ===== CONTENIDO ===== -->
-  <main class="track-full">
+  <main class="track-full" id="mainContent">
     <div class="track-card sell-card">
       <div class="track-title">
         <img src="./assets/imagen.png" alt="" style="width:40px;height:40px;border-radius:8px;">
@@ -326,7 +356,7 @@
     });
   </script>
 
-  <!-- ===== SUPABASE: cliente único global + saludo “Hola, Ignacio!” ===== -->
+  <!-- ===== SUPABASE: cliente único global + saludo "Hola, Ignacio!" ===== -->
   <script type="module">
     import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
     // Cliente global único
@@ -345,6 +375,10 @@
     const userMenu  = document.getElementById('userMenu')
     const logoutBtn = document.getElementById('logoutBtn')
 
+    // Elementos para la protección
+    const authProtection = document.getElementById('authProtection')
+    const mainContent = document.getElementById('mainContent')
+
     const initialsFrom = (n='',a='',e='')=>{
       const ini = (n.trim().split(/\s+/)[0]?.[0]||'') + (a.trim().split(/\s+/)[0]?.[0]||'')
       return (ini || (e?.[0]||'?')).toUpperCase()
@@ -356,11 +390,21 @@
 
     async function refreshHeader(){
       const { data:{ session } } = await sb.auth.getSession()
+      
+      // Protección de autenticación - MOSTRAR/OCULTAR CONTENIDO
       if(!session){
+        // No hay sesión - mostrar protección y ocultar contenido
+        authProtection.classList.add('show')
+        mainContent.style.display = 'none'
         userWdg.classList.add('hidden')
         loginBtn.classList.remove('hidden')
         return
+      } else {
+        // Hay sesión - mostrar contenido y ocultar protección
+        authProtection.classList.remove('show')
+        mainContent.style.display = 'block'
       }
+      
       let nombre='', apellido='', email=session.user.email||''
       try{
         const { data: perfil } = await sb
