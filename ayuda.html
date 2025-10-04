@@ -30,6 +30,21 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
+    
+    /* Centrar el contenido */
+    .track-full {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: calc(100vh - 200px);
+      padding: 40px 20px;
+    }
+    
+    .track-card {
+      width: 100%;
+      max-width: 500px;
+      margin: 0 auto;
+    }
   </style>
 </head>
 <body>
@@ -166,7 +181,7 @@
           <textarea id="message" placeholder="Contanos el problema con el mayor detalle posible…" required></textarea>
         </div>
 
-        <button class="btn primary" type="submit">Enviar</button>
+        <button class="btn primary" type="submit" style="width: 100%;">Enviar</button>
       </form>
 
       <div id="helpResult" class="track-result" style="display:none"></div>
