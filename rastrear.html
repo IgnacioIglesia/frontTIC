@@ -9,11 +9,40 @@
   <link rel="stylesheet" href="styles/user-widget.css" />
   <link rel="stylesheet" href="styles/rastrear.css" />
   <link rel="icon" type="image/png" href="./assets/logo.png">
+  <style>
+    /* Loading spinner */
+    .loading-spinner {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #007bff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
 </head>
 
 <body class="bg-pedido">
+  <!-- ===== LOADING ===== -->
+  <div id="loading" class="loading-spinner">
+    <div class="spinner"></div>
+    <p>Verificando acceso...</p>
+  </div>
+
   <!-- ===== HEADER ===== -->
-  <header id="siteHeader">
+  <header id="siteHeader" style="display:none;">
     <div class="top container">
       <div class="brand-wrap">
         <a href="index.html" class="logo-link" aria-label="Ir al inicio">
@@ -115,8 +144,8 @@
     </div>
   </div>
 
-  <!-- ===== CONTENIDO ===== -->
-  <main class="track-full">
+  <!-- ===== CONTENIDO (SOLO PARA USUARIOS AUTENTICADOS) ===== -->
+  <main class="track-full" id="mainContent" style="display:none;">
     <div class="track-card">
       <div class="track-title">
         <img src="./assets/imagen.png" alt="" style="width:40px; height:40px; border-radius:8px;">
@@ -138,7 +167,7 @@
     </div>
   </main>
 
-  <footer class="site-footer">© <span id="year"></span> La Otra Tribuna.</footer>
+  <footer class="site-footer" style="display:none;">© <span id="year"></span> La Otra Tribuna.</footer>
 
   <script>
     // ===== Footer dinámico
@@ -223,12 +252,17 @@
     });
   </script>
 
-  <!-- ===== SUPABASE: widget de usuario (saludo + menú) ===== -->
+  <!-- ===== SUPABASE: VERIFICACIÓN DE AUTENTICACIÓN ===== -->
   <script type="module">
     import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
     const SUPABASE_URL = 'https://imexctmcesopdfdebsgo.supabase.co'
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImltZXhjdG1jZXNvcGRmZGVic2dvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzMDczMDIsImV4cCI6MjA3NDg4MzMwMn0.g1lziVKAuUvMEOkYxJhe2D2z8PlwGJ6xcXo_SSpTj7Q'
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    
+    // Cliente global único
+    if (!window.sb) {
+      window.sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    }
+    const supabase = window.sb
 
     const loginBtn   = document.getElementById('loginBtn')
     const userWidget = document.getElementById('userWidget')
@@ -236,6 +270,32 @@
     const greetEl    = document.getElementById('greeting')
     const userMenu   = document.getElementById('userMenu')
     const logoutBtn  = document.getElementById('logoutBtn')
+    const loadingEl = document.getElementById('loading')
+    const siteHeader = document.getElementById('siteHeader')
+    const mainContent = document.getElementById('mainContent')
+    const footer = document.querySelector('.site-footer')
+
+    async function checkAuthAndRedirect() {
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      if (!session) {
+        // No hay sesión - redirigir inmediatamente a login
+        const currentPage = encodeURIComponent(window.location.pathname + window.location.search);
+        window.location.href = `login.html?return=${currentPage}`;
+        return;
+      }
+      
+      // Hay sesión - mostrar contenido
+      showContent();
+      await refreshHeader();
+    }
+
+    function showContent() {
+      loadingEl.style.display = 'none';
+      siteHeader.style.display = 'block';
+      mainContent.style.display = 'block';
+      footer.style.display = 'block';
+    }
 
     const initialsFrom = (nombre='', apellido='', email='')=>{
       const n = (nombre||'').trim().split(/\s+/)[0] || ''
@@ -280,10 +340,10 @@
       userWidget.classList.remove('hidden')
     }
 
-    await refreshHeader()
-    supabase.auth.onAuthStateChange((_event, _session) => { refreshHeader() })
+    // Verificar autenticación al cargar
+    await checkAuthAndRedirect();
 
-    // === Menú desplegable ===
+    // Configurar listeners del header
     userWidget.addEventListener('click', (e)=>{
       if(e.target.closest('#userMenu')) return
       userMenu.classList.toggle('hidden')
@@ -294,7 +354,7 @@
     logoutBtn.addEventListener('click', async (e)=>{
       e.preventDefault()
       await supabase.auth.signOut()
-      location.reload()
+      window.location.href = 'index.html'
     })
   </script>
 </body>
