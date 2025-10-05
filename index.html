@@ -4,10 +4,56 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>La Otra Tribuna — Tienda de camisetas</title>
-  <base href="https://la-otra-tribuna.netlify.app/" />
   <link rel="stylesheet" href="styles/main.css" />
   <link rel="stylesheet" href="styles/user-widget.css" />
   <link rel="icon" type="image/png" href="./assets/logo.png" />
+
+  <!-- === Estilos mínimos para el dropdown de notificaciones === -->
+  <style>
+    .pill { position: relative; }
+    .pill span { margin-left: .25rem; font-weight: 600; }
+    .pill.has-notifications { animation: bump .3s ease; }
+    @keyframes bump { 0%{transform:scale(1)} 50%{transform:scale(1.08)} 100%{transform:scale(1)} }
+
+    .not-dd-wrapper { position: relative; }
+    .not-dropdown{
+      position:absolute; right:0; top:calc(100% + 10px);
+      width:340px; max-height:70vh; overflow:auto;
+      background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:12px;
+      box-shadow:0 12px 30px rgba(0,0,0,.12); z-index:50;
+    }
+    .not-dd-header{ display:flex; justify-content:space-between; align-items:center; gap:8px;
+      padding:6px 8px 10px; border-bottom:1px solid #f0f0f0; margin-bottom:8px; }
+    .not-dd-list{ display:flex; flex-direction:column; gap:10px; }
+    .not-dd-empty{ text-align:center; color:#6b7280; padding:18px 8px; }
+    .not-item{
+      display:grid; grid-template-columns:auto 1fr auto; gap:8px; align-items:start;
+      padding:10px; border-radius:10px; border:1px solid #eef0f2; background:#fafafa; cursor:pointer;
+    }
+    .not-item.unread{ background:#f7fbff; border-color:#e5f0ff; }
+    .not-item .title{ font-weight:600; margin-bottom:2px; }
+    .not-item .desc{ color:#6b7280; font-size:13px; }
+    .not-item .time{ color:#6b7280; font-size:12px; margin-left:8px; white-space:nowrap; }
+
+    /* Botón papelera en cada notificación */
+    .not-item .right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+    }
+    .not-del {
+      border: 1px solid #e5e7eb;
+      background: #fff;
+      font-size: 13px;
+      padding: 4px 6px;
+      border-radius: 8px;
+      cursor: pointer;
+      line-height: 1;
+    }
+    .not-del:hover { background: #f9fafb; }
+    .not-del:active { transform: scale(0.98); }
+  </style>
 </head>
 <body>
   <!-- ===== HEADER ===== -->
@@ -37,6 +83,18 @@
           <div id="userMenu" class="user-menu hidden">
             <a href="perfil.html">👤 Perfil</a>
             <a href="#" id="logoutBtn">🚪 Cerrar sesión</a>
+          </div>
+        </div>
+
+        <!-- === Notificaciones (campana + dropdown) === -->
+        <div class="not-dd-wrapper">
+          <button class="pill" id="notBtn" aria-label="Abrir notificaciones">🔔<span id="notCount">0</span></button>
+          <div id="notDropdown" class="not-dropdown" hidden>
+            <div class="not-dd-header">
+              <strong>Notificaciones</strong>
+              <a href="#" id="markAllRead" class="muted">Marcar todas como leídas</a>
+            </div>
+            <div id="notList" class="not-dd-list"></div>
           </div>
         </div>
 
@@ -254,19 +312,27 @@
     const cart = new Map(Object.entries(JSON.parse(localStorage.getItem('lot_cart') || '{}')).map(([k,v]) => [+k, v]));
     function saveCart(){ localStorage.setItem('lot_cart', JSON.stringify(Object.fromEntries(cart))); }
 
-    // ===== ACTUALIZAR BADGES =====
+    // ======== NOTIFICACIONES (persistentes) ========
+    const notifications = JSON.parse(localStorage.getItem('lot_notifications') || '[]');
+
+    // Badges
     function updateFavBadge(){
       const favCountBadge = document.getElementById('favCount');
       if (favCountBadge) favCountBadge.textContent = favorites.size;
     }
-
     function updateCartBadge(){
       const cartCountBadge = document.getElementById('cartCount');
       if (cartCountBadge) {
-        let totalQty = 0;
-        cart.forEach(qty => totalQty += qty);
+        let totalQty = 0; cart.forEach(qty => totalQty += qty);
         cartCountBadge.textContent = totalQty;
       }
+    }
+    function updateNotBadge(){
+      const el = document.getElementById('notCount');
+      const unread = notifications.filter(n=>!n.read).length;
+      el.textContent = unread;
+      const btn = document.getElementById('notBtn');
+      if (unread>0) btn.classList.add('has-notifications'); else btn.classList.remove('has-notifications');
     }
 
     // ===== PANEL CARRITO =====
@@ -274,6 +340,8 @@
     const closeCart = document.getElementById('closeCart');
     const cartItemsDiv = document.getElementById('cartItems');
     const cartTotal = document.getElementById('cartTotal');
+    const cartMenu = document.getElementById('cartMenu');
+    const overlay = document.getElementById('overlay'); /* <-- referencia usada por paneles/modales */
 
     function showOverlay(){ overlay.classList.add('show'); }
     function hideOverlay(){ overlay.classList.remove('show'); }
@@ -289,24 +357,15 @@
 
     function updateCartUI(){
       let totalPrice = 0;
-      let totalQty = 0;
-      
       cartItemsDiv.innerHTML = '';
-      
       if (cart.size === 0) {
         cartItemsDiv.innerHTML = '<p class="muted">Tu carrito está vacío</p>';
-        cartTotal.textContent = '$ 0';
-        updateCartBadge();
-        return;
+        cartTotal.textContent = '$ 0'; updateCartBadge(); return;
       }
-
       cart.forEach((qty, id) => {
         const prod = DATA.find(p => p.id === id);
         if (prod) {
-          totalQty += qty;
-          const itemTotal = prod.precio * qty;
-          totalPrice += itemTotal;
-          
+          const itemTotal = prod.precio * qty; totalPrice += itemTotal;
           const row = document.createElement('div');
           row.className = 'cart-item';
           row.innerHTML = `
@@ -325,33 +384,16 @@
           cartItemsDiv.appendChild(row);
         }
       });
-      
-      cartTotal.textContent = uy.format(totalPrice);
-      updateCartBadge();
+      cartTotal.textContent = uy.format(totalPrice); updateCartBadge();
     }
 
     cartItemsDiv.addEventListener('click', (e)=>{
-      const btn = e.target.closest('button.icon');
-      if (!btn) return;
-      
-      const id = Number(btn.dataset.id);
-      const act = btn.dataset.act;
-      
-      if (act === 'inc') {
-        cart.set(id, (cart.get(id) || 0) + 1);
-      } else if (act === 'dec') {
-        const current = cart.get(id) || 0;
-        if (current > 1) {
-          cart.set(id, current - 1);
-        } else {
-          cart.delete(id);
-        }
-      } else if (act === 'rm') {
-        cart.delete(id);
-      }
-      
-      saveCart();
-      updateCartUI();
+      const btn = e.target.closest('button.icon'); if (!btn) return;
+      const id = Number(btn.dataset.id); const act = btn.dataset.act;
+      if (act === 'inc') cart.set(id, (cart.get(id) || 0) + 1);
+      else if (act === 'dec') { const current = cart.get(id) || 0; if (current > 1) cart.set(id, current - 1); else cart.delete(id); }
+      else if (act === 'rm') cart.delete(id);
+      saveCart(); updateCartUI();
     });
 
     // Favoritos
@@ -367,33 +409,59 @@
     favBtn.addEventListener('click', openFav);
     closeFav.addEventListener('click', closeFavMenu);
     favGoCartBtn.addEventListener('click', ()=>{
-      favorites.forEach(id=>{
-        const prod = DATA.find(p=>p.id===id); if(!prod) return;
-        cart.set(id, (cart.get(id) || 0) + 1);
-      });
-      saveCart();
-      updateCartUI(); 
-      openCart();
+      favorites.forEach(id=>{ const prod = DATA.find(p=>p.id===id); if(!prod) return; cart.set(id, (cart.get(id) || 0) + 1); });
+      saveCart(); updateCartUI(); openCart();
     });
 
-    function renderFavMenu(){
-      favItemsDiv.innerHTML = '';
-      if(!favorites.size){ favItemsDiv.innerHTML = '<p class="muted">Aún no agregaste favoritos</p>'; return; }
-      DATA.filter(p=>favorites.has(p.id)).forEach(item=>{
-        const row = document.createElement('div');
-        row.className = 'cart-item';
-        row.innerHTML = `
-          <img src="${item.img}" alt="${item.nombre}" onerror="this.src='${PLACEHOLDER}'">
-          <div class="meta">
-            <strong>${item.nombre}</strong>
-            <span class="muted">${uy.format(item.precio)}</span>
-            <div class="qty" style="gap:8px">
-              <button class="icon" data-act="addcart" data-id="${item.id}">🛒 Agregar</button>
-              <button class="icon" data-act="rmfav"  data-id="${item.id}">🗑 Quitar</button>
-            </div>
+    function renderNotifications() {
+      notList.innerHTML = '';
+
+      if (!notifications.length) {
+        notList.innerHTML = `<div class="not-dd-empty">
+          <div style="font-size:22px; margin-bottom:6px;">🔔</div>
+          No tienes notificaciones
+        </div>`;
+        updateNotBadge();
+        return;
+      }
+
+      notifications.forEach((not, index) => {
+        const el = document.createElement('div');
+        el.className = `not-item ${not.read ? '' : 'unread'}`;
+        el.innerHTML = `
+          <div class="icon">🟡</div>
+          <div>
+            <div class="title">${not.title}</div>
+            <div class="desc">${not.message}</div>
           </div>
-          <div><strong>${uy.format(item.precio)}</strong></div>`;
-        favItemsDiv.appendChild(row);
+          <div class="right">
+            <div class="time">${formatTime(not.timestamp)}</div>
+            <button class="not-del" data-idx="${index}" aria-label="Borrar notificación" title="Borrar">🗑</button>
+          </div>
+        `;
+
+        // Marcar leída al hacer click en el item (menos en la papelera)
+        el.addEventListener('click', (e) => {
+          if (e.target.closest('.not-del')) return; // no marcar si clickeó papelera
+          notifications[index].read = true;
+          localStorage.setItem('lot_notifications', JSON.stringify(notifications));
+          updateNotBadge();
+          renderNotifications();
+        });
+
+        notList.appendChild(el);
+      });
+
+      // Borrar individual (delegado)
+      notList.querySelectorAll('.not-del').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation(); // evita marcar como leída
+          const idx = Number(btn.dataset.idx);
+          notifications.splice(idx, 1);
+          localStorage.setItem('lot_notifications', JSON.stringify(notifications));
+          updateNotBadge();
+          renderNotifications();
+        });
       });
     }
 
@@ -401,15 +469,59 @@
       const btn = e.target.closest('button.icon'); if(!btn) return;
       const id = Number(btn.dataset.id), act = btn.dataset.act;
       const prod = DATA.find(p => p.id === id); if(!prod) return;
-      if(act==='addcart'){
-        cart.set(id, (cart.get(id) || 0) + 1);
-        saveCart();
-        updateCartUI(); 
-        openCart();
-      }else if(act==='rmfav'){
-        favorites.delete(id); saveFavorites(); updateFavBadge(); renderFavMenu(); updateGridFavIcons();
-      }
+      if(act==='addcart'){ cart.set(id, (cart.get(id) || 0) + 1); saveCart(); updateCartUI(); openCart(); }
+      else if(act==='rmfav'){ favorites.delete(id); saveFavorites(); updateFavBadge(); renderFavMenu(); updateGridFavIcons(); }
     });
+
+    // ======== NOTIFICACIONES: Dropdown ========
+    const notBtn = document.getElementById('notBtn');
+    const notDropdown = document.getElementById('notDropdown');
+    const notList = document.getElementById('notList');
+    const markAllReadBtn = document.getElementById('markAllRead');
+
+    function formatTime(ts){
+      const now=new Date(), diff=now - new Date(ts);
+      const m=Math.floor(diff/60000), h=Math.floor(diff/3600000), d=Math.floor(diff/86400000);
+      if(m<1) return 'Ahora mismo'; if(m<60) return `Hace ${m} min`; if(h<24) return `Hace ${h} h`;
+      if(d<7) return `Hace ${d} d`; return new Date(ts).toLocaleDateString();
+    }
+    function renderNotifications(){
+      notList.innerHTML='';
+      if(!notifications.length){
+        notList.innerHTML = `<div class="not-dd-empty"><div style="font-size:22px;margin-bottom:6px">🔔</div>No tienes notificaciones</div>`;
+        return;
+      }
+      notifications.forEach((n,i)=>{
+        const el=document.createElement('div'); el.className=`not-item ${n.read?'':'unread'}`;
+        el.innerHTML = `
+          <div class="icon">🟡</div>
+          <div><div class="title">${n.title}</div><div class="desc">${n.message}</div></div>
+          <div class="time">${formatTime(n.timestamp)}</div>`;
+        el.addEventListener('click', ()=>{
+          notifications[i].read = true;
+          localStorage.setItem('lot_notifications', JSON.stringify(notifications));
+          updateNotBadge(); renderNotifications();
+        });
+        notList.appendChild(el);
+      });
+    }
+    function openNotDD(){ notDropdown.hidden=false; }
+    function closeNotDD(){ notDropdown.hidden=true; }
+    notBtn.addEventListener('click',(e)=>{ e.stopPropagation(); if(notDropdown.hidden) openNotDD(); else closeNotDD(); });
+    document.addEventListener('click',(e)=>{ if(!notDropdown.hidden && !e.target.closest('.not-dd-wrapper')) closeNotDD(); });
+    markAllReadBtn.addEventListener('click',(e)=>{ e.preventDefault(); notifications.forEach(n=>n.read=true); localStorage.setItem('lot_notifications', JSON.stringify(notifications)); updateNotBadge(); renderNotifications(); });
+
+    // Muestras iniciales (solo si no hay nada guardado)
+    (function seedNotifs(){
+      if (notifications.length) return;
+      const sample = [
+        { title:"¡Bienvenido a La Otra Tribuna!", message:"Explorá nuestro catálogo de camisetas únicas.", timestamp:new Date(Date.now()-1000*60*5).toISOString(), read:false },
+        { title:"Oferta especial", message:"Envío gratis en compras superiores a $2000.", timestamp:new Date(Date.now()-1000*60*60*2).toISOString(), read:false },
+        { title:"Nuevas camisetas", message:"Sección Retro actualizada.", timestamp:new Date(Date.now()-1000*60*60*24).toISOString(), read:true }
+      ];
+      notifications.push(...sample);
+      localStorage.setItem('lot_notifications', JSON.stringify(notifications));
+    })();
 
     // Render catálogo
     function render(){
@@ -423,14 +535,13 @@
         (!club || p.club===club) &&
         (!pais || p.pais===pais) &&
         (!cat || p.categoria===cat) &&
-        (p.nombre.toLowerCase().includes(term) || p.club.toLowerCase().includes(term) || p.pais.toLowerCase().includes(term))
+        (p.nombre.toLowerCase().includes(term) || (p.club||'').toLowerCase().includes(term) || (p.pais||'').toLowerCase().includes(term))
       );
 
       count.textContent = items.length;
       grid.innerHTML = '';
       for(const p of items){
-        const el = document.createElement('article');
-        el.className = 'card';
+        const el = document.createElement('article'); el.className = 'card';
         el.innerHTML = `
           <div class="media">
             <img src="${p.img}" alt="${p.nombre}" loading="lazy" onerror="this.src='${PLACEHOLDER}'">
@@ -442,7 +553,7 @@
             <div class="meta">
               <div>
                 <div style="font-weight:700;font-size:16px;line-height:1.2">${p.nombre}</div>
-                <div class="muted">${p.club} • ${p.categoria}</div>
+                <div class="muted">${p.club || '—'} • ${p.categoria}</div>
               </div>
               <div class="price">${uy.format(p.precio)}</div>
             </div>
@@ -468,10 +579,8 @@
       if(addBtn){
         const id = Number(addBtn.dataset.id);
         cart.set(id, (cart.get(id) || 0) + 1);
-        saveCart();
-        updateCartUI();
-        addBtn.textContent = 'Agregado ✓'; 
-        setTimeout(()=> addBtn.textContent = 'Agregar al carrito', 900);
+        saveCart(); updateCartUI();
+        addBtn.textContent = 'Agregado ✓'; setTimeout(()=> addBtn.textContent = 'Agregar al carrito', 900);
         return;
       }
       if(favBtnEl){
@@ -499,7 +608,7 @@
     function getSuggestions(term){
       const t = term.trim().toLowerCase(); if(!t) return [];
       return DATA.filter(p =>
-        p.nombre.toLowerCase().includes(t) || p.club.toLowerCase().includes(t) || p.pais.toLowerCase().includes(t)
+        p.nombre.toLowerCase().includes(t) || (p.club||'').toLowerCase().includes(t) || (p.pais||'').toLowerCase().includes(t)
       ).slice(0, 6);
     }
 
@@ -543,7 +652,7 @@
                     `<li class="search-item" data-type="suggestion" data-value="${p.nombre.replace(/"/g,'&quot;')}">
                       <div>
                         <div>${hl(p.nombre, term)}</div>
-                        <small>• ${hl(p.club, term)} — ${hl(p.pais, term)}</small>
+                        <small>• ${hl(p.club || '—', term)} — ${hl(p.pais || '—', term)}</small>
                       </div>
                     </li>`
                   ).join('')}
@@ -738,6 +847,8 @@
     updateCartBadge();
     updateCartUI();
     renderFavMenu();
+    updateNotBadge();
+    renderNotifications();
   </script>
 
   <!-- ===== SUPABASE: widget de usuario y cargar publicaciones ===== -->
@@ -802,7 +913,7 @@
           id: pub.id_publicacion,
           nombre: pub.titulo,
           precio: pub.precio,
-          club: 'Peñarol', // Temporal - deberías tener esta info en PRODUCTO_BASE
+          club: pub.club,
           pais: 'Uruguay', // Temporal
           categoria: formatCategoria(pub.categoria),
           img: primeraFoto || PLACEHOLDER, // Usar la foto real o el placeholder
