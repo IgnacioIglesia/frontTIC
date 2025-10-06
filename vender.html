@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="styles/main.css" />
   <link rel="stylesheet" href="styles/user-widget.css" />
   <link rel="stylesheet" href="styles/rastrear.css" />
+  <link rel="stylesheet" href="styles/notifications.css" />
 
   <style>
     body {
@@ -363,7 +364,6 @@
   <div id="successOverlay" class="success-overlay" role="status" aria-live="polite" aria-atomic="true">
     <div class="success-card">
       <div class="success-icon-wrap" aria-hidden="true">
-        <!-- Check verde -->
         <svg class="success-icon" viewBox="0 0 24 24" fill="none">
           <circle cx="12" cy="12" r="11" stroke="#16a34a" stroke-width="1.5" fill="#22c55e22"></circle>
           <path d="M7 12.5l3.2 3.2L17 9" stroke="#16a34a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -483,7 +483,7 @@
       }
     });
 
-    // ====== Funciones de éxito centrado ======
+    // ====== Éxito centrado ======
     const successOverlay = document.getElementById('successOverlay');
     const successTitle   = document.getElementById('successTitle');
     const successText    = document.getElementById('successText');
@@ -492,14 +492,10 @@
       successTitle.textContent = '¡Publicación creada!';
       successText.textContent  = message;
       successOverlay.classList.add('show');
-
-      // Evita scroll detrás
       document.body.classList.add('modal-open');
-
-      setTimeout(()=>{
-        window.location.href = redirUrl;
-      }, delayMs);
+      setTimeout(()=>{ window.location.href = redirUrl; }, delayMs);
     }
+    window.showSuccess = showSuccess;
   </script>
 
   <!-- SUPABASE: Auth + header -->
@@ -586,7 +582,6 @@
 
   <!-- SUPABASE: crear PRODUCTO_BASE + PUBLICACION + FOTO -->
   <script type="module">
-    // Usamos otro alias para evitar "Cannot redeclare 'sb'"
     const sbClient = window.sb;
     const BUCKET_NAME = 'publicaciones';
 
@@ -685,7 +680,7 @@
         talle,
         stock,
         estado: estado_pub,
-        club: equipo               // <-- acá guardás el club para el catálogo
+        club: equipo               // para el catálogo
       };
 
       const { data: pub, error: pubErr } = await sbClient
@@ -715,10 +710,9 @@
       // Éxito ✅
       window.showSuccess?.('Tu publicación se guardó correctamente.', 'index.html', 1400);
     });
-
-    // Exponer la función de éxito al scope del módulo
-    // (tomada del script anterior que no es módulo)
-    window.showSuccess = window.showSuccess || function(){};
   </script>
+
+  <!-- === Notificaciones: SOLO el JS, sin HTML incrustado === -->
+  <script type="module" src="scripts/notifications.js"></script>
 </body>
 </html>

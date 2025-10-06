@@ -6,53 +6,170 @@
   <title>La Otra Tribuna — Tienda de camisetas</title>
   <link rel="stylesheet" href="styles/main.css" />
   <link rel="stylesheet" href="styles/user-widget.css" />
+  <link rel="stylesheet" href="styles/notifications.css" />
   <link rel="icon" type="image/png" href="./assets/logo.png" />
-
-  <!-- === Estilos mínimos para el dropdown de notificaciones === -->
   <style>
-    .pill { position: relative; }
-    .pill span { margin-left: .25rem; font-weight: 600; }
-    .pill.has-notifications { animation: bump .3s ease; }
-    @keyframes bump { 0%{transform:scale(1)} 50%{transform:scale(1.08)} 100%{transform:scale(1)} }
-
-    .not-dd-wrapper { position: relative; }
-    .not-dropdown{
-      position:absolute; right:0; top:calc(100% + 10px);
-      width:340px; max-height:70vh; overflow:auto;
-      background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:12px;
-      box-shadow:0 12px 30px rgba(0,0,0,.12); z-index:50;
+    /* Estilos adicionales para el selector de ordenamiento */
+    .catalog-layout {
+      display: grid;
+      grid-template-columns: 250px 1fr;
+      gap: 24px;
+      margin-top: 20px;
     }
-    .not-dd-header{ display:flex; justify-content:space-between; align-items:center; gap:8px;
-      padding:6px 8px 10px; border-bottom:1px solid #f0f0f0; margin-bottom:8px; }
-    .not-dd-list{ display:flex; flex-direction:column; gap:10px; }
-    .not-dd-empty{ text-align:center; color:#6b7280; padding:18px 8px; }
-    .not-item{
-      display:grid; grid-template-columns:auto 1fr auto; gap:8px; align-items:start;
-      padding:10px; border-radius:10px; border:1px solid #eef0f2; background:#fafafa; cursor:pointer;
-    }
-    .not-item.unread{ background:#f7fbff; border-color:#e5f0ff; }
-    .not-item .title{ font-weight:600; margin-bottom:2px; }
-    .not-item .desc{ color:#6b7280; font-size:13px; }
-    .not-item .time{ color:#6b7280; font-size:12px; margin-left:8px; white-space:nowrap; }
-
-    /* Botón papelera en cada notificación */
-    .not-item .right {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 6px;
-    }
-    .not-del {
-      border: 1px solid #e5e7eb;
-      background: #fff;
-      font-size: 13px;
-      padding: 4px 6px;
+    
+    .filters-sidebar {
+      background: #f8f9fa;
+      padding: 20px;
       border-radius: 8px;
-      cursor: pointer;
-      line-height: 1;
+      height: fit-content;
+      position: sticky;
+      top: 20px;
     }
-    .not-del:hover { background: #f9fafb; }
-    .not-del:active { transform: scale(0.98); }
+    
+    .filters-sidebar h3 {
+      margin: 0 0 16px 0;
+      font-size: 18px;
+      color: #333;
+    }
+    
+    .filter-group {
+      margin-bottom: 20px;
+    }
+    
+    .filter-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 500;
+      color: #555;
+      font-size: 14px;
+    }
+    
+    .filter-group select,
+    .filter-group input {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    
+    .catalog-content {
+      min-width: 0; /* Para evitar problemas de overflow */
+    }
+    
+    .catalog-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    
+    .results-count {
+      color: #666;
+      font-size: 14px;
+    }
+    
+    .sort-selector select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-color: #fff;
+  background-image: url("data:image/svg+xml;utf8,<svg fill='%23666' height='16' viewBox='0 0 24 24' width='16' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 16px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 8px 36px 8px 12px;
+  font-size: 14px;
+  color: #333;
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+.sort-selector select:focus {
+  outline: none;
+  border-color: #064e3b;
+  box-shadow: 0 0 0 2px #064e3b22;
+  cursor: pointer;
+}
+    
+    
+
+    /* (Opcional) Gradiente del slider usando --percent */
+/* ===== Slider de precio: limpio y consistente en Chrome/Safari/Firefox ===== */
+#price.range{
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  height: 16px;          /* área de click cómoda */
+  background: transparent;  /* <- importante: sin background en el input */
+  margin: 0;
+}
+
+/* Track (WebKit: Chrome/Safari/Edge Chromium) */
+#price.range::-webkit-slider-runnable-track{
+  height: 8px;
+  border-radius: 999px;
+  /* 2 capas: progreso (usa --percent) + fondo gris */
+  background:
+    linear-gradient(#064e3b, #064e3b) left/var(--percent,0%) 100% no-repeat,
+    linear-gradient(#e5e7eb, #e5e7eb) left/100% 100% no-repeat;
+}
+
+/* Thumb (WebKit) */
+#price.range::-webkit-slider-thumb{
+  -webkit-appearance: none;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #064e3b;
+  box-shadow: 0 1px 2px rgba(0,0,0,.15);
+  margin-top: calc((8px - 18px)/2); /* centra el thumb en el track */
+}
+
+/* Track (Firefox) */
+#price.range::-moz-range-track{
+  height: 8px;
+  border-radius: 999px;
+  background: #e5e7eb;
+}
+#price.range::-moz-range-progress{
+  height: 8px;
+  border-radius: 999px;
+  background: #064e3b;
+}
+
+/* Thumb (Firefox) */
+#price.range::-moz-range-thumb{
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #064e3b;
+  box-shadow: 0 1px 2px rgba(0,0,0,.15);
+}
+
+/* Accesibilidad y feedback */
+#price.range:focus-visible{ outline: none; }
+#price.range::-webkit-slider-thumb:active,
+#price.range::-moz-range-thumb:active{ transform: scale(1.05); }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .catalog-layout {
+        grid-template-columns: 1fr;
+      }
+      
+      .filters-sidebar {
+        position: static;
+        order: 2;
+      }
+      
+      .catalog-content {
+        order: 1;
+      }
+    }
   </style>
 </head>
 <body>
@@ -82,19 +199,9 @@
           <span id="greeting" class="user-greeting"></span>
           <div id="userMenu" class="user-menu hidden">
             <a href="perfil.html">👤 Perfil</a>
+            <a href="mis_publicaciones.html">📊 Mis Publicaciones</a>
+            <a href="mis-pedidos.html">🧾 Mis pedidos</a>
             <a href="#" id="logoutBtn">🚪 Cerrar sesión</a>
-          </div>
-        </div>
-
-        <!-- === Notificaciones (campana + dropdown) === -->
-        <div class="not-dd-wrapper">
-          <button class="pill" id="notBtn" aria-label="Abrir notificaciones">🔔<span id="notCount">0</span></button>
-          <div id="notDropdown" class="not-dropdown" hidden>
-            <div class="not-dd-header">
-              <strong>Notificaciones</strong>
-              <a href="#" id="markAllRead" class="muted">Marcar todas como leídas</a>
-            </div>
-            <div id="notList" class="not-dd-list"></div>
           </div>
         </div>
 
@@ -119,7 +226,7 @@
 
         <div class="subnav-center">
           <div class="has-submenu" id="catsDrop">
-            <a href="#categorias" class="subnav-link" id="catsLink" aria-haspopup="true" aria-expanded="false">
+            <a href="#categorías" class="subnav-link" id="catsLink" aria-haspopup="true" aria-expanded="false">
               Categorías <span class="chev" aria-hidden="true">▾</span>
             </a>
             <div class="cat-submenu" id="catsMenu" role="menu" aria-label="Categorías">
@@ -223,6 +330,18 @@
         <h2>Catálogo</h2>
         <p class="muted">Resultados: <span id="count">0</span></p>
 
+        <!-- Selector de ordenamiento agregado -->
+        <div class="sort-selector">
+          <label for="sortBy">Ordenar por:</label>
+          <select id="sortBy">
+            <option value="default">Por defecto</option>
+            <option value="name-asc">Nombre (A-Z)</option>
+            <option value="name-desc">Nombre (Z-A)</option>
+            <option value="price-asc">Precio (Menor a Mayor)</option>
+            <option value="price-desc">Precio (Mayor a Menor)</option>
+          </select>
+        </div>
+
         <div class="filters">
           <select id="club"><option value="">Todos los clubes</option></select>
           <select id="pais"><option value="">Todos los países</option></select>
@@ -240,6 +359,9 @@
 
         <div id="grid" class="grid"></div>
       </section>
+
+      <!-- ===== CONTENEDOR DE NOTIFICACIONES ===== -->
+      <div id="notifications" class="notifications" aria-live="polite"></div>
 
       <footer>©️ <span id="year"></span> La Otra Tribuna.</footer>
     </div>
@@ -295,8 +417,60 @@
     const grid = qs('#grid'), count = qs('#count');
     const price = qs('#price'), priceLabel = qs('#priceLabel');
     const clubSel = qs('#club'), paisSel = qs('#pais'), catSel = qs('#categoria');
+    const sortBy = qs('#sortBy'); // Nuevo selector de ordenamiento
     const q = qs('#q');
     document.getElementById('year').textContent = new Date().getFullYear();
+
+    // ===== RANGO DE PRECIOS DINÁMICO (expuesto en window para usar desde módulos) =====
+    window.redondearPaso = function(valor, paso=50){ return Math.ceil(valor / paso) * paso; };
+
+    window.updateRangeTrack = function(){
+      const min = Number(price.min) || 0;
+      const max = Number(price.max) || 1;
+      const val = Number(price.value) || 0;
+      const pct = max > min ? ((val - min) / (max - min)) * 100 : 0;
+      price.style.setProperty('--percent', `${pct}%`);
+    };
+
+    window.setPriceBoundsFromData = function(){
+      if (!Array.isArray(DATA) || DATA.length === 0){
+        price.min = '0';
+        price.max = '0';
+        price.value = '0';
+        priceLabel.textContent = uy.format(0);
+        window.updateRangeTrack();
+        return;
+      }
+
+      const precios = DATA
+        .map(p => Number(p.precio) || 0)
+        .filter(n => Number.isFinite(n) && n >= 0);
+
+      if (precios.length === 0){
+        price.min = '0';
+        price.max = '0';
+        price.value = '0';
+        priceLabel.textContent = uy.format(0);
+        window.updateRangeTrack();
+        return;
+      }
+
+      const paso = Number(price.step) || 50;
+      const minP = Math.min(...precios);
+      const maxP = Math.max(...precios);
+
+      const minNice = Math.max(0, Math.floor(minP / paso) * paso);
+      const maxNice = window.redondearPaso(maxP, paso);
+
+      price.min = String(minNice);
+      price.max = String(maxNice);
+
+      const actual = Number(price.value);
+      price.value = String(isNaN(actual) ? maxNice : Math.min(actual, maxNice));
+
+      priceLabel.textContent = uy.format(Number(price.value));
+      window.updateRangeTrack();
+    };
 
     // Preseleccionar categoría desde ?cat=
     const params = new URLSearchParams(window.location.search);
@@ -312,36 +486,13 @@
     const cart = new Map(Object.entries(JSON.parse(localStorage.getItem('lot_cart') || '{}')).map(([k,v]) => [+k, v]));
     function saveCart(){ localStorage.setItem('lot_cart', JSON.stringify(Object.fromEntries(cart))); }
 
-    // ======== NOTIFICACIONES (persistentes) ========
-    const notifications = JSON.parse(localStorage.getItem('lot_notifications') || '[]');
-
-    // Badges
-    function updateFavBadge(){
-      const favCountBadge = document.getElementById('favCount');
-      if (favCountBadge) favCountBadge.textContent = favorites.size;
-    }
-    function updateCartBadge(){
-      const cartCountBadge = document.getElementById('cartCount');
-      if (cartCountBadge) {
-        let totalQty = 0; cart.forEach(qty => totalQty += qty);
-        cartCountBadge.textContent = totalQty;
-      }
-    }
-    function updateNotBadge(){
-      const el = document.getElementById('notCount');
-      const unread = notifications.filter(n=>!n.read).length;
-      el.textContent = unread;
-      const btn = document.getElementById('notBtn');
-      if (unread>0) btn.classList.add('has-notifications'); else btn.classList.remove('has-notifications');
-    }
-
     // ===== PANEL CARRITO =====
     const cartBtn = document.getElementById('cartBtn');
     const closeCart = document.getElementById('closeCart');
     const cartItemsDiv = document.getElementById('cartItems');
     const cartTotal = document.getElementById('cartTotal');
     const cartMenu = document.getElementById('cartMenu');
-    const overlay = document.getElementById('overlay'); /* <-- referencia usada por paneles/modales */
+    const overlay = document.getElementById('overlay');
 
     function showOverlay(){ overlay.classList.add('show'); }
     function hideOverlay(){ overlay.classList.remove('show'); }
@@ -396,7 +547,7 @@
       saveCart(); updateCartUI();
     });
 
-    // Favoritos
+    // Favoritos (panel lateral)
     const favBtn = document.getElementById('favBtn');
     const favMenu = document.getElementById('favMenu');
     const closeFav = document.getElementById('closeFav');
@@ -413,58 +564,6 @@
       saveCart(); updateCartUI(); openCart();
     });
 
-    function renderNotifications() {
-      notList.innerHTML = '';
-
-      if (!notifications.length) {
-        notList.innerHTML = `<div class="not-dd-empty">
-          <div style="font-size:22px; margin-bottom:6px;">🔔</div>
-          No tienes notificaciones
-        </div>`;
-        updateNotBadge();
-        return;
-      }
-
-      notifications.forEach((not, index) => {
-        const el = document.createElement('div');
-        el.className = `not-item ${not.read ? '' : 'unread'}`;
-        el.innerHTML = `
-          <div class="icon">🟡</div>
-          <div>
-            <div class="title">${not.title}</div>
-            <div class="desc">${not.message}</div>
-          </div>
-          <div class="right">
-            <div class="time">${formatTime(not.timestamp)}</div>
-            <button class="not-del" data-idx="${index}" aria-label="Borrar notificación" title="Borrar">🗑</button>
-          </div>
-        `;
-
-        // Marcar leída al hacer click en el item (menos en la papelera)
-        el.addEventListener('click', (e) => {
-          if (e.target.closest('.not-del')) return; // no marcar si clickeó papelera
-          notifications[index].read = true;
-          localStorage.setItem('lot_notifications', JSON.stringify(notifications));
-          updateNotBadge();
-          renderNotifications();
-        });
-
-        notList.appendChild(el);
-      });
-
-      // Borrar individual (delegado)
-      notList.querySelectorAll('.not-del').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          e.stopPropagation(); // evita marcar como leída
-          const idx = Number(btn.dataset.idx);
-          notifications.splice(idx, 1);
-          localStorage.setItem('lot_notifications', JSON.stringify(notifications));
-          updateNotBadge();
-          renderNotifications();
-        });
-      });
-    }
-
     favItemsDiv.addEventListener('click', (e)=>{
       const btn = e.target.closest('button.icon'); if(!btn) return;
       const id = Number(btn.dataset.id), act = btn.dataset.act;
@@ -473,55 +572,42 @@
       else if(act==='rmfav'){ favorites.delete(id); saveFavorites(); updateFavBadge(); renderFavMenu(); updateGridFavIcons(); }
     });
 
-    // ======== NOTIFICACIONES: Dropdown ========
-    const notBtn = document.getElementById('notBtn');
-    const notDropdown = document.getElementById('notDropdown');
-    const notList = document.getElementById('notList');
-    const markAllReadBtn = document.getElementById('markAllRead');
-
-    function formatTime(ts){
-      const now=new Date(), diff=now - new Date(ts);
-      const m=Math.floor(diff/60000), h=Math.floor(diff/3600000), d=Math.floor(diff/86400000);
-      if(m<1) return 'Ahora mismo'; if(m<60) return `Hace ${m} min`; if(h<24) return `Hace ${h} h`;
-      if(d<7) return `Hace ${d} d`; return new Date(ts).toLocaleDateString();
+    // Badges
+    function updateFavBadge(){
+      const favCountBadge = document.getElementById('favCount');
+      if (favCountBadge) favCountBadge.textContent = favorites.size;
     }
-    function renderNotifications(){
-      notList.innerHTML='';
-      if(!notifications.length){
-        notList.innerHTML = `<div class="not-dd-empty"><div style="font-size:22px;margin-bottom:6px">🔔</div>No tienes notificaciones</div>`;
-        return;
+    function updateCartBadge(){
+      const cartCountBadge = document.getElementById('cartCount');
+      if (cartCountBadge) {
+        let totalQty = 0; cart.forEach(qty => totalQty += qty);
+        cartCountBadge.textContent = totalQty;
       }
-      notifications.forEach((n,i)=>{
-        const el=document.createElement('div'); el.className=`not-item ${n.read?'':'unread'}`;
-        el.innerHTML = `
-          <div class="icon">🟡</div>
-          <div><div class="title">${n.title}</div><div class="desc">${n.message}</div></div>
-          <div class="time">${formatTime(n.timestamp)}</div>`;
-        el.addEventListener('click', ()=>{
-          notifications[i].read = true;
-          localStorage.setItem('lot_notifications', JSON.stringify(notifications));
-          updateNotBadge(); renderNotifications();
-        });
-        notList.appendChild(el);
-      });
     }
-    function openNotDD(){ notDropdown.hidden=false; }
-    function closeNotDD(){ notDropdown.hidden=true; }
-    notBtn.addEventListener('click',(e)=>{ e.stopPropagation(); if(notDropdown.hidden) openNotDD(); else closeNotDD(); });
-    document.addEventListener('click',(e)=>{ if(!notDropdown.hidden && !e.target.closest('.not-dd-wrapper')) closeNotDD(); });
-    markAllReadBtn.addEventListener('click',(e)=>{ e.preventDefault(); notifications.forEach(n=>n.read=true); localStorage.setItem('lot_notifications', JSON.stringify(notifications)); updateNotBadge(); renderNotifications(); });
 
-    // Muestras iniciales (solo si no hay nada guardado)
-    (function seedNotifs(){
-      if (notifications.length) return;
-      const sample = [
-        { title:"¡Bienvenido a La Otra Tribuna!", message:"Explorá nuestro catálogo de camisetas únicas.", timestamp:new Date(Date.now()-1000*60*5).toISOString(), read:false },
-        { title:"Oferta especial", message:"Envío gratis en compras superiores a $2000.", timestamp:new Date(Date.now()-1000*60*60*2).toISOString(), read:false },
-        { title:"Nuevas camisetas", message:"Sección Retro actualizada.", timestamp:new Date(Date.now()-1000*60*60*24).toISOString(), read:true }
-      ];
-      notifications.push(...sample);
-      localStorage.setItem('lot_notifications', JSON.stringify(notifications));
-    })();
+    // Función para ordenar los productos
+    function sortProducts(products, sortOption) {
+      const sortedProducts = [...products];
+      
+      switch(sortOption) {
+        case 'name-asc':
+          sortedProducts.sort((a, b) => a.nombre.localeCompare(b.nombre));
+          break;
+        case 'name-desc':
+          sortedProducts.sort((a, b) => b.nombre.localeCompare(a.nombre));
+          break;
+        case 'price-asc':
+          sortedProducts.sort((a, b) => a.precio - b.precio);
+          break;
+        case 'price-desc':
+          sortedProducts.sort((a, b) => b.precio - a.precio);
+          break;
+        default:
+          break;
+      }
+      
+      return sortedProducts;
+    }
 
     // Render catálogo
     function render(){
@@ -529,6 +615,7 @@
       const term = (q.value||'').toLowerCase();
       const maxP = Number(price.value);
       const club = clubSel.value, pais = paisSel.value, cat = catSel.value;
+      const sortOption = sortBy.value;
 
       const items = DATA.filter(p =>
         p.precio <= maxP &&
@@ -538,9 +625,12 @@
         (p.nombre.toLowerCase().includes(term) || (p.club||'').toLowerCase().includes(term) || (p.pais||'').toLowerCase().includes(term))
       );
 
-      count.textContent = items.length;
+      // Aplicar ordenamiento
+      const sortedItems = sortProducts(items, sortOption);
+
+      count.textContent = sortedItems.length;
       grid.innerHTML = '';
-      for(const p of items){
+      for(const p of sortedItems){
         const el = document.createElement('article'); el.className = 'card';
         el.innerHTML = `
           <div class="media">
@@ -562,6 +652,9 @@
         grid.appendChild(el);
       }
       updateGridFavIcons();
+
+      // Actualizar gradiente del slider acorde al valor
+      window.updateRangeTrack();
     }
 
     function updateGridFavIcons(){
@@ -703,8 +796,8 @@
     function onScroll(){ siteHeader.classList.toggle('is-scrolled', window.scrollY > 0); }
     onScroll(); window.addEventListener('scroll', onScroll, {passive:true});
 
-    // Inputs => render
-    function attachInputs(){ [price, clubSel, paisSel, catSel, q].forEach(el => el.addEventListener('input', render)); }
+    // Inputs => render (incluyendo el nuevo selector de ordenamiento)
+    function attachInputs(){ [price, clubSel, paisSel, catSel, q, sortBy].forEach(el => el.addEventListener('input', render)); }
     attachInputs();
 
     // Ubicación
@@ -846,10 +939,12 @@
     updateFavBadge();
     updateCartBadge();
     updateCartUI();
-    renderFavMenu();
-    updateNotBadge();
-    renderNotifications();
+    renderFavMenu?.();   // si existe en tu CSS/JS compartido
+    render();
   </script>
+
+  <!-- ===== NOTIFICACIONES ===== -->
+  <script type="module" src="scripts/notifications.js"></script>
 
   <!-- ===== SUPABASE: widget de usuario y cargar publicaciones ===== -->
   <script type="module">
@@ -879,91 +974,56 @@
     // ===== CARGAR PUBLICACIONES DESDE SUPABASE =====
     async function cargarPublicaciones() {
       try {
-        console.log('🔍 Cargando publicaciones desde Supabase...');
-        
-        // Cargar publicaciones con sus fotos
         const { data: publicaciones, error } = await supabase
           .from('publicacion')
-          .select(`
-            *,
-            foto (*)
-          `)
+          .select(`*, foto (*)`)
           .eq('estado', 'Activa');
-  
-        if (error) {
-          console.error('❌ Error cargando publicaciones:', error);
-          return;
-        }
-  
-        console.log('✅ Publicaciones cargadas con fotos:', publicaciones);
-        procesarPublicaciones(publicaciones);
-        
-      } catch (error) {
-        console.error('💥 Error al cargar publicaciones:', error);
-      }
+        if (error) return;
+        procesarPublicaciones(publicaciones || []);
+      } catch {}
     }
   
     function procesarPublicaciones(publicaciones) {
-      // Transformar los datos al formato que espera tu frontend
       DATA = publicaciones.map(pub => {
-        // Obtener la primera foto (si existe)
         const primeraFoto = pub.foto && pub.foto.length > 0 ? pub.foto[0].url : null;
-        
         return {
           id: pub.id_publicacion,
           nombre: pub.titulo,
           precio: pub.precio,
           club: pub.club,
-          pais: 'Uruguay', // Temporal
+          pais: 'Uruguay',
           categoria: formatCategoria(pub.categoria),
-          img: primeraFoto || PLACEHOLDER, // Usar la foto real o el placeholder
+          img: primeraFoto || PLACEHOLDER,
           talle: pub.talle,
           condicion: pub.condicion,
           autenticidad: pub.autenticidad,
           stock: pub.stock,
           descripcion: pub.descripcion,
           sellerId: pub.id_usuario,
-          // Guardar todas las fotos por si las necesitas después
           fotos: pub.foto || []
         }
       });
-      
-      console.log('🔄 DATA transformada con imágenes:', DATA);
-      
-      // Llenar los filtros de club y país
       llenarFiltros();
-      
-      // Renderizar el catálogo
-      render();
+
+      // >>> NUEVO: ajustar límites del slider SEGÚN DATA (desde el módulo usamos window.*)
+      window.setPriceBoundsFromData?.();
+
+      // render ahora usa el max dinámico correcto
+      // (render está definido en el script no-módulo y es global)
+      window.render?.();
     }
   
-    function formatCategoria(cat) {
-      if (!cat) return 'Club';
-      if (cat === 'Seleccion') return 'Selección';
-      return cat;
-    }
+    function formatCategoria(cat) { if (!cat) return 'Club'; if (cat === 'Seleccion') return 'Selección'; return cat; }
   
-    // Función para llenar los select de filtros
     function llenarFiltros() {
       const clubs = [...new Set(DATA.map(p => p.club).filter(Boolean))];
       const paises = [...new Set(DATA.map(p => p.pais).filter(Boolean))];
-      
-      // Limpiar selects
       const clubSel = document.getElementById('club');
       const paisSel = document.getElementById('pais');
-      
       clubSel.innerHTML = '<option value="">Todos los clubes</option>';
       paisSel.innerHTML = '<option value="">Todos los países</option>';
-      
-      // Llenar clubes
-      clubs.forEach(club => {
-        clubSel.appendChild(new Option(club, club));
-      });
-      
-      // Llenar países
-      paises.forEach(pais => {
-        paisSel.appendChild(new Option(pais, pais));
-      });
+      clubs.forEach(club => clubSel.appendChild(new Option(club, club)));
+      paises.forEach(pais => paisSel.appendChild(new Option(pais, pais)));
     }
   
     async function refreshHeader(){
@@ -975,19 +1035,13 @@
       }
       const uid = session.user.id
       let nombre = '', apellido = '', email = session.user.email || ''
-      
       try{
-        const { data: perfil, error } = await supabase
+        const { data: perfil } = await supabase
           .from('usuario')
           .select('nombre, apellido, email')
           .eq('id_auth', uid)
           .maybeSingle()
-          
-        if (error) {
-          console.log('⚠️ Error cargando perfil:', error);
-          nombre = session.user.user_metadata?.nombre || ''
-          apellido = session.user.user_metadata?.apellido || ''
-        } else if (perfil) {
+        if (perfil){
           nombre = perfil.nombre || session.user.user_metadata?.nombre || ''
           apellido = perfil.apellido || session.user.user_metadata?.apellido || ''
           email = perfil.email || email
@@ -995,11 +1049,7 @@
           nombre = session.user.user_metadata?.nombre || ''
           apellido = session.user.user_metadata?.apellido || ''
         }
-      } catch(error) {
-        console.error('Error cargando perfil:', error);
-        nombre = session.user.user_metadata?.nombre || ''
-        apellido = session.user.user_metadata?.apellido || ''
-      }
+      } catch {}
   
       avatarEl.textContent = initialsFrom(nombre, apellido, email)
       greetEl.textContent  = `Hola, ${firstNameFrom(nombre, email)}!`
@@ -1008,15 +1058,10 @@
       userWidget.classList.remove('hidden')
     }
   
-    // Inicializar la aplicación
     await refreshHeader();
-    
-    // CARGAR LAS PUBLICACIONES DESDE SUPABASE
     await cargarPublicaciones();
   
-    supabase.auth.onAuthStateChange(() => { 
-      refreshHeader(); 
-    })
+    supabase.auth.onAuthStateChange(() => { refreshHeader(); })
   
     // Toggle menú usuario
     userWidget.addEventListener('click', (e)=>{
@@ -1034,7 +1079,7 @@
       location.reload()
     })
   
-    // MODAL PRODUCTO - ACTUALIZADO PARA MOSTRAR MÚLTIPLES FOTOS
+    // MODAL PRODUCTO
     const SELLERS = {
       1: { nombre:'Ignacio Iglesia', email:'iaioiglesia@icloud.com' },
       2: { nombre:'María Pérez', email:'maria@example.com' }
@@ -1061,7 +1106,6 @@
     }
   
     function openProductModal(item){
-      // Usar la imagen real en lugar del placeholder
       pdImage.src = item.img;
       pdImage.onerror = ()=>{ pdImage.src = PLACEHOLDER; }
       pdTitle.textContent = item.nombre || 'Publicación';
@@ -1106,7 +1150,6 @@
       document.getElementById('overlay').classList.remove('show');
     });
   
-    // Abrir modal al clickear card (excepto botones)
     const gridEl = document.getElementById('grid');
     gridEl.addEventListener('click', (e)=>{
       const btnAdd = e.target.closest('button[data-id]');

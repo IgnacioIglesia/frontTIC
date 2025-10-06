@@ -4,8 +4,11 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Cómo funciona — La Otra Tribuna</title>
+
+  <!-- Estilos base -->
   <link rel="stylesheet" href="styles/main.css" />
   <link rel="stylesheet" href="styles/user-widget.css" />
+  <link rel="stylesheet" href="styles/notifications.css" />
   <link rel="icon" type="image/png" href="./assets/logo.png" />
 </head>
 <body>
@@ -162,7 +165,7 @@
     // Mensaje del header
     document.getElementById('headerMessage').textContent = 'Así de simple es usar La Otra Tribuna';
 
-    // ====== UBICACIÓN (mismo código que Ayuda/Favoritos) ======
+    // ====== UBICACIÓN (mismo código que en otras páginas) ======
     const LOCATION_KEY = 'lot_location';
     const overlay = document.getElementById('overlay');
     const openLocationBtn = document.getElementById('openLocation');
@@ -174,8 +177,7 @@
     const acceptLocBtn = document.getElementById('acceptLoc');
     const locText = document.getElementById('locText');
 
-    const DEPTS = {
-      "Artigas":["Artigas","Bella Unión","Tomás Gomensoro","Baltasar Brum"],
+    const DEPTS = {"Artigas":["Artigas","Bella Unión","Tomás Gomensoro","Baltasar Brum"],
       "Canelones":["Canelones","Ciudad de la Costa","Las Piedras","Pando","La Paz","Progreso","Santa Lucía","Atlántida","Parque del Plata","Sauce","San Ramón","Empalme Olmos","Toledo"],
       "Cerro Largo":["Melo","Río Branco","Fraile Muerto","Tupambaé","Isidoro Noblía"],
       "Colonia":["Colonia del Sacramento","Carmelo","Nueva Helvecia","Juan Lacaze","Rosario","Tarariras","Ombúes de Lavalle"],
@@ -193,8 +195,7 @@
       "San José":["San José de Mayo","Ciudad del Plata","Libertad","Ecilda Paullier","Delta El Tigre","Raigón"],
       "Soriano":["Mercedes","Dolores","Cardona","José Enrique Rodó","Palmitas"],
       "Tacuarembó":["Tacuarembó","Paso de los Toros","San Gregorio de Polanco","Curtina","Ansina"],
-      "Treinta y Tres":["Treinta y Tres","Vergara","Santa Clara de Olimar","Villa Sara"]
-    };
+      "Treinta y Tres":["Treinta y Tres","Vergara","Santa Clara de Olimar","Villa Sara"]};
 
     function fillDept(){ Object.keys(DEPTS).forEach(d => deptSel.append(new Option(d,d))); }
     function renderLocationText(){
@@ -233,17 +234,16 @@
     fillDept(); renderLocationText();
 
     // Sombra header al hacer scroll
-    const siteHeader = document.getElementById('siteHeader');
-    const onScroll = ()=> siteHeader.classList.toggle('is-scrolled', window.scrollY > 0);
+    const siteHeaderEl = document.getElementById('siteHeader');
+    const onScroll = ()=> siteHeaderEl.classList.toggle('is-scrolled', window.scrollY > 0);
     onScroll(); window.addEventListener('scroll', onScroll, {passive:true});
 
-    // (Opcional) abrir/cerrar submenu categorías en mobile
+    // Mobile: submenu categorías
     const catsDrop = document.getElementById('catsDrop');
     const catsLink = document.getElementById('catsLink');
     catsLink?.addEventListener('click', (e)=>{
       if (window.matchMedia('(max-width: 820px)').matches){
-        e.preventDefault();
-        catsDrop.classList.toggle('open');
+        e.preventDefault(); catsDrop.classList.toggle('open');
       }
     });
     document.addEventListener('click', (e)=>{
@@ -251,12 +251,15 @@
     });
   </script>
 
-  <!-- ===== SUPABASE: widget de usuario (saludo + menú) ===== -->
+  <!-- ===== SUPABASE: widget de usuario + sesión global para notifications.js ===== -->
   <script type="module">
     import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
     const SUPABASE_URL = 'https://imexctmcesopdfdebsgo.supabase.co'
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImltZXhjdG1jZXNvcGRmZGVic2dvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzMDczMDIsImV4cCI6MjA3NDg4MzMwMn0.g1lziVKAuUvMEOkYxJhe2D2z8PlwGJ6xcXo_SSpTj7Q'
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+    // cliente global para que scripts/notifications.js use window.sb
+    if (!window.sb) window.sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    const supabase = window.sb
 
     const loginBtn   = document.getElementById('loginBtn')
     const userWidget = document.getElementById('userWidget')
@@ -309,9 +312,9 @@
     }
 
     await refreshHeader()
-    supabase.auth.onAuthStateChange((_event, _session) => { refreshHeader() })
+    supabase.auth.onAuthStateChange((_e,_s)=>refreshHeader())
 
-    // === Menú desplegable ===
+    // Menú usuario
     userWidget.addEventListener('click', (e)=>{
       if(e.target.closest('#userMenu')) return
       userMenu.classList.toggle('hidden')
@@ -320,10 +323,11 @@
       if(!userWidget.contains(e.target)){ userMenu.classList.add('hidden') }
     })
     logoutBtn.addEventListener('click', async (e)=>{
-      e.preventDefault()
-      await supabase.auth.signOut()
-      location.reload()
+      e.preventDefault(); await supabase.auth.signOut(); location.reload()
     })
   </script>
+
+  <!-- 🔔 NOTIFICACIONES: deja que el JS cree/gestione la campana -->
+  <script type="module" src="scripts/notifications.js"></script>
 </body>
 </html>

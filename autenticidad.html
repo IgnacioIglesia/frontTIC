@@ -6,6 +6,7 @@
   <title>Autenticidad — La Otra Tribuna</title>
   <link rel="stylesheet" href="styles/main.css" />
   <link rel="stylesheet" href="styles/user-widget.css" />
+  <link rel="stylesheet" href="styles/notifications.css" />
   <link rel="icon" type="image/png" href="./assets/logo.png" />
 </head>
 <body>
@@ -25,19 +26,23 @@
       <div class="header-messages" id="headerMessage">Compra y vendé con confianza</div>
 
       <div class="actions" style="display:flex;align-items:center;gap:12px;">
-        <!-- Botón por defecto -->
+        <!-- Botón por defecto (si no hay sesión) -->
         <a id="loginBtn" href="login.html" class="btn-login">Iniciar sesión</a>
 
-        <!-- Widget usuario (se muestra con sesión) -->
+        <!-- Widget usuario (con sesión) -->
         <div id="userWidget" class="user-widget hidden" aria-live="polite">
           <div id="userAvatar" class="user-avatar" title="Mi perfil"></div>
           <span id="greeting" class="user-greeting"></span>
+
           <!-- Menú -->
           <div id="userMenu" class="user-menu hidden">
             <a href="perfil.html">👤 Perfil</a>
-            <a href="#" id="logoutBtn">🚪 Cerrar sesión</a>
+            <a href="mis-publicaciones.html">📦 Mis publicaciones</a>
+            <a href="mis-pedidos.html">🧾 Mis pedidos</a>
+            <a href="#" id="logoutBtn" class="menu-divider">🚪 Cerrar sesión</a>
           </div>
         </div>
+        <!-- La campana de notificaciones se inyecta aquí por notifications.js -->
       </div>
     </div>
 
@@ -53,23 +58,23 @@
             <span class="loc-line" id="locText">Ingresa tu <strong>ubicación</strong></span>
           </a>
         </div>
-    
+
         <div class="subnav-center">
           <div class="has-submenu" id="catsDrop">
             <a href="index.html" class="subnav-link" id="catsLink" aria-haspopup="true" aria-expanded="false">
               Categorías <span class="chev" aria-hidden="true">▾</span>
             </a>
             <div class="cat-submenu" id="catsMenu" role="menu" aria-label="Categorías">
-                <a href="index.html?cat=club#catalogo">Club</a>
-                <a href="index.html?cat=seleccion#catalogo">Selección</a>
-                <a href="index.html?cat=retro#catalogo">Retro</a>
+              <a href="index.html?cat=club#catalogo">Club</a>
+              <a href="index.html?cat=seleccion#catalogo">Selección</a>
+              <a href="index.html?cat=retro#catalogo">Retro</a>
             </div>
           </div>
           <a href="ofertas.html" class="subnav-link">Ofertas</a>
           <a href="vender.html" class="subnav-link">Vender</a>
           <a href="rastrear.html" class="subnav-link">Rastrear Pedido</a>
         </div>
-    
+
         <div class="subnav-right">
           <a href="favoritos.html" class="subnav-link">Favoritos</a>
           <a href="como-funciona.html" class="subnav-link">Cómo funciona</a>
@@ -153,7 +158,7 @@
   </main>
 
   <script>
-    // Mensaje del header
+    // Mensaje fijo del header
     document.getElementById('headerMessage').textContent = 'Compra y vendé con confianza';
 
     // ====== UBICACIÓN ======
@@ -245,79 +250,24 @@
     });
   </script>
 
-  <!-- ===== SUPABASE: widget de usuario (saludo + menú) ===== -->
-  <script type="module">
-    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-    const SUPABASE_URL = 'https://imexctmcesopdfdebsgo.supabase.co'
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImltZXhjdG1jZXNvcGRmZGVic2dvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzMDczMDIsImV4cCI6MjA3NDg4MzMwMn0.g1lziVKAuUvMEOkYxJhe2D2z8PlwGJ6xcXo_SSpTj7Q'
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  <!-- ===== SCRIPTS COMPARTIDOS ===== -->
+  <!-- Notificaciones -->
+  <script src="scripts/notifications.js"></script>
 
-    const loginBtn   = document.getElementById('loginBtn')
-    const userWidget = document.getElementById('userWidget')
-    const avatarEl   = document.getElementById('userAvatar')
-    const greetEl    = document.getElementById('greeting')
-    const userMenu   = document.getElementById('userMenu')
-    const logoutBtn  = document.getElementById('logoutBtn')
+  <!-- Widget de usuario centralizado (maneja sesión, saludo, menú y logout) -->
+  <script type="module" src="scripts/user-widget.js"></script>
 
-    const initialsFrom = (nombre='', apellido='', email='')=>{
-      const n = (nombre||'').trim().split(/\s+/)[0] || ''
-      const a = (apellido||'').trim().split(/\s+/)[0] || ''
-      const ini = (n[0]||'') + (a[0]||'')
-      return (ini || (email[0]||'?')).toUpperCase()
-    }
-    const firstNameFrom = (nombre='', email='')=>{
-      const n = (nombre||'').trim().split(/\s+/)[0]
-      return n || (email || '').split('@')[0]
-    }
-
-    async function refreshHeader(){
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session){
-        userWidget.classList.add('hidden')
-        loginBtn.classList.remove('hidden')
-        return
+  <script>
+    // Montar campana en el contenedor de acciones del header
+    window.NotificationsConfig = Object.assign(
+      { containerSelector: '.actions' },
+      window.NotificationsConfig || {}
+    );
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.Notifications && typeof window.Notifications.mount === 'function') {
+        window.Notifications.mount();
       }
-      const uid = session.user.id
-      let nombre = '', apellido = '', email = session.user.email || ''
-      try{
-        const { data: perfil } = await supabase
-          .from('usuario')
-          .select('nombre, apellido, email')
-          .eq('id_auth', uid)
-          .maybeSingle()
-        if (perfil){
-          nombre = perfil.nombre || session.user.user_metadata?.nombre || ''
-          apellido = perfil.apellido || session.user.user_metadata?.apellido || ''
-          email = perfil.email || email
-        }else{
-          nombre = session.user.user_metadata?.nombre || ''
-          apellido = session.user.user_metadata?.apellido || ''
-        }
-      }catch(_){}
-
-      avatarEl.textContent = initialsFrom(nombre, apellido, email)
-      greetEl.textContent  = `Hola, ${firstNameFrom(nombre, email)}!`
-
-      loginBtn.classList.add('hidden')
-      userWidget.classList.remove('hidden')
-    }
-
-    await refreshHeader()
-    supabase.auth.onAuthStateChange((_event, _session) => { refreshHeader() })
-
-    // === Menú desplegable ===
-    userWidget.addEventListener('click', (e)=>{
-      if(e.target.closest('#userMenu')) return
-      userMenu.classList.toggle('hidden')
-    })
-    document.addEventListener('click', (e)=>{
-      if(!userWidget.contains(e.target)){ userMenu.classList.add('hidden') }
-    })
-    logoutBtn.addEventListener('click', async (e)=>{
-      e.preventDefault()
-      await supabase.auth.signOut()
-      location.reload()
-    })
+    });
   </script>
 </body>
 </html>
