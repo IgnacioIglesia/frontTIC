@@ -171,4 +171,10 @@ button, .btn, a.btn, .pill, .loc-link, .subnav-link {
 
   /* Botones de navegación del hero un poco más chicos */
   .hero-nav{ width:36px; height:36px; font-size:20px; }
+
+  @media (max-width: 820px){
+    html, body { overflow-x: hidden; }
+    img, video, canvas { max-width: 100%; height: auto; }
+    .hero{ width: 100% !important; margin-left: 0 !important; }
+  }
 }
