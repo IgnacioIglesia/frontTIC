@@ -10,7 +10,55 @@ button, .btn, a.btn, .pill, .loc-link, .subnav-link {
   min-height: 44px;
 }
 
+/* ===== MENÚ MÓVIL (DRAWER) ===== */
+/* Botón hamburguesa oculto por defecto (lo mostramos en mobile) */
+.burger{ display: none; }
+
+/* Drawer lateral derecho */
+.mnav{
+  position: fixed; inset: 0 0 0 auto;
+  width: min(88vw, 420px);
+  transform: translateX(100%);
+  background: #fff;
+  box-shadow: -6px 0 22px rgba(0,0,0,.18);
+  display: flex; flex-direction: column;
+  z-index: 140;
+  transition: transform .25s ease;
+}
+.mnav.open{ transform: translateX(0); }
+
+.mnav-head{
+  display:flex; align-items:center; justify-content:space-between;
+  gap:8px; padding:14px 16px; border-bottom:1px solid var(--ring);
+}
+.mnav-search{ padding:12px 16px; border-bottom:1px solid var(--ring); }
+.mnav-search input{
+  width:100%; height:42px; border:1px solid var(--ring); border-radius:12px;
+  padding:8px 12px; background:#fff;
+}
+
+.mnav-links{ display:flex; flex-direction:column; padding:8px; }
+.mnav-links a{
+  padding:12px 10px; border-radius:10px; text-decoration:none; color:#111; font-weight:600;
+}
+.mnav-links a:hover{ background:#f6f6f7; }
+
+.mnav-sec{ padding:12px 16px; border-top:1px solid var(--ring); }
+
+/* Ajuste del dropdown de búsqueda dentro del drawer (reusa .search-menu global) */
+@media (max-width: 820px){
+  #msearchMenu.search-menu{ left:16px; right:16px; width:auto; }
+}
+
 /* ===== BREAKPOINTS ===== */
+
+/* Ajustes para <= 820px (ocultar subnav y buscador del header; mostrar burger) */
+@media (max-width: 820px){
+  .burger { display: inline-flex !important; align-items: center; justify-content: center; }
+  .search { display: none; }      /* ocultamos buscador del header (usamos el del drawer) */
+  .subnav { display: none; }      /* ocultamos la sub-navegación horizontal */
+  header .header-messages { display: none; } /* ahorrar espacio en header */
+}
 
 /* Ajustes para <= 640px (móviles medianos) */
 @media (max-width: 640px) {
@@ -36,7 +84,7 @@ button, .btn, a.btn, .pill, .loc-link, .subnav-link {
     display: none; /* ahorrar espacio en móvil */
   }
 
-  /* Subnav más flexible */
+  /* Subnav más flexible (si en alguna vista no la ocultás) */
   .subnav-inner {
     gap: 8px;
     padding: 6px 8px;
@@ -88,6 +136,9 @@ button, .btn, a.btn, .pill, .loc-link, .subnav-link {
   .card .media {
     min-height: 200px;
   }
+  .card .body{
+    padding: 10px;
+  }
 
   /* Hero más bajo y texto más chico */
   .hero {
@@ -117,4 +168,7 @@ button, .btn, a.btn, .pill, .loc-link, .subnav-link {
   .cart-menu {
     width: 100%;
   }
+
+  /* Botones de navegación del hero un poco más chicos */
+  .hero-nav{ width:36px; height:36px; font-size:20px; }
 }
