@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Iniciar sesión — La Otra Tribuna</title>
   <link rel="stylesheet" href="styles/main.css" />
+  <link rel="stylesheet" href="styles/mobile.css" />
+  <script src="scripts/mobile-nav.js" defer></script>
   <link rel="stylesheet" href="styles/user-widget.css" />
   <link rel="icon" type="image/png" href="./assets/logo.png" />
 </head>
@@ -22,6 +24,9 @@
       </div>
       <div class="header-messages">Iniciá sesión para comprar y vender</div>
     </div>
+    <button class="burger" aria-expanded="false" aria-controls="mnav" aria-label="Abrir menú">
+      <span>≡</span>
+    </button>
 
     <!-- ===== SUBNAV ===== -->
     <nav class="subnav">
@@ -56,6 +61,34 @@
         </div>
       </div>
     </nav>
+    <!-- ===== MENÚ MÓVIL (DRAWER) ===== -->
+    <nav id="mnav" class="mnav" role="dialog" aria-modal="true" aria-label="Menú">
+      <div class="mnav-head">
+        <strong>Menú</strong>
+        <button type="button" class="close-mnav" aria-label="Cerrar">✕</button>
+      </div>
+
+      <!-- Buscador dentro del menú (opcional) -->
+      <div class="mnav-search">
+        <input id="mq" type="search" placeholder="Buscar camisetas…" autocomplete="off" />
+        <div id="msearchMenu" class="search-menu" hidden></div>
+      </div>
+
+      <!-- Enlaces -->
+      <div class="mnav-links">
+        <a href="index.html">Inicio</a>
+        <a href="ofertas.html">Ofertas</a>
+        <a href="vender.html">Vender</a>
+        <a href="rastrear.html">Rastrear Pedido</a>
+        <a href="favoritos.html">Favoritos</a>
+        <a href="como-funciona.html">Cómo funciona</a>
+        <a href="autenticidad.html">Autenticidad</a>
+        <a href="ayuda.html">Ayuda</a>
+      </div>
+    </nav>
+
+  <!-- Overlay para cerrar tocando afuera -->
+  <div id="overlay" class="overlay"></div>
   </header>
 
   <!-- ===== LOGIN FORM ===== -->
