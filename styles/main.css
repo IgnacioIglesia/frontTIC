@@ -62,48 +62,83 @@ header .header-messages{
 }
 
 /* ===== SUBNAV ===== */
+/* ===== SUBNAV ===== */
+:root{
+  --subnav-h: 36px;      /* altura uniforme para todos los items */
+  --subnav-pad-x: 10px;  /* padding lateral */
+}
+
 .subnav{
   background: transparent;
   border-top: 1px solid #edf0f2;
 }
+
 .subnav-inner{
   display: flex; align-items: center; gap: 16px;
-  padding: 8px 16px; min-height: 44px;
+  padding: 8px 16px;
+  min-height: calc(var(--subnav-h) + 8px); /* header cómodo */
 }
 
-.subnav-left{
-  flex: 0 0 auto; min-width: 0;
+/* columnas */
+.subnav-left,
+.subnav-center,
+.subnav-right{
   display:flex; align-items:center;
 }
-.loc-link{
-  display:inline-flex; align-items:center; gap:8px;
-  color:#111; text-decoration:none; padding:6px 12px 6px 0;
-  line-height:1; border-right:1px solid #e8ebee; margin-right:12px;
+.subnav-center{ flex:1 1 auto; min-width:0; justify-content:center; gap:18px; flex-wrap:nowrap; }
+.subnav-left{  flex:0 0 auto; min-width:0; }
+.subnav-right{ flex:0 0 auto; min-width:0; gap:18px; }
+
+/* link de ubicación */
+/* ===== Ajuste tipográfico de "Enviar a ..." ===== */
+.loc-link {
+  font-weight: 500;              /* antes 600 — más liviano */
+  font-size: 14px;
+  color: #444;                   /* un gris más suave que el negro */
+  opacity: 0.9;                  /* lo integra mejor con el resto */
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: var(--subnav-h);
+  padding: 0 var(--subnav-pad-x) 0 0;
+  border-right: 1px solid #e8ebee;
+  margin-right: 12px;
   white-space: nowrap;
+  transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+.loc-link:hover {
+  color: #111;                   /* más oscuro al pasar el mouse */
+  opacity: 1;
+}
+
+.loc-line {
+  font-weight: 500;              /* igual que .loc-link */
+  color: inherit;
+}
+
+.loc-line strong {
+  font-weight: 700;      /* negrita */
+  color: #111;           /* un poquito más oscuro */
 }
 .loc-ic{ display:block; }
-.loc-line{ font-size:14px; font-weight:600; white-space:nowrap; }
+.loc-ic svg, .loc-ic img{ width:18px; height:18px; display:block; } /* 👈 alto fijo */
 
-.subnav-center{
-  flex: 1 1 auto; min-width: 0;
-  display:flex; align-items:center; justify-content:center;
-  gap:18px; flex-wrap: nowrap;
-}
-.subnav-right{
-  flex: 0 0 auto; min-width: 0;
-  display:flex; align-items:center; gap:18px;
-}
-
+/* links del centro/derecha */
 .subnav-link{
+  display:inline-flex; align-items:center; /* 👈 centra verticalmente */
   color:#111; text-decoration:none; font-weight:600; font-size:14px;
-  line-height:1; padding:8px 10px; opacity:.9; transition:opacity .2s ease;
+  line-height:1;
+  height: var(--subnav-h);                /* 👈 misma altura */
+  padding: 0 var(--subnav-pad-x);         /* 👈 sin padding vertical */
+  opacity:.9; transition:opacity .2s ease;
   white-space: nowrap;
 }
 .subnav-link:hover{ opacity:1; }
 
-/* Submenú Categorías */
 .has-submenu{ position:relative; }
-.has-submenu .chev{ margin-left:4px; font-size:12px; opacity:.7; }
+.has-submenu .chev{ margin-left:4px; font-size:12px; opacity:.7; display:block; line-height:1; }
 
 .cat-submenu{
   position:absolute; top:calc(100% + 8px); left:0;
@@ -128,6 +163,7 @@ header .header-messages{
   .subnav-right{ order:3; width:100%; justify-content:center; gap:16px; }
   .cat-submenu{ left:50%; transform:translateX(-50%); }
 }
+
 header.is-scrolled + .subnav{ border-top-color:#e8ebee; }
 
 /* ===== BOTONES ===== */
@@ -442,4 +478,18 @@ select, .range{ width:100%; padding:10px; border:1px solid var(--ring); border-r
 /* Cuando está activo (agregado a favoritos) */
 .fav-toggle.active {
   color: red;
+}
+
+.empty-state a {
+  display: inline-block;
+  background: #f6f6f7;
+  color: var(--brand, #004225);
+  font-weight: 600;
+  text-decoration: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  transition: background 0.2s ease;
+}
+.empty-state a:hover {
+  background: #eaeaea;
 }

@@ -108,10 +108,6 @@
         <a href="ayuda.html">Ayuda</a>
       </div>
     </nav>
-
-  <!-- Si la página no lo tiene todavía: -->
-  <div id="overlay" class="overlay"></div>
-
   </header>
 
   <!-- ===== Overlay + MODAL UBICACIÓN ===== -->
@@ -192,11 +188,13 @@
     </div>
   </main>
 
+  <!-- ===== SCRIPT UBICACIÓN ===== -->
+  <script src="scripts/uy-depts.js"></script>
   <script>
     // Mensaje del header
     document.getElementById('headerMessage').textContent = 'Así de simple es usar La Otra Tribuna';
 
-    // ====== UBICACIÓN (mismo código que en otras páginas) ======
+    // ====== UBICACIÓN ======
     const LOCATION_KEY = 'lot_location';
     const overlay = document.getElementById('overlay');
     const openLocationBtn = document.getElementById('openLocation');
@@ -208,49 +206,60 @@
     const acceptLocBtn = document.getElementById('acceptLoc');
     const locText = document.getElementById('locText');
 
-    const DEPTS = {"Artigas":["Artigas","Bella Unión","Tomás Gomensoro","Baltasar Brum"],
-      "Canelones":["Canelones","Ciudad de la Costa","Las Piedras","Pando","La Paz","Progreso","Santa Lucía","Atlántida","Parque del Plata","Sauce","San Ramón","Empalme Olmos","Toledo"],
-      "Cerro Largo":["Melo","Río Branco","Fraile Muerto","Tupambaé","Isidoro Noblía"],
-      "Colonia":["Colonia del Sacramento","Carmelo","Nueva Helvecia","Juan Lacaze","Rosario","Tarariras","Ombúes de Lavalle"],
-      "Durazno":["Durazno","Sarandí del Yí","Carmen","Centenario"],
-      "Flores":["Trinidad","Ismael Cortinas"],
-      "Florida":["Florida","Sarandí Grande","Casupá","25 de Mayo"],
-      "Lavalleja":["Minas","José Pedro Varela","Solís de Mataojo","Mariscala"],
-      "Maldonado":["Maldonado","Punta del Este","San Carlos","Piriápolis","Pan de Azúcar","Aiguá","La Barra"],
-      "Montevideo":["Montevideo"],
-      "Paysandú":["Paysandú","Guichón","Quebracho","Piedras Coloradas"],
-      "Río Negro":["Fray Bentos","Young","Nuevo Berlín","San Javier"],
-      "Rivera":["Rivera","Tranqueras","Minas de Corrales","Vichadero","Mandubí"],
-      "Rocha":["Rocha","Chuy","Castillos","Lascano","La Paloma","Punta del Diablo"],
-      "Salto":["Salto","Constitución","Belén","Daymán","San Antonio"],
-      "San José":["San José de Mayo","Ciudad del Plata","Libertad","Ecilda Paullier","Delta El Tigre","Raigón"],
-      "Soriano":["Mercedes","Dolores","Cardona","José Enrique Rodó","Palmitas"],
-      "Tacuarembó":["Tacuarembó","Paso de los Toros","San Gregorio de Polanco","Curtina","Ansina"],
-      "Treinta y Tres":["Treinta y Tres","Vergara","Santa Clara de Olimar","Villa Sara"]};
+    // Usar DEPTS del archivo externo
+    const DEPTS = window.UY_DEPTS || {"Montevideo":["Montevideo"]};
 
-    function fillDept(){ Object.keys(DEPTS).forEach(d => deptSel.append(new Option(d,d))); }
+    function fillDept(){ 
+      Object.keys(DEPTS).forEach(d => deptSel.append(new Option(d,d))); 
+    }
+    
     function renderLocationText(){
       const raw = localStorage.getItem(LOCATION_KEY);
-      if(!raw){ locText.innerHTML = 'Ingresa tu <strong>ubicación</strong>'; return; }
-      try{ const {loc} = JSON.parse(raw); locText.textContent = `Enviar a ${loc}`; }
-      catch{ locText.innerHTML = 'Ingresa tu <strong>ubicación</strong>'; }
+      if(!raw){ 
+        locText.innerHTML = 'Ingresa tu <strong>ubicación</strong>'; 
+        return; 
+      }
+      try{ 
+        const {loc} = JSON.parse(raw); 
+        locText.textContent = `Enviar a ${loc}`; 
+      }
+      catch{ 
+        locText.innerHTML = 'Ingresa tu <strong>ubicación</strong>'; 
+      }
     }
-    function showOverlay(){ overlay.classList.add('show'); }
-    function hideOverlay(){ overlay.classList.remove('show'); }
-    function openLocation(){ locationModal.classList.add('open'); showOverlay(); }
-    function closeLocation(){ locationModal.classList.remove('open'); hideOverlay(); }
 
-    openLocationBtn.addEventListener('click', (e)=>{ e.preventDefault(); openLocation(); });
-    closeLocationBtn?.addEventListener('click', closeLocation);
-    cancelLocBtn?.addEventListener('click', closeLocation);
-    overlay.addEventListener('click', closeLocation);
+    function openLocationModal() {
+      locationModal.classList.add('open');
+      overlay.classList.add('show');
+      document.body.classList.add('modal-open');
+    }
+    
+    function closeLocationModal() {
+      locationModal.classList.remove('open');
+      overlay.classList.remove('show');
+      document.body.classList.remove('modal-open');
+    }
+
+    openLocationBtn.addEventListener('click', (e)=>{ 
+      e.preventDefault(); 
+      openLocationModal(); 
+    });
+    
+    closeLocationBtn?.addEventListener('click', closeLocationModal);
+    cancelLocBtn?.addEventListener('click', closeLocationModal);
+    overlay.addEventListener('click', closeLocationModal);
 
     deptSel.addEventListener('change', ()=>{
       const dept = deptSel.value;
       locSel.innerHTML = '<option value="" selected>Elija una opción</option>';
-      if(!dept){ locSel.disabled = true; acceptLocBtn.disabled = true; return; }
-      DEPTS[dept].forEach(loc => locSel.append(new Option(loc,loc)));
-      locSel.disabled = false; acceptLocBtn.disabled = true;
+      if(!dept){ 
+        locSel.disabled = true; 
+        acceptLocBtn.disabled = true; 
+        return; 
+      }
+      (DEPTS[dept] || []).forEach(loc => locSel.append(new Option(loc,loc)));
+      locSel.disabled = false; 
+      acceptLocBtn.disabled = true;
     });
 
     locSel.addEventListener('change', ()=> acceptLocBtn.disabled = !locSel.value);
@@ -259,22 +268,26 @@
       e.preventDefault();
       if(!deptSel.value || !locSel.value) return;
       localStorage.setItem(LOCATION_KEY, JSON.stringify({dept:deptSel.value, loc:locSel.value}));
-      renderLocationText(); closeLocation();
+      renderLocationText(); 
+      closeLocation();
     });
 
-    fillDept(); renderLocationText();
+    fillDept(); 
+    renderLocationText();
 
     // Sombra header al hacer scroll
     const siteHeaderEl = document.getElementById('siteHeader');
     const onScroll = ()=> siteHeaderEl.classList.toggle('is-scrolled', window.scrollY > 0);
-    onScroll(); window.addEventListener('scroll', onScroll, {passive:true});
+    onScroll(); 
+    window.addEventListener('scroll', onScroll, {passive:true});
 
     // Mobile: submenu categorías
     const catsDrop = document.getElementById('catsDrop');
     const catsLink = document.getElementById('catsLink');
     catsLink?.addEventListener('click', (e)=>{
       if (window.matchMedia('(max-width: 820px)').matches){
-        e.preventDefault(); catsDrop.classList.toggle('open');
+        e.preventDefault(); 
+        catsDrop.classList.toggle('open');
       }
     });
     document.addEventListener('click', (e)=>{

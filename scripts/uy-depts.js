@@ -1,0 +1,21 @@
+window.UY_DEPTS = {
+    "Artigas": ["Artigas", "Bella Unión", "Tomás Gomensoro"],
+    "Canelones": ["Canelones", "Las Piedras", "Pando", "Santa Lucía", "Atlántida", "La Paz"],
+    "Cerro Largo": ["Melo", "Río Branco", "Fraile Muerto"],
+    "Colonia": ["Colonia del Sacramento", "Juan Lacaze", "Carmelo", "Nueva Helvecia"],
+    "Durazno": ["Durazno", "Sarandí del Yí"],
+    "Flores": ["Trinidad"],
+    "Florida": ["Florida", "Sarandí Grande"],
+    "Lavalleja": ["Minas", "José Pedro Varela"],
+    "Maldonado": ["Maldonado", "Punta del Este", "San Carlos", "Piriápolis"],
+    "Montevideo": ["Montevideo"],
+    "Paysandú": ["Paysandú", "Guichón"],
+    "Río Negro": ["Fray Bentos", "Young", "San Javier"],
+    "Rivera": ["Rivera", "Tranqueras", "Vichadero"],
+    "Rocha": ["Rocha", "Castillos", "Chuy", "La Paloma"],
+    "Salto": ["Salto", "Belén"],
+    "San José": ["San José de Mayo", "Ciudad del Plata", "Libertad"],
+    "Soriano": ["Mercedes", "Dolores", "Cardona"],
+    "Tacuarembó": ["Tacuarembó", "Paso de los Toros"],
+    "Treinta y Tres": ["Treinta y Tres", "Vergara"]
+  };

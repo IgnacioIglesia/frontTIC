@@ -25,37 +25,37 @@
         <input type="search" placeholder="Buscar club o país…" autocomplete="off" />
       </div>
 
-      <div class="header-messages" id="headerMessage">Tus camisetas preferidas, en un solo lugar</div>
+      <div class="header-messages" id="headerMessage">Tus favoritos, siempre a mano</div>
 
       <div class="actions" style="display:flex;align-items:center;gap:12px;">
-        <!-- Botón por defecto -->
+        <!-- Botón por defecto (si no hay sesión) -->
         <a id="loginBtn" href="login.html" class="btn-login">Iniciar sesión</a>
 
-        <!-- Widget de usuario (oculto hasta que haya sesión) -->
+        <!-- Widget usuario (con sesión) -->
         <div id="userWidget" class="user-widget hidden" aria-live="polite">
           <div id="userAvatar" class="user-avatar" title="Mi perfil"></div>
           <span id="greeting" class="user-greeting"></span>
 
-          <!-- Menú desplegable -->
+          <!-- Menú -->
           <div id="userMenu" class="user-menu hidden">
             <a href="perfil.html">👤 Perfil</a>
-            <a href="mis_publicaciones.html">📊 Mis Publicaciones</a>
+            <a href="mis_publicaciones.html">📦 Mis publicaciones</a>
             <a href="mis-pedidos.html">🧾 Mis pedidos</a>
-            <a href="#" id="logoutBtn">🚪 Cerrar sesión</a>
+            <a href="#" id="logoutBtn" class="menu-divider">🚪 Cerrar sesión</a>
           </div>
         </div>
+        <!-- La campana de notificaciones se inyecta aquí por notifications.js -->
       </div>
     </div>
-
     <button class="burger" aria-expanded="false" aria-controls="mnav" aria-label="Abrir menú">
       <span>≡</span>
     </button>
-
 
     <!-- ===== SUBNAV ===== -->
     <nav class="subnav">
       <div class="container subnav-inner">
         <div class="subnav-left">
+          <!-- botón/estado de ubicación -->
           <a href="#ubicacion" class="loc-link" id="openLocation">
             <svg class="loc-ic" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path d="M12 22s7-6.46 7-12a7 7 0 1 0-14 0c0 5.54 7 12 7 12Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
@@ -71,9 +71,9 @@
               Categorías <span class="chev" aria-hidden="true">▾</span>
             </a>
             <div class="cat-submenu" id="catsMenu" role="menu" aria-label="Categorías">
-                <a href="index.html?cat=club#catalogo">Club</a>
-                <a href="index.html?cat=seleccion#catalogo">Selección</a>
-                <a href="index.html?cat=retro#catalogo">Retro</a>
+              <a href="index.html?cat=club#catalogo">Club</a>
+              <a href="index.html?cat=seleccion#catalogo">Selección</a>
+              <a href="index.html?cat=retro#catalogo">Retro</a>
             </div>
           </div>
           <a href="ofertas.html" class="subnav-link">Ofertas</a>
@@ -89,6 +89,8 @@
         </div>
       </div>
     </nav>
+
+    <!-- Menú móvil -->
     <nav id="mnav" class="mnav" role="dialog" aria-modal="true" aria-label="Menú">
       <div class="mnav-head">
         <strong>Menú</strong>
@@ -109,14 +111,11 @@
         <a href="ayuda.html">Ayuda</a>
       </div>
     </nav>
-
-  <!-- Si la página no lo tiene todavía: -->
-  <div id="overlay" class="overlay"></div>
-
   </header>
 
-  <!-- ===== Overlay + MODAL UBICACIÓN ===== -->
+  <!-- ===== Overlay + MODAL UBICACIÓN (únicos) ===== -->
   <div id="overlay" class="overlay"></div>
+
   <div id="locationModal" class="modal" aria-hidden="true" role="dialog" aria-modal="true">
     <div class="modal-card">
       <div class="modal-head">
@@ -146,159 +145,173 @@
 
   <!-- ===== CONTENIDO ===== -->
   <main class="container">
-    <div class="info-wrap" style="padding:20px">
-      <h1 style="margin-bottom:6px">Favoritos</h1>
-      <p class="lead">Guardá tus camisetas preferidas y comparalas fácil. Podés pasarlas al carrito cuando quieras.</p>
+    <div class="info-wrap">
+      <h1>Favoritos</h1>
+      <p class="lead">Guardá y compará las camisetas que más te gustan.</p>
 
-      <div id="favGrid" class="favs-grid" style="margin-top:12px"></div>
-      <p id="favEmpty" class="muted" style="text-align:center; display:none; margin:18px 0">
-        Aún no agregaste favoritos.
-      </p>
+      <!-- Estado vacío / grilla (dejalo como uses en tu CSS/JS) -->
+      <section id="fav-empty" class="empty-state" hidden>
+        <p>No tenés camisetas en Favoritos todavía.</p>
+        <a class="btn" href="index.html#catalogo">Explorar catálogo</a>
+      </section>
+
+      <section id="fav-grid" class="grid" aria-live="polite"></section>
     </div>
   </main>
 
+  <!-- ===== SCRIPT UBICACIÓN ===== -->
+  <script src="scripts/uy-depts.js"></script>
   <script>
-    document.getElementById('headerMessage').textContent = 'Tus camisetas preferidas, en un solo lugar';
+    // Mensaje fijo del header
+    document.getElementById('headerMessage').textContent = 'Tus favoritos, siempre a mano';
 
-    // ===== DEMO DATA =====
-    const DATA = [
-      {id:1,nombre:'Camiseta Local 24/25',club:'Barcelona',pais:'España',categoria:'Club',precio:3290,img:'./assets/camisetas/barcelona-local.jpg'},
-      {id:2,nombre:'Camiseta Visitante 24/25',club:'Barcelona',pais:'España',categoria:'Club',precio:3190,img:'./assets/camisetas/barcelona-visitante.jpg'},
-      {id:3,nombre:'Camiseta Titular 24/25',club:'Real Madrid',pais:'España',categoria:'Club',precio:3490,img:'./assets/camisetas/real-madrid-titular.jpg'},
-      {id:4,nombre:'Camiseta Selección 24/25',club:'Uruguay',pais:'Uruguay',categoria:'Selección',precio:2990,img:'./assets/camisetas/uruguay-seleccion.jpg'}
-    ];
-    const PLACEHOLDER = 'https://placehold.co/600x750?text=Camiseta';
-    const uy = new Intl.NumberFormat('es-UY',{style:'currency',currency:'UYU',maximumFractionDigits:0});
+    // ====== UBICACIÓN ======
+    const LOCATION_KEY = 'lot_location';
+    const overlay = document.getElementById('overlay');
+    const openLocationBtn = document.getElementById('openLocation');
+    const locationModal = document.getElementById('locationModal');
+    const closeLocationBtn = document.getElementById('closeLocation');
+    const cancelLocBtn = document.getElementById('cancelLoc');
+    const deptSel = document.getElementById('departamento');
+    const locSel = document.getElementById('localidad');
+    const acceptLocBtn = document.getElementById('acceptLoc');
+    const locText = document.getElementById('locText');
 
-    const favorites = new Set(JSON.parse(localStorage.getItem('lot_favorites') || '[]'));
-    const grid = document.getElementById('favGrid');
-    const empty = document.getElementById('favEmpty');
-    function saveFavorites(){ localStorage.setItem('lot_favorites', JSON.stringify([...favorites])); }
+    // Usar DEPTS del archivo externo
+    const DEPTS = window.UY_DEPTS || {"Montevideo":["Montevideo"]};
 
-    function renderFavs(){
-      grid.innerHTML = '';
-      if(!favorites.size){ empty.style.display='block'; return; }
-      empty.style.display='none';
-
-      DATA.filter(p=>favorites.has(p.id)).forEach(p=>{
-        const card = document.createElement('article');
-        card.className = 'card';
-        card.innerHTML = `
-          <div class="media">
-            <img src="${p.img}" alt="${p.nombre}" onerror="this.src='${PLACEHOLDER}'">
-          </div>
-          <div class="body">
-            <div class="meta">
-              <div>
-                <div style="font-weight:700">${p.nombre}</div>
-                <div class="muted">${p.club} • ${p.categoria}</div>
-              </div>
-              <div class="price">${uy.format(p.precio)}</div>
-            </div>
-            <div style="display:flex; gap:8px">
-              <button class="btn primary" data-act="cart" data-id="${p.id}">Agregar al carrito</button>
-              <button class="btn ghost" data-act="rm" data-id="${p.id}">Quitar</button>
-            </div>
-          </div>`;
-        grid.appendChild(card);
-      });
+    function fillDept(){ 
+      Object.keys(DEPTS).forEach(d => deptSel.append(new Option(d,d))); 
+    }
+    
+    function renderLocationText(){
+      const raw = localStorage.getItem(LOCATION_KEY);
+      if(!raw){ 
+        locText.innerHTML = 'Ingresa tu <strong>ubicación</strong>'; 
+        return; 
+      }
+      try{ 
+        const {loc} = JSON.parse(raw); 
+        locText.textContent = `Enviar a ${loc}`; 
+      }
+      catch{ 
+        locText.innerHTML = 'Ingresa tu <strong>ubicación</strong>'; 
+      }
     }
 
-    function addCart(id){
-      const key = 'lot_cart_demo';
-      const cart = new Map(Object.entries(JSON.parse(localStorage.getItem(key) || '{}')).map(([k,v])=>[+k,v]));
-      const prod = DATA.find(x=>x.id===id); if(!prod) return;
-      cart.set(id, (cart.get(id)||0)+1);
-      localStorage.setItem(key, JSON.stringify(Object.fromEntries(cart)));
-      alert('Agregado al carrito (demo)');
+    function openLocationModal() {
+      locationModal.classList.add('open');
+      overlay.classList.add('show');
+      document.body.classList.add('modal-open');
+    }
+    
+    function closeLocationModal() {
+      locationModal.classList.remove('open');
+      overlay.classList.remove('show');
+      document.body.classList.remove('modal-open');
     }
 
-    grid.addEventListener('click', (e)=>{
-      const btn = e.target.closest('button[data-act]'); if(!btn) return;
-      const id = Number(btn.dataset.id);
-      if(btn.dataset.act==='rm'){ favorites.delete(id); saveFavorites(); renderFavs(); }
-      if(btn.dataset.act==='cart'){ addCart(id); }
+    openLocationBtn.addEventListener('click', (e)=>{ 
+      e.preventDefault(); 
+      openLocationModal(); 
+    });
+    
+    closeLocationBtn?.addEventListener('click', closeLocationModal);
+    cancelLocBtn?.addEventListener('click', closeLocationModal);
+    overlay.addEventListener('click', closeLocationModal);
+
+    deptSel.addEventListener('change', ()=>{
+      const dept = deptSel.value;
+      locSel.innerHTML = '<option value="" selected>Elija una opción</option>';
+      if(!dept){ 
+        locSel.disabled = true; 
+        acceptLocBtn.disabled = true; 
+        return; 
+      }
+      (DEPTS[dept] || []).forEach(loc => locSel.append(new Option(loc,loc)));
+      locSel.disabled = false; 
+      acceptLocBtn.disabled = true;
     });
 
-    renderFavs();
-  </script>
+    locSel.addEventListener('change', ()=> acceptLocBtn.disabled = !locSel.value);
 
-  <!-- ===== SUPABASE: sesión ===== -->
-  <script type="module">
-    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-    const SUPABASE_URL = 'https://imexctmcesopdfdebsgo.supabase.co'
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImltZXhjdG1jZXNvcGRmZGVic2dvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzMDczMDIsImV4cCI6MjA3NDg4MzMwMn0.g1lziVKAuUvMEOkYxJhe2D2z8PlwGJ6xcXo_SSpTj7Q'
-    if (!window.sb) window.sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-    const supabase = window.sb
+    document.getElementById('locForm').addEventListener('submit', (e)=>{
+      e.preventDefault();
+      if(!deptSel.value || !locSel.value) return;
+      localStorage.setItem(LOCATION_KEY, JSON.stringify({dept:deptSel.value, loc:locSel.value}));
+      renderLocationText(); 
+      closeLocation();
+      window.dispatchEvent(new CustomEvent('lotr:location-changed'));
+    });
 
-    const loginBtn   = document.getElementById('loginBtn')
-    const userWidget = document.getElementById('userWidget')
-    const userMenu   = document.getElementById('userMenu')
-    const logoutBtn  = document.getElementById('logoutBtn')
-    const avatarEl   = document.getElementById('userAvatar')
-    const greetEl    = document.getElementById('greeting')
+    fillDept(); 
+    renderLocationText();
 
-    const initialsFrom = (nombre='', apellido='', email='')=>{
-      const n = (nombre||'').trim().split(/\s+/)[0]||''
-      const a = (apellido||'').trim().split(/\s+/)[0]||''
-      const ini = (n[0]||'') + (a[0]||'')
-      return (ini || (email[0]||'?')).toUpperCase()
-    }
-    const firstNameFrom = (nombre='', email='')=>{
-      const n = (nombre||'').trim().split(/\s+/)[0]
-      return n || (email||'').split('@')[0]
-    }
+    // Sombra header
+    const siteHeader = document.getElementById('siteHeader');
+    const onScroll = ()=> siteHeader.classList.toggle('is-scrolled', window.scrollY > 0);
+    onScroll(); 
+    window.addEventListener('scroll', onScroll, {passive:true});
 
-    async function refreshHeader(){
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session){
-        userWidget.classList.add('hidden')
-        loginBtn.classList.remove('hidden')
-        return
+    // Submenú categorías en mobile
+    const catsDrop = document.getElementById('catsDrop');
+    const catsLink = document.getElementById('catsLink');
+    catsLink?.addEventListener('click', (e)=>{
+      if (window.matchMedia('(max-width: 820px)').matches){
+        e.preventDefault();
+        catsDrop.classList.toggle('open');
       }
-
-      let nombre = session.user.user_metadata?.nombre || ''
-      let apellido = session.user.user_metadata?.apellido || ''
-      let email = session.user.email || ''
-
-      try{
-        const { data: perfil } = await supabase
-          .from('usuario')
-          .select('nombre,apellido,email')
-          .eq('id_auth', session.user.id)
-          .maybeSingle()
-        if (perfil){
-          nombre = perfil.nombre ?? nombre
-          apellido = perfil.apellido ?? apellido
-          email = perfil.email ?? email
-        }
-      }catch(_){}
-
-      avatarEl.textContent = initialsFrom(nombre, apellido, email)
-      greetEl.textContent  = `Hola, ${firstNameFrom(nombre, email)}!`
-
-      loginBtn.classList.add('hidden')
-      userWidget.classList.remove('hidden')
-    }
-
-    userWidget.addEventListener('click', (e)=>{
-      if(e.target.closest('#userMenu')) return
-      userMenu.classList.toggle('hidden')
-    })
+    });
     document.addEventListener('click', (e)=>{
-      if(!userWidget.contains(e.target)){ userMenu.classList.add('hidden') }
-    })
-    logoutBtn?.addEventListener('click', async (e)=>{
-      e.preventDefault()
-      await supabase.auth.signOut()
-      location.reload()
-    })
+      if(!catsDrop.contains(e.target)) catsDrop.classList.remove('open');
+    });
 
-    await refreshHeader()
-    supabase.auth.onAuthStateChange((_event,_session)=> refreshHeader())
+    // ====== FAVORITOS (placeholder simple: usa tu lógica si ya la tenés) ======
+    const favGrid = document.getElementById('fav-grid');
+    const favEmpty = document.getElementById('fav-empty');
+    const FAV_KEY = 'lot_favs';
+    function loadFavs(){
+      let items = [];
+      try { items = JSON.parse(localStorage.getItem(FAV_KEY) || '[]'); } catch {}
+      if(!items.length){
+        favEmpty.hidden = false;
+        favGrid.innerHTML = '';
+        return;
+      }
+      favEmpty.hidden = true;
+      favGrid.innerHTML = items.map(it => `
+        <article class="card">
+          <img src="${it.img || './assets/placeholder.png'}" alt="${it.title || 'Camiseta'}" />
+          <div class="card-body">
+            <h3>${it.title || 'Camiseta'}</h3>
+            <p>${it.team || ''} ${it.season ? '· ' + it.season : ''}</p>
+            <strong>${it.price ? '$ ' + it.price : ''}</strong>
+          </div>
+        </article>
+      `).join('');
+    }
+    loadFavs();
+    window.addEventListener('storage', e => { if(e.key === FAV_KEY) loadFavs(); });
   </script>
 
-  <!-- ✅ NOTIFICACIONES: solo el script -->
-  <script type="module" src="scripts/notifications.js"></script>
+  <!-- ===== SCRIPTS COMPARTIDOS ===== -->
+  <!-- Notificaciones -->
+  <script src="scripts/notifications.js"></script>
+
+  <!-- Widget de usuario centralizado (maneja sesión, saludo, menú y logout) -->
+  <script type="module" src="scripts/user-widget.js"></script>
+
+  <script>
+    // Montar campana en el contenedor de acciones del header
+    window.NotificationsConfig = Object.assign(
+      { containerSelector: '.actions' },
+      window.NotificationsConfig || {}
+    );
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.Notifications && typeof window.Notifications.mount === 'function') {
+        window.Notifications.mount();
+      }
+    });
+  </script>
 </body>
 </html>

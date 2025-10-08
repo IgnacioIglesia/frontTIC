@@ -12,64 +12,18 @@
   <link rel="icon" type="image/png" href="./assets/logo.png" />
   <style>
     /* Loading spinner */
-    .loading-spinner {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      flex-direction: column;
-      gap: 16px;
-    }
-    .spinner {
-      width: 40px;
-      height: 40px;
-      border: 4px solid #f3f3f3;
-      border-top: 4px solid #007bff;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
+    .loading-spinner { display:flex; justify-content:center; align-items:center; height:100vh; flex-direction:column; gap:16px; }
+    .spinner { width:40px; height:40px; border:4px solid #f3f3f3; border-top:4px solid #007bff; border-radius:50%; animation:spin 1s linear infinite; }
+    @keyframes spin { 0%{transform:rotate(0)} 100%{transform:rotate(360deg)} }
 
     /* Centrar el contenido */
-    .track-full {
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      min-height: calc(100vh - 200px);
-      padding: 40px 20px;
-    }
-    .track-card {
-      width: 100%;
-      max-width: 500px;
-      margin: 0 auto;
-    }
+    .track-full { display:flex; justify-content:center; align-items:flex-start; min-height:calc(100vh - 200px); padding:40px 20px; }
+    .track-card { width:100%; max-width:500px; margin:0 auto; }
 
     /* ✅ Fix de notificación */
-    .notif-btn::before,
-    .notif-btn::after {
-      content: none !important;
-      background: none !important;
-    }
-
-    .notif-btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 34px;
-      height: 34px;
-      border-radius: 8px;
-      border: 1px solid var(--ring, #e5e7eb);
-      background: #fff;
-      padding: 0;
-      font-size: 18px;
-      line-height: 1;
-      cursor: pointer;
-    }
-
-    .notif-badge[hidden] { display: none !important; }
+    .notif-btn::before, .notif-btn::after { content:none !important; background:none !important; }
+    .notif-btn { display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; border-radius:8px; border:1px solid var(--ring, #e5e7eb); background:#fff; padding:0; font-size:18px; line-height:1; cursor:pointer; }
+    .notif-badge[hidden] { display:none !important; }
   </style>
 </head>
 <body>
@@ -123,7 +77,7 @@
           <span id="greeting" class="user-greeting"></span>
           <div id="userMenu" class="user-menu hidden">
             <a href="perfil.html">👤 Perfil</a>
-            <a href="mis_publicaciones.html">📊 Mis Publicaciones</a>
+            <a href="mis_publicaciones.html">📊 Mis Publiciciones</a>
             <a href="mis-pedidos.html">🧾 Mis pedidos</a>
             <a href="#" id="logoutBtn">🚪 Cerrar sesión</a>
           </div>
@@ -143,7 +97,7 @@
               <path d="M12 22s7-6.46 7-12a7 7 0 1 0-14 0c0 5.54 7 12 7 12Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
               <circle cx="12" cy="10" r="2.5" stroke="currentColor" stroke-width="1.6"/>
             </svg>
-            <span class="loc-line" id="locText">Enviar a <strong>Montevideo</strong></span>
+            <span class="loc-line" id="locText">Ingresa tu <strong>ubicación</strong></span>
           </a>
         </div>
 
@@ -192,11 +146,37 @@
         <a href="ayuda.html">Ayuda</a>
       </div>
     </nav>
+  </header>
 
-  <!-- Si la página no lo tiene todavía: -->
+  <!-- ===== Overlay + MODAL UBICACIÓN (únicos) ===== -->
   <div id="overlay" class="overlay"></div>
 
-  </header>
+  <div id="locationModal" class="modal" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3>Elige dónde recibir tus compras</h3>
+        <button class="modal-close" id="closeLocation" aria-label="Cerrar">✕</button>
+      </div>
+      <form id="locForm" class="loc-form" autocomplete="off">
+        <div class="field">
+          <label for="departamento">Departamento</label>
+          <select id="departamento" required>
+            <option value="" selected>Elija una opción</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="localidad">Localidad</label>
+          <select id="localidad" required disabled>
+            <option value="" selected>Elija una opción</option>
+          </select>
+        </div>
+        <div class="actions-row">
+          <button type="button" class="btn" id="cancelLoc">Cancelar</button>
+          <button type="submit" class="btn primary" id="acceptLoc" disabled>Aceptar</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <!-- ===== CONTENIDO ===== -->
   <main class="track-full" id="mainContent" style="display:none;">
@@ -231,6 +211,10 @@
 
   <footer class="site-footer" style="display:none;">© <span id="year"></span> La Otra Tribuna.</footer>
 
+  <!-- ===== SCRIPT UBICACIÓN ===== -->
+  <script src="scripts/uy-depts.js"></script>
+
+  <!-- Notificaciones -->
   <script src="scripts/notifications.js" type="module"></script>
 
   <!-- ===== SUPABASE AUTH ===== -->
@@ -241,16 +225,19 @@
     if (!window.sb) window.sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
     const supabase = window.sb
 
-    const loginBtn = document.getElementById('loginBtn')
+    const loginBtn   = document.getElementById('loginBtn')
     const userWidget = document.getElementById('userWidget')
-    const avatarEl = document.getElementById('userAvatar')
-    const greetEl = document.getElementById('greeting')
-    const userMenu = document.getElementById('userMenu')
-    const logoutBtn = document.getElementById('logoutBtn')
-    const loadingEl = document.getElementById('loading')
+    const avatarEl   = document.getElementById('userAvatar')
+    const greetEl    = document.getElementById('greeting')
+    const userMenu   = document.getElementById('userMenu')
+    const logoutBtn  = document.getElementById('logoutBtn')
+    const loadingEl  = document.getElementById('loading')
     const siteHeader = document.getElementById('siteHeader')
-    const mainContent = document.getElementById('mainContent')
-    const footer = document.querySelector('.site-footer')
+    const mainContent= document.getElementById('mainContent')
+    const footer     = document.querySelector('.site-footer')
+
+    const initialsFrom = (n='', a='', e='') => ((n[0]||'')+(a[0]||e[0]||'?')).toUpperCase()
+    const firstNameFrom= (n='', e='') => (n.trim().split(/\s+/)[0] || e.split('@')[0])
 
     async function checkAuthAndRedirect() {
       const { data: { session } } = await supabase.auth.getSession()
@@ -261,6 +248,8 @@
       }
       showContent()
       await refreshHeader()
+      // 👉 inicializar ubicación una vez visible el header
+      if (window.initLocation) window.initLocation()
     }
 
     function showContent() {
@@ -269,9 +258,6 @@
       mainContent.style.display = 'block'
       footer.style.display = 'block'
     }
-
-    const initialsFrom = (n='', a='', e='') => ((n[0]||'')+(a[0]||e[0]||'?')).toUpperCase()
-    const firstNameFrom = (n='', e='') => (n.trim().split(/\s+/)[0] || e.split('@')[0])
 
     async function refreshHeader(){
       const { data: { session } } = await supabase.auth.getSession()
@@ -304,6 +290,104 @@
     userWidget.addEventListener('click', e => { if(!e.target.closest('#userMenu')) userMenu.classList.toggle('hidden') })
     document.addEventListener('click', e => { if(!userWidget.contains(e.target)) userMenu.classList.add('hidden') })
     logoutBtn.addEventListener('click', async e => { e.preventDefault(); await supabase.auth.signOut(); window.location.href = 'index.html' })
+  </script>
+
+  <!-- ===== UBICACIÓN: MISMO CÓDIGO QUE EN AUTENTICIDAD ===== -->
+  <script>
+    // Hago la init exportable para llamarla tras el login
+    window.initLocation = function initLocation(){
+      const LOCATION_KEY = 'lot_location';
+      const overlay = document.getElementById('overlay');
+      const openLocationBtn = document.getElementById('openLocation');
+      const locationModal = document.getElementById('locationModal');
+      const closeLocationBtn = document.getElementById('closeLocation');
+      const cancelLocBtn = document.getElementById('cancelLoc');
+      const deptSel = document.getElementById('departamento');
+      const locSel = document.getElementById('localidad');
+      const acceptLocBtn = document.getElementById('acceptLoc');
+      const locText = document.getElementById('locText');
+
+      if (!openLocationBtn || !locationModal || !locText) return;
+
+      // Usar DEPTS del archivo externo
+      const DEPTS = window.UY_DEPTS || {"Montevideo":["Montevideo"]};
+
+      function fillDept(){ 
+        if(!deptSel.options.length || deptSel.options.length===1) 
+          Object.keys(DEPTS).forEach(d => deptSel.append(new Option(d,d))); 
+      }
+      
+      function renderLocationText(){
+        const raw = localStorage.getItem(LOCATION_KEY);
+        if(!raw){ 
+          locText.innerHTML = 'Ingresa tu <strong>ubicación</strong>'; 
+          return; 
+        }
+        try{ 
+          const {loc} = JSON.parse(raw); 
+          locText.textContent = `Enviar a ${loc}`; 
+        }
+        catch{ 
+          locText.innerHTML = 'Ingresa tu <strong>ubicación</strong>'; 
+        }
+      }
+
+      function openLocationModal() {
+        locationModal.classList.add('open');
+        overlay.classList.add('show');
+        document.body.classList.add('modal-open');
+      }
+      
+      function closeLocationModal() {
+        locationModal.classList.remove('open');
+        overlay.classList.remove('show');
+        document.body.classList.remove('modal-open');
+      }
+
+      openLocationBtn.addEventListener('click', (e)=>{ 
+        e.preventDefault(); 
+        openLocationModal(); 
+      });
+      
+      closeLocationBtn?.addEventListener('click', closeLocationModal);
+      cancelLocBtn?.addEventListener('click', closeLocationModal);
+      overlay?.addEventListener('click', closeLocationModal);
+
+      deptSel.addEventListener('change', ()=>{
+        const dept = deptSel.value;
+        locSel.innerHTML = '<option value="" selected>Elija una opción</option>';
+        if(!dept){ 
+          locSel.disabled = true; 
+          acceptLocBtn.disabled = true; 
+          return; 
+        }
+        (DEPTS[dept] || []).forEach(loc => locSel.append(new Option(loc,loc)));
+        locSel.disabled = false; 
+        acceptLocBtn.disabled = true;
+      });
+
+      locSel.addEventListener('change', ()=> acceptLocBtn.disabled = !locSel.value);
+
+      document.getElementById('locForm').addEventListener('submit', (e)=>{
+        e.preventDefault();
+        if(!deptSel.value || !locSel.value) return;
+        localStorage.setItem(LOCATION_KEY, JSON.stringify({dept:deptSel.value, loc:locSel.value}));
+        renderLocationText(); 
+        closeLocation();
+        window.dispatchEvent(new CustomEvent('lotr:location-changed'));
+      });
+
+      fillDept();
+      renderLocationText();
+    };
+
+    // fallback por si la página no pasa por checkAuth (no debería)
+    document.addEventListener('DOMContentLoaded', ()=> { 
+      if (document.getElementById('siteHeader').style.display !== 'none') window.initLocation(); 
+    });
+
+    // Año footer
+    document.getElementById('year').textContent = new Date().getFullYear();
   </script>
 </body>
 </html>

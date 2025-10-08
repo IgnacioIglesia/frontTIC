@@ -24,6 +24,7 @@
       </div>
       <div class="header-messages">Iniciá sesión para comprar y vender</div>
     </div>
+
     <button class="burger" aria-expanded="false" aria-controls="mnav" aria-label="Abrir menú">
       <span>≡</span>
     </button>
@@ -37,7 +38,7 @@
               <path d="M12 22s7-6.46 7-12a7 7 0 1 0-14 0c0 5.54 7 12 7 12Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
               <circle cx="12" cy="10" r="2.5" stroke="currentColor" stroke-width="1.6"/>
             </svg>
-            <span class="loc-line" id="locText">Enviar a <strong>Montevideo</strong></span>
+            <span class="loc-line" id="locText">Ingresa tu <strong>ubicación</strong></span>
           </a>
         </div>
         <div class="subnav-center">
@@ -61,20 +62,17 @@
         </div>
       </div>
     </nav>
-    <!-- ===== MENÚ MÓVIL (DRAWER) ===== -->
+
+    <!-- ===== MENÚ MÓVIL ===== -->
     <nav id="mnav" class="mnav" role="dialog" aria-modal="true" aria-label="Menú">
       <div class="mnav-head">
         <strong>Menú</strong>
         <button type="button" class="close-mnav" aria-label="Cerrar">✕</button>
       </div>
-
-      <!-- Buscador dentro del menú (opcional) -->
       <div class="mnav-search">
         <input id="mq" type="search" placeholder="Buscar camisetas…" autocomplete="off" />
         <div id="msearchMenu" class="search-menu" hidden></div>
       </div>
-
-      <!-- Enlaces -->
       <div class="mnav-links">
         <a href="index.html">Inicio</a>
         <a href="ofertas.html">Ofertas</a>
@@ -86,10 +84,40 @@
         <a href="ayuda.html">Ayuda</a>
       </div>
     </nav>
+  </header>
 
-    <!-- Overlay para cerrar tocando afuera -->
-    <div id="overlay" class="overlay"></div>
-    </header>
+  <!-- ===== MODAL UBICACIÓN ===== -->
+  <div id="overlay" class="overlay"></div>
+  <div id="locationModal" class="modal" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 id="locTitle">Elige dónde recibir tus compras</h3>
+        <button class="modal-close" id="closeLocation" aria-label="Cerrar">✕</button>
+      </div>
+      <p class="muted" style="margin:0 0 12px">
+        Podrás ver costos y tiempos de entrega precisos en todo lo que busques.
+      </p>
+
+      <form id="locForm" class="loc-form" autocomplete="off">
+        <div class="field">
+          <label for="departamento">Departamento</label>
+          <select id="departamento" required>
+            <option value="" selected>Elija una opción</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="localidad">Localidad</label>
+          <select id="localidad" required disabled>
+            <option value="" selected>Elija una opción</option>
+          </select>
+        </div>
+        <div class="actions-row">
+          <button type="button" class="btn" id="cancelLoc">Cancelar</button>
+          <button type="submit" class="btn primary" id="acceptLoc" disabled>Aceptar</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <!-- ===== LOGIN FORM ===== -->
   <main class="track-full">
@@ -122,14 +150,93 @@
     </div>
   </main>
 
-  <!-- ===== SUPABASE ===== -->
+  <!-- ===== SCRIPT UBICACIÓN ===== -->
+  <script src="scripts/uy-depts.js"></script>
+  <script>
+    const LOCATION_KEY = 'lot_location';
+    const overlay = document.getElementById('overlay');
+    const locationModal = document.getElementById('locationModal');
+    const openLocationBtn = document.getElementById('openLocation');
+    const closeLocationBtn = document.getElementById('closeLocation');
+    const cancelLocBtn = document.getElementById('cancelLoc');
+    const deptSel = document.getElementById('departamento');
+    const locSel  = document.getElementById('localidad');
+    const acceptLocBtn = document.getElementById('acceptLoc');
+    const locText = document.getElementById('locText');
+    const DEPTS = window.UY_DEPTS || {"Montevideo":["Montevideo"]};
+
+    function fillDept(){ 
+      Object.keys(DEPTS).forEach(d => deptSel.append(new Option(d,d))); 
+    }
+    
+    function renderLocationText(){
+      const raw = localStorage.getItem(LOCATION_KEY);
+      if(!raw){ 
+        locText.innerHTML = 'Ingresa tu <strong>ubicación</strong>'; 
+        return; 
+      }
+      try{ 
+        const {loc} = JSON.parse(raw); 
+        locText.textContent = `Enviar a ${loc}`;  // ← CORREGIDO: textContent en lugar de innerHTML
+      }
+      catch{ 
+        locText.innerHTML = 'Ingresa tu <strong>ubicación</strong>'; 
+      }
+    }
+
+    function openLocationModal() {
+      locationModal.classList.add('open');
+      overlay.classList.add('show');
+      document.body.classList.add('modal-open');
+    }
+    
+    function closeLocationModal() {
+      locationModal.classList.remove('open');
+      overlay.classList.remove('show');
+      document.body.classList.remove('modal-open');
+    }
+
+    openLocationBtn.addEventListener('click', e=>{ 
+      e.preventDefault(); 
+      openLocationModal(); 
+    });
+    
+    closeLocationBtn.addEventListener('click', closeLocationModal);
+    cancelLocBtn.addEventListener('click', closeLocationModal);
+    overlay.addEventListener('click', closeLocationModal);
+
+    deptSel.addEventListener('change', ()=>{
+      locSel.innerHTML = '<option value="">Elija una opción</option>';
+      if(!deptSel.value){ 
+        locSel.disabled = true; 
+        acceptLocBtn.disabled = true; 
+        return; 
+      }
+      (DEPTS[deptSel.value]||[]).forEach(l => locSel.append(new Option(l,l)));
+      locSel.disabled = false; 
+      acceptLocBtn.disabled = true;
+    });
+    
+    locSel.addEventListener('change', ()=>{ 
+      acceptLocBtn.disabled = !locSel.value; 
+    });
+
+    document.getElementById('locForm').addEventListener('submit', e=>{
+      e.preventDefault();
+      localStorage.setItem(LOCATION_KEY, JSON.stringify({dept:deptSel.value, loc:locSel.value}));
+      renderLocationText();
+      closeLocationModal();
+    });
+
+    fillDept(); 
+    renderLocationText();
+  </script>
+
+  <!-- ===== SUPABASE LOGIN ===== -->
   <script type="module">
     import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-
-    // ⚠️ Tu URL y anon key de Supabase
     const SUPABASE_URL = 'https://imexctmcesopdfdebsgo.supabase.co'
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImltZXhjdG1jZXNvcGRmZGVic2dvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzMDczMDIsImV4cCI6MjA3NDg4MzMwMn0.g1lziVKAuUvMEOkYxJhe2D2z8PlwGJ6xcXo_SSpTj7Q'
-
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
     const form = document.getElementById('loginForm')
@@ -142,27 +249,21 @@
       const email = document.getElementById('email').value
       const password = document.getElementById('password').value
 
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      })
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
 
       if (error) {
         if (error.message.includes("Invalid login credentials")) {
-          msg.textContent = "El email o la contraseña son incorrectos.";
+          msg.textContent = "El email o la contraseña son incorrectos."
         } else if (error.message.includes("Email not confirmed")) {
-          msg.textContent = "Tu email aún no fue confirmado. Revisá tu bandeja.";
+          msg.textContent = "Tu email aún no fue confirmado. Revisá tu bandeja."
         } else {
-          msg.textContent = "Ocurrió un error: " + error.message;
+          msg.textContent = "Ocurrió un error: " + error.message
         }
-        msg.style.color = "red";
+        msg.style.color = "red"
       } else {
         msg.textContent = '¡Login correcto! Redirigiendo...'
         msg.style.color = 'green'
-        // Redirigir al inicio o dashboard
-        setTimeout(() => {
-          window.location.href = 'index.html'
-        }, 1200)
+        setTimeout(() => { window.location.href = 'index.html' }, 1200)
       }
     })
   </script>

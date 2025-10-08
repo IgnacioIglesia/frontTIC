@@ -104,12 +104,37 @@
           <a href="ayuda.html">Ayuda</a>
         </div>
       </nav>
-
-    <!-- Si la página no lo tiene todavía: -->
-    <div id="overlay" class="overlay"></div>
-
     </header>
-  
+
+    <!-- ===== MODAL UBICACIÓN ===== -->
+    <div id="overlay" class="overlay"></div>
+    <div id="locationModal" class="modal" aria-hidden="true" role="dialog" aria-modal="true">
+      <div class="modal-card">
+        <div class="modal-head">
+          <h3>Elige dónde recibir tus compras</h3>
+          <button class="modal-close" id="closeLocation" aria-label="Cerrar">✕</button>
+        </div>
+        <form id="locForm" class="loc-form" autocomplete="off">
+          <div class="field">
+            <label for="departamento">Departamento</label>
+            <select id="departamento" required>
+              <option value="" selected>Elija una opción</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="localidad">Localidad</label>
+            <select id="localidad" required disabled>
+              <option value="" selected>Elija una opción</option>
+            </select>
+          </div>
+          <div class="actions-row">
+            <button type="button" class="btn" id="cancelLoc">Cancelar</button>
+            <button type="submit" class="btn primary" id="acceptLoc" disabled>Aceptar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <!-- ===== CONTENIDO ===== -->
     <main class="profile-wrap">
       <div class="profile-header">
@@ -182,6 +207,95 @@
   
     <!-- Toast -->
     <div id="toast" class="toast">Guardado</div>
+
+    <!-- ===== SCRIPT UBICACIÓN ===== -->
+    <script src="scripts/uy-depts.js"></script>
+    <script>
+      // ===== Sistema de Ubicación =====
+      const LOCATION_KEY = 'lot_location';
+      const overlay = document.getElementById('overlay');
+      const locationModal = document.getElementById('locationModal');
+      const openLocationBtn = document.getElementById('openLocation');
+      const closeLocationBtn = document.getElementById('closeLocation');
+      const cancelLocBtn = document.getElementById('cancelLoc');
+      const deptSel = document.getElementById('departamento');
+      const locSel = document.getElementById('localidad');
+      const acceptLocBtn = document.getElementById('acceptLoc');
+      const locText = document.getElementById('locText');
+
+      // Usar DEPTS del archivo externo
+      const DEPTS = window.UY_DEPTS || {"Montevideo":["Montevideo"]};
+
+      function fillDept(){ 
+        Object.keys(DEPTS).forEach(d => deptSel.append(new Option(d,d))); 
+      }
+      
+      function renderLocationText(){
+        const raw = localStorage.getItem(LOCATION_KEY);
+        if(!raw){ 
+          locText.innerHTML = 'Ingresa tu <strong>ubicación</strong>'; 
+          return; 
+        }
+        try{ 
+          const {loc} = JSON.parse(raw); 
+          locText.textContent = `Enviar a ${loc}`; 
+        }
+        catch{ 
+          locText.innerHTML = 'Ingresa tu <strong>ubicación</strong>'; 
+        }
+      }
+
+      function openLocationModal() {
+        locationModal.classList.add('open');
+        overlay.classList.add('show');
+        document.body.classList.add('modal-open');
+      }
+      
+      function closeLocationModal() {
+        locationModal.classList.remove('open');
+        overlay.classList.remove('show');
+        document.body.classList.remove('modal-open');
+      }
+
+      // Event listeners para ubicación
+      openLocationBtn.addEventListener('click', e=>{ 
+        e.preventDefault(); 
+        openLocationModal(); 
+      });
+      
+      closeLocationBtn?.addEventListener('click', closeLocationModal);
+      cancelLocBtn?.addEventListener('click', closeLocationModal);
+      overlay.addEventListener('click', closeLocationModal);
+
+      deptSel.addEventListener('change', ()=>{
+        const dept = deptSel.value;
+        locSel.innerHTML = '<option value="" selected>Elija una opción</option>';
+        if(!dept){ 
+          locSel.disabled = true; 
+          acceptLocBtn.disabled = true; 
+          return; 
+        }
+        (DEPTS[dept] || []).forEach(l => locSel.append(new Option(l,l)));
+        locSel.disabled = false; 
+        acceptLocBtn.disabled = true;
+      });
+      
+      locSel.addEventListener('change', ()=> { 
+        acceptLocBtn.disabled = !locSel.value; 
+      });
+
+      document.getElementById('locForm').addEventListener('submit', e=>{
+        e.preventDefault();
+        if(!deptSel.value || !locSel.value) return;
+        localStorage.setItem(LOCATION_KEY, JSON.stringify({dept:deptSel.value, loc:locSel.value}));
+        renderLocationText(); 
+        closeLocationModal();
+      });
+
+      // Inicializar ubicación
+      fillDept(); 
+      renderLocationText();
+    </script>
   
     <!-- ===== SUPABASE + LÓGICA PERFIL ===== -->
     <script type="module">
@@ -284,4 +398,4 @@
       supabase.auth.onAuthStateChange(()=>{ refreshHeader(); loadData() })
     </script>
   </body>
-  </html>
+</html>

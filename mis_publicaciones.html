@@ -4,23 +4,306 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Mis publicaciones — La Otra Tribuna</title>
+
   <link rel="stylesheet" href="styles/main.css" />
+  <link rel="stylesheet" href="styles/mobile.css" />
   <link rel="stylesheet" href="styles/user-widget.css" />
-  <link rel="stylesheet" href="styles/notifications.css" />
   <link rel="icon" type="image/png" href="./assets/logo.png" />
+  <script src="scripts/mobile-nav.js" defer></script>
+
+  <!-- Mini estilos para la grilla tipo catálogo -->
+  <style>
+    .catalog-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px}
+    .product-card{background:#fff;border:1px solid var(--ring,#e5e7eb);border-radius:12px;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,.04)}
+    .product-media{position:relative;width:100%;padding-top:125%;overflow:hidden;background:#f7f7f7}
+    .product-media img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .25s}
+    .product-card:hover .product-media img{transform:scale(1.03)}
+    .product-body{padding:12px}
+    .product-title{font-weight:600;line-height:1.2;margin:0 0 2px}
+    .product-meta{color:var(--muted,#6b7280);font-size:.9em}
+    .product-price{font-weight:700;margin-top:8px}
+    .product-actions{display:flex;gap:8px;margin-top:10px}
+    .btn{padding:8px 12px;border:1px solid var(--ring,#e5e7eb);background:#fff;border-radius:8px;cursor:pointer;text-decoration:none}
+    .btn.ghost{border-color:#0b2e1f;color:#0b2e1f}.btn.ghost:hover{background:#0b2e1f;color:#fff}
+    .btn.danger{border-color:#dc3545;color:#dc3545}.btn.danger:hover{background:#dc3545;color:#fff}
+    .muted{color:var(--muted,#6b7280);font-size:.9em}
+    .info-wrap{max-width:1100px;margin:0 auto;padding:20px}
+    
+    /* Estilos para los modales */
+    .confirmation-modal,
+    .edit-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s, visibility 0.3s;
+    }
+    
+    .confirmation-modal.active,
+    .edit-modal.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .confirmation-modal-content,
+    .edit-modal-content {
+      background-color: white;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 600px;
+      padding: 30px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      transform: translateY(-20px);
+      transition: transform 0.3s;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    
+    .confirmation-modal.active .confirmation-modal-content,
+    .edit-modal.active .edit-modal-content {
+      transform: translateY(0);
+    }
+    
+    .confirmation-modal-title,
+    .edit-modal-title {
+      font-size: 20px;
+      margin-bottom: 0;
+      color: #2c3e50;
+    }
+    
+    .confirmation-modal-message {
+      margin-bottom: 25px;
+      color: #555;
+      line-height: 1.5;
+    }
+    
+    .confirmation-modal-actions,
+    .edit-modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    
+    .btn-cancel {
+      background-color: #95a5a6;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    
+    .btn-cancel:hover {
+      background-color: #7f8c8d;
+    }
+    
+    .btn-confirm-delete {
+      background-color: #e74c3c;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    
+    .btn-confirm-delete:hover {
+      background-color: #c0392b;
+    }
+
+    .btn-save {
+      background-color: #27ae60;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .btn-save:hover {
+      background-color: #219a52;
+    }
+
+    .loading {
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    .success-message {
+      background-color: #d4edda;
+      color: #155724;
+      padding: 12px;
+      border-radius: 8px;
+      margin: 10px 0;
+      text-align: center;
+      border: 1px solid #c3e6cb;
+    }
+
+    /* Estilos para el formulario de edición */
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+      color: #333;
+    }
+
+    .form-input,
+    .form-select,
+    .form-textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+
+    .form-textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+      outline: none;
+      border-color: #0b2e1f;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+
+    /* Estilos para la sección de foto */
+    .photo-section {
+      border: 2px dashed #ddd;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 20px;
+      background: #f9f9f9;
+    }
+
+    .photo-preview {
+      max-width: 200px;
+      max-height: 200px;
+      margin: 0 auto 15px;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .photo-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .file-input-wrapper {
+      position: relative;
+      display: inline-block;
+    }
+
+    .file-input {
+      position: absolute;
+      left: -9999px;
+    }
+
+    .file-input-label {
+      display: inline-block;
+      padding: 10px 20px;
+      background: #0b2e1f;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .file-input-label:hover {
+      background: #094625;
+    }
+
+    .current-photo-label {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 10px;
+    }
+
+    .remove-photo {
+      background: #e74c3c;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .remove-photo:hover {
+      background: #c0392b;
+    }
+
+    /* Estilos para el header del modal con la cruz */
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .modal-close-btn {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #666;
+      padding: 5px;
+      line-height: 1;
+      border-radius: 4px;
+      transition: color 0.3s, background-color 0.3s;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-close-btn:hover {
+      color: #333;
+      background-color: #f5f5f5;
+    }
+  </style>
 </head>
 <body>
-  <!-- ===== HEADER ===== -->
+  <!-- ===== HEADER (igual al resto del sitio) ===== -->
   <header id="siteHeader">
     <div class="top container">
       <div class="brand-wrap">
         <a href="index.html" class="logo-link" aria-label="Ir al inicio">
-          <img class="logo" src="./assets/logo.png" alt="La Otra Tribuna">
+          <img class="logo" src="./assets/logo.png" alt="La Otra Tribuna" />
         </a>
       </div>
 
       <div class="search">
-        <input type="search" placeholder="Buscar club o país…" autocomplete="off" />
+        <input id="q" type="search" placeholder="Buscar club o país…" autocomplete="off" />
       </div>
 
       <div class="header-messages" id="headerMessage">Gestioná tus publicaciones</div>
@@ -28,23 +311,21 @@
       <div class="actions" style="display:flex;align-items:center;gap:12px;">
         <a id="loginBtn" href="login.html" class="btn-login">Iniciar sesión</a>
 
-        <!-- Widget de usuario -->
         <div id="userWidget" class="user-widget hidden" aria-live="polite">
           <div id="userAvatar" class="user-avatar" title="Mi perfil"></div>
           <span id="greeting" class="user-greeting"></span>
-
           <div id="userMenu" class="user-menu hidden">
             <a href="perfil.html">👤 Perfil</a>
             <a href="mis_publicaciones.html">📊 Mis Publicaciones</a>
             <a href="mis-pedidos.html">🧾 Mis pedidos</a>
-            <a href="favoritos.html">⭐ Favoritos</a>
             <a href="#" id="logoutBtn">🚪 Cerrar sesión</a>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- ===== SUBNAV ===== -->
+    <button class="burger" aria-expanded="false" aria-controls="mnav" aria-label="Abrir menú"><span>≡</span></button>
+
     <nav class="subnav">
       <div class="container subnav-inner">
         <div class="subnav-left">
@@ -53,16 +334,13 @@
               <path d="M12 22s7-6.46 7-12a7 7 0 1 0-14 0c0 5.54 7 12 7 12Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
               <circle cx="12" cy="10" r="2.5" stroke="currentColor" stroke-width="1.6"/>
             </svg>
-            <span class="loc-line" id="locText">Ingresa tu <strong>ubicación</strong></span>
+            <span class="loc-line" id="locText">Enviar a <strong>Montevideo</strong></span>
           </a>
         </div>
-
         <div class="subnav-center">
           <div class="has-submenu" id="catsDrop">
-            <a href="index.html" class="subnav-link" id="catsLink" aria-haspopup="true" aria-expanded="false">
-              Categorías <span class="chev" aria-hidden="true">▾</span>
-            </a>
-            <div class="cat-submenu" id="catsMenu" role="menu" aria-label="Categorías">
+            <a href="index.html" class="subnav-link">Categorías ▾</a>
+            <div class="cat-submenu">
               <a href="index.html?cat=club#catalogo">Club</a>
               <a href="index.html?cat=seleccion#catalogo">Selección</a>
               <a href="index.html?cat=retro#catalogo">Retro</a>
@@ -72,7 +350,6 @@
           <a href="vender.html" class="subnav-link">Vender</a>
           <a href="rastrear.html" class="subnav-link">Rastrear Pedido</a>
         </div>
-
         <div class="subnav-right">
           <a href="favoritos.html" class="subnav-link">Favoritos</a>
           <a href="como-funciona.html" class="subnav-link">Cómo funciona</a>
@@ -81,181 +358,865 @@
         </div>
       </div>
     </nav>
+
+    <nav id="mnav" class="mnav" role="dialog" aria-modal="true" aria-label="Menú">
+      <div class="mnav-head">
+        <strong>Menú</strong>
+        <button type="button" class="close-mnav" aria-label="Cerrar">✕</button>
+      </div>
+      <div class="mnav-search">
+        <input id="mq" type="search" placeholder="Buscar camisetas…" autocomplete="off" />
+        <div id="msearchMenu" class="search-menu" hidden></div>
+      </div>
+      <div class="mnav-links">
+        <a href="index.html">Inicio</a>
+        <a href="ofertas.html">Ofertas</a>
+        <a href="vender.html">Vender</a>
+        <a href="rastrear.html">Rastrear Pedido</a>
+        <a href="favoritos.html">Favoritos</a>
+        <a href="como-funciona.html">Cómo funciona</a>
+        <a href="autenticidad.html">Autenticidad</a>
+        <a href="ayuda.html">Ayuda</a>
+      </div>
+    </nav>
   </header>
+
+  <!-- ===== MODAL UBICACIÓN ===== -->
+  <div id="overlay" class="overlay"></div>
+  <div id="locationModal" class="modal" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3>Elige dónde recibir tus compras</h3>
+        <button class="modal-close" id="closeLocation" aria-label="Cerrar">✕</button>
+      </div>
+      <form id="locForm" class="loc-form" autocomplete="off">
+        <div class="field">
+          <label for="departamento">Departamento</label>
+          <select id="departamento" required><option value="" selected>Elija una opción</option></select>
+        </div>
+        <div class="field">
+          <label for="localidad">Localidad</label>
+          <select id="localidad" required disabled><option value="" selected>Elija una opción</option></select>
+        </div>
+        <div class="actions-row">
+          <button type="button" class="btn" id="cancelLoc">Cancelar</button>
+          <button type="submit" class="btn primary" id="acceptLoc" disabled>Aceptar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== MODAL DE CONFIRMACIÓN ===== -->
+  <div id="deleteConfirmationModal" class="confirmation-modal">
+    <div class="confirmation-modal-content">
+      <h3 class="confirmation-modal-title">Confirmar eliminación</h3>
+      <p class="confirmation-modal-message" id="confirmationMessage">
+        ¿Seguro que querés borrar esta publicación? Esta acción no se puede deshacer.
+      </p>
+      <div class="confirmation-modal-actions">
+        <button class="btn-cancel" id="cancelDelete">Cancelar</button>
+        <button class="btn-confirm-delete" id="confirmDelete">Aceptar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MODAL DE EDICIÓN ===== -->
+  <div id="editPublicationModal" class="edit-modal">
+    <div class="edit-modal-content">
+      <div class="modal-header">
+        <h3 class="edit-modal-title">Editar publicación</h3>
+        <button class="modal-close-btn" id="closeEditModal" aria-label="Cerrar">✕</button>
+      </div>
+      <form id="editPublicationForm">
+        <!-- Sección de Foto -->
+        <div class="photo-section">
+          <div class="current-photo-label">Foto actual:</div>
+          <div class="photo-preview">
+            <img id="currentPhotoPreview" src="" alt="Vista previa">
+          </div>
+          <div class="file-input-wrapper">
+            <input type="file" id="editFoto" class="file-input" accept="image/*">
+            <label for="editFoto" class="file-input-label">📷 Cambiar foto</label>
+          </div>
+          <div>
+            <button type="button" class="remove-photo" id="removePhoto">🗑️ Quitar foto</button>
+          </div>
+          <div id="newPhotoPreview" class="photo-preview" style="display:none; margin-top:15px;">
+            <img src="" alt="Nueva foto" id="newPhotoImg">
+            <div>Nueva foto seleccionada</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="editTitulo">Título *</label>
+          <input type="text" id="editTitulo" class="form-input" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="editClub">Club *</label>
+            <input type="text" id="editClub" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="editCategoria">Categoría *</label>
+            <select id="editCategoria" class="form-select" required>
+              <option value="Club">Club</option>
+              <option value="Seleccion">Selección</option>
+              <option value="Retro">Retro</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="editPrecio">Precio (UYU) *</label>
+            <input type="number" id="editPrecio" class="form-input" min="0" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="editStock">Stock *</label>
+            <input type="number" id="editStock" class="form-input" min="0" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="editTalle">Talle</label>
+            <select id="editTalle" class="form-select">
+              <option value="">Seleccionar talle</option>
+              <option value="XS">XS</option>
+              <option value="S">S</option>
+              <option value="M">M</option>
+              <option value="L">L</option>
+              <option value="XL">XL</option>
+              <option value="XXL">XXL</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="editCondicion">Condición</label>
+            <select id="editCondicion" class="form-select">
+              <option value="">Seleccionar condición</option>
+              <option value="Nueva">Nueva</option>
+              <option value="Como nueva">Como nueva</option>
+              <option value="Usada">Usada</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="editAutenticidad">Autenticidad</label>
+          <select id="editAutenticidad" class="form-select">
+            <option value="">Seleccionar autenticidad</option>
+            <option value="Original">Original</option>
+            <option value="Réplica">Réplica</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="editDescripcion">Descripción</label>
+          <textarea id="editDescripcion" class="form-textarea" placeholder="Describe tu producto..."></textarea>
+        </div>
+
+        <div class="edit-modal-actions">
+          <button type="button" class="btn-cancel" id="cancelEdit">Cancelar</button>
+          <button type="submit" class="btn-save" id="savePublication">Guardar cambios</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <!-- ===== CONTENIDO ===== -->
   <main class="container">
-    <div class="info-wrap" style="padding:20px">
+    <div class="info-wrap">
       <h1 style="margin-bottom:6px">Mis publicaciones</h1>
       <p class="lead">Acá podés ver, comparar y administrar las publicaciones que creaste.</p>
 
-      <div id="pubGrid" class="favs-grid" style="margin-top:12px"></div>
-      <p id="pubEmpty" class="muted" style="text-align:center; display:none; margin:18px 0">
+      <div id="successMessage" class="success-message" style="display:none;"></div>
+
+      <div id="pubGrid" class="catalog-grid" style="margin-top:12px"></div>
+      <p id="pubEmpty" class="muted" style="text-align:center;display:none;margin:18px 0">
         Aún no publicaste nada.
       </p>
     </div>
   </main>
 
-  <!-- ===== ➊ SUPABASE init + HEADER (una sola vez) ===== -->
-  <script type="module" id="sb-init">
-    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+  <footer class="muted" style="text-align:center;margin:22px 0 36px">© <span id="year"></span> La Otra Tribuna.</footer>
 
-    // Declaración única
+  <!-- ===== UBICACIÓN ===== -->
+  <script src="scripts/uy-depts.js"></script>
+  <script>
+    const LOCATION_KEY='lot_location';
+    const overlay=document.getElementById('overlay');
+    const locationModal=document.getElementById('locationModal');
+    const openLocationBtn=document.getElementById('openLocation');
+    const closeLocationBtn=document.getElementById('closeLocation');
+    const cancelLocBtn=document.getElementById('cancelLoc');
+    const deptSel=document.getElementById('departamento');
+    const locSel=document.getElementById('localidad');
+    const acceptLocBtn=document.getElementById('acceptLoc');
+    const locText=document.getElementById('locText');
+    const DEPTS=window.UY_DEPTS||{"Montevideo":["Montevideo"]};
+
+    function fillDept(){Object.keys(DEPTS).forEach(d=>deptSel.append(new Option(d,d)));}
+    function renderLocationText(){
+      const raw=localStorage.getItem(LOCATION_KEY);
+      if(!raw){locText.innerHTML='Ingresa tu <strong>ubicación</strong>';return;}
+      try{const {loc}=JSON.parse(raw);locText.textContent=`Enviar a ${loc}`;}
+      catch{locText.innerHTML='Ingresa tu <strong>ubicación</strong>';}
+    }
+    function openLocationModal(){locationModal.classList.add('open');overlay.classList.add('show');document.body.classList.add('modal-open');}
+    function closeLocationModal(){locationModal.classList.remove('open');overlay.classList.remove('show');document.body.classList.remove('modal-open');}
+    openLocationBtn.addEventListener('click',e=>{e.preventDefault();openLocationModal();});
+    closeLocationBtn?.addEventListener('click',closeLocationModal);
+    cancelLocBtn?.addEventListener('click',closeLocationModal);
+    overlay.addEventListener('click',closeLocationModal);
+    deptSel.addEventListener('change',()=>{
+      const dept=deptSel.value;
+      locSel.innerHTML='<option value="" selected>Elija una opción</option>';
+      if(!dept){locSel.disabled=true;acceptLocBtn.disabled=true;return;}
+      (DEPTS[dept]||[]).forEach(l=>locSel.append(new Option(l,l)));
+      locSel.disabled=false;acceptLocBtn.disabled=true;
+    });
+    locSel.addEventListener('change',()=>{acceptLocBtn.disabled=!locSel.value;});
+    document.getElementById('locForm').addEventListener('submit',e=>{
+      e.preventDefault();
+      if(!deptSel.value||!locSel.value) return;
+      localStorage.setItem(LOCATION_KEY,JSON.stringify({dept:deptSel.value,loc:locSel.value}));
+      renderLocationText(); closeLocationModal();
+    });
+    fillDept(); renderLocationText();
+  </script>
+
+  <!-- ===== SUPABASE + HEADER ===== -->
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
     const SUPABASE_URL = 'https://imexctmcesopdfdebsgo.supabase.co'
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImltZXhjdG1jZXNvcGRmZGVic2dvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzMDczMDIsImV4cCI6MjA3NDg4MzMwMn0.g1lziVKAuUvMEOkYxJhe2D2z8PlwGJ6xcXo_SSpTj7Q'
+    window.sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
-    // Cliente compartido global
-    window.sb = window.sb ?? createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-    
-    const loginBtn   = document.getElementById('loginBtn')
+    const loginBtn = document.getElementById('loginBtn')
     const userWidget = document.getElementById('userWidget')
-    const userMenu   = document.getElementById('userMenu')
-    const logoutBtn  = document.getElementById('logoutBtn')
-    const avatarEl   = document.getElementById('userAvatar')
-    const greetEl    = document.getElementById('greeting')
+    const userMenu = document.getElementById('userMenu')
+    const logoutBtn = document.getElementById('logoutBtn')
+    const avatarEl = document.getElementById('userAvatar')
+    const greetEl = document.getElementById('greeting')
 
-    const initialsFrom = (nombre='', apellido='', email='')=>{
-      const n = (nombre||'').trim().split(/\s+/)[0]||''
-      const a = (apellido||'').trim().split(/\s+/)[0]||''
-      const ini = (n[0]||'') + (a[0]||'')
-      return (ini || (email[0]||'?')).toUpperCase()
+    const initialsFrom=(n='',a='',e='')=>{
+      const n1=(n||'').trim().split(/\s+/)[0]||''; const a1=(a||'').trim().split(/\s+/)[0]||'';
+      const ini=(n1[0]||'')+(a1[0]||''); return (ini||(e[0]||'?')).toUpperCase();
     }
-    const firstNameFrom = (nombre='', email='')=>{
-      const n = (nombre||'').trim().split(/\s+/)[0]
-      return n || (email||'').split('@')[0]
-    }
+    const firstNameFrom=(n='',e='')=> (n||'').trim().split(/\s+/)[0] || (e||'').split('@')[0];
 
     async function refreshHeader(){
-      const { data: { session } } = await supabase.auth.getSession()
+      const { data:{ session } } = await window.sb.auth.getSession()
       if (!session){
-        userWidget.classList.add('hidden')
-        loginBtn.classList.remove('hidden')
-        return
+        userWidget.classList.add('hidden'); loginBtn.classList.remove('hidden'); return
       }
-      let nombre = session.user.user_metadata?.nombre || ''
-      let apellido = session.user.user_metadata?.apellido || ''
-      let email = session.user.email || ''
+      let nombre='', apellido='', email=session.user.email||''
       try{
-        const { data: perfil } = await supabase
-          .from('usuario')
-          .select('nombre,apellido,email')
-          .eq('id_auth', session.user.id)
-          .maybeSingle()
+        const { data: perfil } = await window.sb.from('usuario')
+          .select('nombre,apellido,email').eq('id_auth', session.user.id).maybeSingle()
         if (perfil){
-          nombre = perfil.nombre ?? nombre
-          apellido = perfil.apellido ?? apellido
-          email = perfil.email ?? email
+          nombre = perfil.nombre || session.user.user_metadata?.nombre || ''
+          apellido = perfil.apellido || session.user.user_metadata?.apellido || ''
+          email = perfil.email || email
+        } else {
+          nombre = session.user.user_metadata?.nombre || ''
+          apellido = session.user.user_metadata?.apellido || ''
         }
       }catch(_){}
-
       avatarEl.textContent = initialsFrom(nombre, apellido, email)
       greetEl.textContent  = `Hola, ${firstNameFrom(nombre, email)}!`
-      loginBtn.classList.add('hidden')
-      userWidget.classList.remove('hidden')
+      loginBtn.classList.add('hidden'); userWidget.classList.remove('hidden')
     }
 
-    userWidget.addEventListener('click', (e)=>{
-      if(e.target.closest('#userMenu')) return
+    // ===== EVENT LISTENERS PARA EL MENÚ DESPLEGABLE =====
+    userWidget.addEventListener('click', (e) => {
+      if (e.target.closest('#userMenu')) return
       userMenu.classList.toggle('hidden')
     })
-    document.addEventListener('click', (e)=>{
-      if(!userWidget.contains(e.target)){ userMenu.classList.add('hidden') }
+
+    document.addEventListener('click', (e) => {
+      if (!userWidget.contains(e.target)) {
+        userMenu.classList.add('hidden')
+      }
     })
-    logoutBtn?.addEventListener('click', async (e)=>{
+
+    logoutBtn.addEventListener('click', async (e) => {
       e.preventDefault()
-      await supabase.auth.signOut()
+      await window.sb.auth.signOut()
       location.reload()
     })
 
+    document.getElementById('year').textContent=new Date().getFullYear()
     await refreshHeader()
-    supabase.auth.onAuthStateChange(()=> refreshHeader())
+    window.sb.auth.onAuthStateChange(()=>refreshHeader())
   </script>
 
-  <!-- ===== ➋ LÓGICA: Listar y borrar publicaciones (reusa window.sb) ===== -->
+  <!-- ===== LÓGICA: Listar/Borrar/Editar ===== -->
   <script type="module">
+    // Usar window.sb que está disponible globalmente
     const supabase = window.sb
-    const TABLE_NAME = 'publicaciones'   // cambiá si tu tabla se llama distinto
-    const PLACEHOLDER = 'https://placehold.co/600x750?text=Camiseta'
-    const uy = new Intl.NumberFormat('es-UY',{style:'currency',currency:'UYU',maximumFractionDigits:0})
+    const TABLE_NAME='publicacion'
+    const PLACEHOLDER='https://placehold.co/600x750?text=Camiseta'
+    const uy=new Intl.NumberFormat('es-UY',{style:'currency',currency:'UYU',maximumFractionDigits:0})
 
-    const grid  = document.getElementById('pubGrid')
-    const empty = document.getElementById('pubEmpty')
+    const grid=document.getElementById('pubGrid')
+    const empty=document.getElementById('pubEmpty')
+    const successMessage = document.getElementById('successMessage')
+    
+    // Elementos de los modales
+    const deleteModal = document.getElementById('deleteConfirmationModal')
+    const editModal = document.getElementById('editPublicationModal')
+    const confirmationMessage = document.getElementById('confirmationMessage')
+    const cancelDeleteBtn = document.getElementById('cancelDelete')
+    const confirmDeleteBtn = document.getElementById('confirmDelete')
+    const cancelEditBtn = document.getElementById('cancelEdit')
+    const savePublicationBtn = document.getElementById('savePublication')
+    const editForm = document.getElementById('editPublicationForm')
+    const editFotoInput = document.getElementById('editFoto')
+    const removePhotoBtn = document.getElementById('removePhoto')
+    const currentPhotoPreview = document.getElementById('currentPhotoPreview')
+    const newPhotoPreview = document.getElementById('newPhotoPreview')
+    const newPhotoImg = document.getElementById('newPhotoImg')
+    const closeEditModalBtn = document.getElementById('closeEditModal')
 
-    // Redirige si no hay sesión
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) location.href = 'login.html?next=mis_publicaciones.html'
+    // Variables para almacenar el estado temporal
+    let pubToDelete = null
+    let pubToEdit = null
+    let deleteButton = null
+    let pubCard = null
+    let currentUserId = null
+    let currentPhotoData = null
+    let newPhotoFile = null
 
-    async function loadMyPubs() {
-      grid.innerHTML = ''
-      empty.style.display = 'none'
-
-      const { data, error } = await supabase
-        .from(TABLE_NAME)
-        .select('id,titulo,club,categoria,precio,imagen_url,created_at')
-        .eq('vendedor_id', session.user.id)
-        .order('created_at', { descending: true })
-
-      if (error) {
-        console.error(error)
-        grid.innerHTML = `<div class="muted">Ocurrió un error al cargar tus publicaciones.</div>`
-        return
-      }
-
-      if (!data?.length) { empty.style.display = 'block'; return }
-
-      for (const p of data) {
-        const card = document.createElement('article')
-        card.className = 'card'
-        card.dataset.id = p.id
-        card.innerHTML = `
-          <div class="media">
-            <img src="${p.imagen_url || PLACEHOLDER}" alt="${p.titulo || 'Camiseta'}"
-                 onerror="this.src='${PLACEHOLDER}'">
-          </div>
-          <div class="body">
-            <div class="meta">
-              <div>
-                <div style="font-weight:700">${p.titulo || 'Sin título'}</div>
-                <div class="muted">${p.club || '—'} • ${p.categoria || '—'}</div>
-              </div>
-              <div class="price">${p.precio!=null ? uy.format(p.precio) : '—'}</div>
-            </div>
-            <div style="display:flex; gap:8px; flex-wrap:wrap">
-              <a class="btn ghost" href="vender.html?edit=${p.id}">Editar</a>
-              <button class="btn danger" data-act="delete" data-id="${p.id}">Borrar</button>
-            </div>
-          </div>`
-        grid.appendChild(card)
-      }
+    function formatCategoria(cat){ 
+        if(!cat) return 'Club'; 
+        if(cat==='Seleccion') return 'Selección'; 
+        return cat; 
     }
 
-    async function deletePub(id, btnEl) {
-      if (!confirm('¿Seguro que querés borrar esta publicación? Esta acción no se puede deshacer.')) return
-      btnEl.disabled = true; btnEl.textContent = 'Borrando…'
-      const card = btnEl.closest('.card'); card.style.opacity = .6
-
-      const { error } = await supabase.from(TABLE_NAME).delete().eq('id', id)
-      if (error) {
-        alert('No se pudo borrar. Intentalo de nuevo.')
-        console.error(error)
-        btnEl.disabled = false; btnEl.textContent = 'Borrar'; card.style.opacity = 1
-        return
-      }
-
-      card.remove()
-      if (!grid.children.length) empty.style.display = 'block'
+    function showSuccessMessage(message) {
+        successMessage.textContent = message
+        successMessage.style.display = 'block'
+        setTimeout(() => {
+            successMessage.style.display = 'none'
+        }, 3000)
     }
 
-    grid.addEventListener('click', (e)=>{
-      const btn = e.target.closest('button[data-act="delete"]')
-      if (!btn) return
-      deletePub(Number(btn.dataset.id), btn)
+    async function loadMyPubs(){
+        try{
+            console.log('Cargando publicaciones...')
+            grid.innerHTML=''; 
+            empty.style.display='none'
+            
+            const { data:{ session } } = await supabase.auth.getSession()
+            if(!session){ 
+                console.log('No hay sesión, redirigiendo...')
+                location.href='login.html?next=mis_publicaciones.html'; 
+                return 
+            }
+
+            console.log('Sesión activa:', session.user.email)
+
+            const { data: usuario, error: uerr } = await supabase
+                .from('usuario').select('id_usuario').eq('id_auth', session.user.id).single()
+            
+            if(uerr){
+                console.error('Error al obtener usuario:', uerr)
+                grid.innerHTML=`<div class="muted">Error al cargar tus datos.</div>`
+                return 
+            }
+
+            currentUserId = usuario.id_usuario
+            console.log('ID Usuario:', currentUserId)
+
+            // === Consulta con relación "foto (url)" como en index ===
+            const cols = `
+                id_publicacion,
+                titulo,
+                club,
+                categoria,
+                precio,
+                talle,
+                condicion,
+                autenticidad,
+                stock,
+                descripcion,
+                id_usuario,
+                foto:foto ( url )
+            `
+            
+            const { data: filas, error: perr } = await supabase
+                .from(TABLE_NAME).select(cols)
+                .eq('id_usuario', currentUserId)
+                .order('id_publicacion', { descending:true })
+
+            if(perr){
+                console.error('Error al cargar publicaciones:', perr)
+                grid.innerHTML = `<div class="muted">Error al cargar tus publicaciones: <code>${perr.message}</code></div>`
+                return
+            }
+
+            console.log('Publicaciones encontradas:', filas?.length || 0)
+
+            if(!filas?.length){ 
+                empty.style.display='block'; 
+                return 
+            }
+
+            for(const p of filas){
+                const primeraFoto = Array.isArray(p.foto) && p.foto.length ? p.foto[0].url : null
+                const card=document.createElement('article')
+                card.className='product-card'
+                card.dataset.id=p.id_publicacion
+                card.innerHTML=`
+                    <div class="product-media">
+                    <img src="${primeraFoto || PLACEHOLDER}" alt="${p.titulo || 'Camiseta'}"
+                         onerror="this.src='${PLACEHOLDER}'">
+                    </div>
+                    <div class="product-body">
+                    <div class="product-title">${p.titulo || 'Sin título'}</div>
+                    <div class="product-meta">${p.club || '—'} • ${formatCategoria(p.categoria) || '—'}</div>
+                    <div class="product-price">${p.precio!=null ? uy.format(p.precio) : '—'}</div>
+                    <div class="product-actions">
+                        <button class="btn ghost" data-act="edit" data-id="${p.id_publicacion}">Editar</button>
+                        <button class="btn danger" data-act="delete" data-id="${p.id_publicacion}">Borrar</button>
+                    </div>
+                    </div>`
+                grid.appendChild(card)
+            }
+
+            console.log('Publicaciones cargadas correctamente')
+
+        }catch(err){
+            console.error('Error inesperado:', err)
+            grid.innerHTML=`<div class="muted">Error inesperado al cargar las publicaciones.</div>`
+        }
+    }
+
+    // Función para mostrar el modal de confirmación de borrado
+    function showDeleteConfirmation(pubId, pubTitle, btnEl) {
+        pubToDelete = pubId
+        deleteButton = btnEl
+        pubCard = btnEl.closest('.product-card')
+        
+        // Personalizar el mensaje con el título de la publicación
+        confirmationMessage.textContent = `¿Seguro que querés borrar "${pubTitle}"? Esta acción no se puede deshacer.`
+        
+        // Mostrar el modal
+        deleteModal.classList.add('active')
+    }
+
+    // Función para mostrar el modal de edición
+    async function showEditModal(pubId) {
+        pubToEdit = pubId
+        newPhotoFile = null
+        
+        try {
+            // Cargar los datos de la publicación con la relación de foto
+            const { data: publicacion, error } = await supabase
+                .from(TABLE_NAME)
+                .select(`
+                    *,
+                    foto:foto ( id_foto, url )
+                `)
+                .eq('id_publicacion', pubId)
+                .single()
+
+            if (error) {
+                throw new Error('No se pudo cargar la publicación: ' + error.message)
+            }
+
+            // Guardar datos de la foto actual
+            currentPhotoData = Array.isArray(publicacion.foto) && publicacion.foto.length > 0 ? publicacion.foto[0] : null
+
+            // Llenar el formulario con los datos actuales
+            document.getElementById('editTitulo').value = publicacion.titulo || ''
+            document.getElementById('editClub').value = publicacion.club || ''
+            document.getElementById('editCategoria').value = publicacion.categoria || 'Club'
+            document.getElementById('editPrecio').value = publicacion.precio || ''
+            document.getElementById('editStock').value = publicacion.stock || 1
+            document.getElementById('editTalle').value = publicacion.talle || ''
+            document.getElementById('editCondicion').value = publicacion.condicion || ''
+            document.getElementById('editAutenticidad').value = publicacion.autenticidad || ''
+            document.getElementById('editDescripcion').value = publicacion.descripcion || ''
+
+            // Mostrar la foto actual
+            if (currentPhotoData && currentPhotoData.url) {
+                currentPhotoPreview.src = currentPhotoData.url
+                currentPhotoPreview.style.display = 'block'
+            } else {
+                currentPhotoPreview.src = PLACEHOLDER
+                currentPhotoPreview.style.display = 'block'
+            }
+
+            // Resetear preview de nueva foto
+            newPhotoPreview.style.display = 'none'
+            editFotoInput.value = ''
+            removePhotoBtn.classList.remove('removed')
+            removePhotoBtn.textContent = '🗑️ Quitar foto'
+
+            // Mostrar el modal
+            editModal.classList.add('active')
+
+        } catch (error) {
+            console.error('Error al cargar publicación:', error)
+            alert('No se pudo cargar la publicación para editar: ' + error.message)
+        }
+    }
+
+    // Función para subir una nueva foto
+    async function uploadNewPhoto(file, publicacionId) {
+        try {
+            // Generar un nombre único para el archivo
+            const fileExt = file.name.split('.').pop()
+            const fileName = `${publicacionId}_${Date.now()}.${fileExt}`
+            const filePath = `publicaciones/${fileName}`
+
+            // Subir el archivo a Supabase Storage
+            const { data, error } = await supabase.storage
+                .from('fotos')
+                .upload(filePath, file)
+
+            if (error) {
+                throw new Error('Error al subir la foto: ' + error.message)
+            }
+
+            // Obtener la URL pública de la foto
+            const { data: urlData } = supabase.storage
+                .from('fotos')
+                .getPublicUrl(filePath)
+
+            // Crear registro en la tabla foto
+            const { data: fotoData, error: fotoError } = await supabase
+                .from('foto')
+                .insert({
+                    url: urlData.publicUrl,
+                    id_publicacion: publicacionId
+                })
+                .select()
+                .single()
+
+            if (fotoError) {
+                throw new Error('Error al crear registro de foto: ' + fotoError.message)
+            }
+
+            return fotoData
+
+        } catch (error) {
+            console.error('Error en uploadNewPhoto:', error)
+            throw error
+        }
+    }
+
+    // Función para eliminar la foto actual
+    async function deleteCurrentPhoto() {
+        if (!currentPhotoData) return
+
+        try {
+            // Eliminar el registro de la base de datos
+            const { error } = await supabase
+                .from('foto')
+                .delete()
+                .eq('id_foto', currentPhotoData.id_foto)
+
+            if (error) {
+                console.error('Error al eliminar registro de foto:', error)
+            }
+
+            // Opcional: También eliminar el archivo del storage
+            // const filePath = currentPhotoData.url.split('/').pop()
+            // await supabase.storage.from('fotos').remove([filePath])
+
+        } catch (error) {
+            console.error('Error al eliminar foto:', error)
+        }
+    }
+
+    // Función para ocultar los modales
+    function hideDeleteConfirmation() {
+        deleteModal.classList.remove('active')
+        pubToDelete = null
+        deleteButton = null
+        pubCard = null
+    }
+
+    function hideEditModal() {
+        editModal.classList.remove('active')
+        pubToEdit = null
+        currentPhotoData = null
+        newPhotoFile = null
+        editForm.reset()
+    }
+
+    // Función para eliminar la publicación de la base de datos
+    async function deletePublication() {
+        if (!pubToDelete) {
+            console.error('No hay publicación para eliminar')
+            return
+        }
+        
+        console.log('Eliminando publicación ID:', pubToDelete)
+        
+        try {
+            // Deshabilitar el botón y mostrar estado de carga
+            deleteButton.disabled = true
+            deleteButton.textContent = 'Borrando…'
+            confirmDeleteBtn.disabled = true
+            
+            // Aplicar efecto visual de carga
+            pubCard.classList.add('loading')
+            
+            // Eliminar la publicación de la base de datos
+            const { data, error } = await supabase
+                .from(TABLE_NAME)
+                .delete()
+                .eq('id_publicacion', pubToDelete)
+                .eq('id_usuario', currentUserId)
+            
+            console.log('Respuesta de Supabase:', { data, error })
+            
+            if (error) {
+                throw new Error(`Error de Supabase: ${error.message}`)
+            }
+            
+            // Verificar que pubCard todavía existe antes de intentar removerlo
+            if (pubCard && pubCard.parentNode) {
+                // Eliminar la tarjeta del DOM con animación
+                pubCard.style.transition = 'all 0.3s ease'
+                pubCard.style.opacity = '0'
+                pubCard.style.transform = 'translateY(-10px)'
+                
+                setTimeout(() => {
+                    if (pubCard && pubCard.parentNode) {
+                        pubCard.remove()
+                    }
+                    
+                    // Mostrar mensaje si no quedan publicaciones
+                    if (!grid.children.length) {
+                        empty.style.display = 'block'
+                    }
+                    
+                    // Mostrar mensaje de éxito
+                    showSuccessMessage('✅ Publicación eliminada correctamente')
+                    
+                    console.log('Publicación eliminada correctamente')
+                }, 300)
+            } else {
+                // Si la tarjeta ya no existe, recargar la lista
+                await loadMyPubs()
+                showSuccessMessage('✅ Publicación eliminada correctamente')
+            }
+            
+        } catch (error) {
+            console.error('Error al eliminar la publicación:', error)
+            alert('No se pudo borrar la publicación: ' + error.message)
+            
+            // Restaurar estado original
+            if (deleteButton && deleteButton.parentNode) {
+                deleteButton.disabled = false
+                deleteButton.textContent = 'Borrar'
+            }
+            if (pubCard && pubCard.parentNode) {
+                pubCard.classList.remove('loading')
+            }
+            if (confirmDeleteBtn) {
+                confirmDeleteBtn.disabled = false
+            }
+        } finally {
+            // Ocultar el modal
+            hideDeleteConfirmation()
+        }
+    }
+
+    // Función para guardar los cambios de la publicación
+    async function savePublication(e) {
+        e.preventDefault()
+        
+        if (!pubToEdit) {
+            console.error('No hay publicación para editar')
+            return
+        }
+        
+        try {
+            // Deshabilitar el botón y mostrar estado de carga
+            savePublicationBtn.disabled = true
+            savePublicationBtn.textContent = 'Guardando…'
+            
+            // Obtener los datos del formulario (SIN fecha_actualizacion)
+            const updates = {
+                titulo: document.getElementById('editTitulo').value,
+                club: document.getElementById('editClub').value,
+                categoria: document.getElementById('editCategoria').value,
+                precio: parseInt(document.getElementById('editPrecio').value),
+                stock: parseInt(document.getElementById('editStock').value),
+                talle: document.getElementById('editTalle').value || null,
+                condicion: document.getElementById('editCondicion').value || null,
+                autenticidad: document.getElementById('editAutenticidad').value || null,
+                descripcion: document.getElementById('editDescripcion').value || null
+            }
+            
+            console.log('Actualizando publicación:', pubToEdit, updates)
+            
+            // 1. Actualizar los datos de la publicación
+            const { data, error } = await supabase
+                .from(TABLE_NAME)
+                .update(updates)
+                .eq('id_publicacion', pubToEdit)
+                .eq('id_usuario', currentUserId)
+            
+            console.log('Respuesta de Supabase (update):', { data, error })
+            
+            if (error) {
+                throw new Error(`Error al actualizar: ${error.message}`)
+            }
+
+            // 2. Manejar cambios de foto
+            if (newPhotoFile) {
+                // Si hay una nueva foto, eliminar la actual y subir la nueva
+                if (currentPhotoData) {
+                    await deleteCurrentPhoto()
+                }
+                await uploadNewPhoto(newPhotoFile, pubToEdit)
+            } else if (currentPhotoData && removePhotoBtn.classList.contains('removed')) {
+                // Si el usuario quiso quitar la foto
+                await deleteCurrentPhoto()
+            }
+            
+            // Ocultar el modal
+            hideEditModal()
+            
+            // Recargar las publicaciones para mostrar los cambios
+            await loadMyPubs()
+            
+            // Mostrar mensaje de éxito
+            showSuccessMessage('✅ Publicación actualizada correctamente')
+            
+        } catch (error) {
+            console.error('Error al actualizar la publicación:', error)
+            alert('No se pudo actualizar la publicación: ' + error.message)
+        } finally {
+            // Restaurar el botón
+            if (savePublicationBtn) {
+                savePublicationBtn.disabled = false
+                savePublicationBtn.textContent = 'Guardar cambios'
+            }
+        }
+    }
+
+    // Event listeners para los modales
+    cancelDeleteBtn.addEventListener('click', hideDeleteConfirmation)
+    confirmDeleteBtn.addEventListener('click', deletePublication)
+    cancelEditBtn.addEventListener('click', hideEditModal)
+    closeEditModalBtn.addEventListener('click', hideEditModal)
+    editForm.addEventListener('submit', savePublication)
+
+    // Event listeners para manejo de fotos
+    editFotoInput.addEventListener('change', (e) => {
+        const file = e.target.files[0]
+        if (file) {
+            newPhotoFile = file
+            // Mostrar preview de la nueva foto
+            const reader = new FileReader()
+            reader.onload = (e) => {
+                newPhotoImg.src = e.target.result
+                newPhotoPreview.style.display = 'block'
+            }
+            reader.readAsDataURL(file)
+        }
     })
 
+    removePhotoBtn.addEventListener('click', () => {
+        currentPhotoPreview.src = PLACEHOLDER
+        newPhotoPreview.style.display = 'none'
+        editFotoInput.value = ''
+        newPhotoFile = null
+        removePhotoBtn.classList.add('removed')
+        removePhotoBtn.textContent = '🗑️ Foto quitada'
+    })
+    
+    // Cerrar modales al hacer clic fuera del contenido
+    deleteModal.addEventListener('click', (e) => {
+        if (e.target === deleteModal) {
+            hideDeleteConfirmation()
+        }
+    })
+    
+    editModal.addEventListener('click', (e) => {
+        if (e.target === editModal) {
+            hideEditModal()
+        }
+    })
+    
+    // Cerrar modales con tecla Escape
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            if (deleteModal.classList.contains('active')) {
+                hideDeleteConfirmation()
+            }
+            if (editModal.classList.contains('active')) {
+                hideEditModal()
+            }
+        }
+    })
+
+    // Event listener para los botones de las tarjetas
+    grid.addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-act]')
+        if (!btn) return
+        
+        const pubId = Number(btn.dataset.id)
+        const action = btn.dataset.act
+        
+        if (action === 'delete') {
+            const pubTitle = btn.closest('.product-card').querySelector('.product-title').textContent
+            console.log('Solicitando borrado de publicación:', pubId, pubTitle)
+            showDeleteConfirmation(pubId, pubTitle, btn)
+        } else if (action === 'edit') {
+            console.log('Solicitando edición de publicación:', pubId)
+            showEditModal(pubId)
+        }
+    })
+
+    // Inicializar
     await loadMyPubs()
   </script>
 
-  <!-- ✅ NOTIFICACIONES -->
-  <script type="module" src="scripts/notifications.js"></script>
+  <!-- Drawer/mobile helpers (igual que index) -->
+  <script>
+    (function(){
+      const burger=document.querySelector('.burger');
+      const drawer=document.getElementById('mnav');
+      const closeBtn=drawer?.querySelector('.close-mnav');
+      const overlay=document.getElementById('overlay');
+      const q=document.getElementById('q');
+      const mq=document.getElementById('mq');
+      const mMenu=document.getElementById('msearchMenu');
+
+      function openMnav(){drawer.classList.add('open');overlay.classList.add('show');burger.setAttribute('aria-expanded','true');document.body.style.overflow='hidden';}
+      function closeMnav(){drawer.classList.remove('open');overlay.classList.remove('show');burger.setAttribute('aria-expanded','false');document.body.style.overflow='';}
+
+      burger?.addEventListener('click', openMnav);
+      closeBtn?.addEventListener('click', closeMnav);
+      overlay?.addEventListener('click', closeMnav);
+      window.addEventListener('keydown',(e)=>{ if(e.key==='Escape') closeMnav(); });
+
+      function syncAndRender(v){ if(!q) return; q.value=v||''; q.dispatchEvent(new Event('input',{bubbles:true})); }
+      mq?.addEventListener('input', ()=>{
+        syncAndRender(mq.value);
+        const mainMenu=document.getElementById('searchMenu');
+        if(mainMenu){ mMenu.innerHTML=mainMenu.innerHTML; mMenu.hidden=mainMenu.hidden; }
+      });
+      mq?.addEventListener('focus', ()=>{
+        const mainMenu=document.getElementById('searchMenu');
+        if(mainMenu){ mMenu.innerHTML=mainMenu.innerHTML; mMenu.hidden=false; }
+      });
+      document.addEventListener('click',(e)=>{ if(!mMenu.contains(e.target) && e.target!==mq) mMenu.hidden=true; });
+
+      document.getElementById('openLocationMobile')?.addEventListener('click',(e)=>{
+        e.preventDefault(); closeMnav(); document.getElementById('openLocation')?.click();
+      });
+    })();
+  </script>
 </body>
 </html>

@@ -82,7 +82,6 @@
       <span>≡</span>
     </button>
 
-
     <nav class="subnav">
       <div class="container subnav-inner">
         <div class="subnav-left">
@@ -141,10 +140,6 @@
         <a href="ayuda.html">Ayuda</a>
       </div>
     </nav>
-
-  <!-- Si la página no lo tiene todavía: -->
-  <div id="overlay" class="overlay"></div>
-
   </header>
 
   <!-- ===== OVERLAY ===== -->
@@ -203,87 +198,130 @@
 
   <footer class="site-footer" style="display:none;">© <span id="year"></span> La Otra Tribuna.</footer>
 
+  <script src="scripts/uy-depts.js"></script>
   <script>
     // ===== Footer dinámico
     document.getElementById('year').textContent = new Date().getFullYear();
 
-    // ===== LocalStorage Ubicación (reutiliza lo del index)
+    const siteHeaderElement = document.getElementById('siteHeader');
+    function onScroll(){ 
+      siteHeaderElement.classList.toggle('is-scrolled', window.scrollY > 0); 
+    }
+    onScroll(); 
+    window.addEventListener('scroll', onScroll, {passive:true});
+
     const LOCATION_KEY = 'lot_location';
-    const locText = document.getElementById('locText');
-    const deptSel = document.getElementById('departamento');
-    const locSel = document.getElementById('localidad');
-    const acceptLocBtn = document.getElementById('acceptLoc');
     const overlay = document.getElementById('overlay');
     const locationModal = document.getElementById('locationModal');
+    const openLocationBtn = document.getElementById('openLocation');
+    const closeLocationBtn = document.getElementById('closeLocation');
+    const cancelLocBtn = document.getElementById('cancelLoc');
+    const deptSel = document.getElementById('departamento');
+    const locSel  = document.getElementById('localidad');
+    const acceptLocBtn = document.getElementById('acceptLoc');
+    const locText = document.getElementById('locText');
+    const DEPTS = window.UY_DEPTS || {"Montevideo":["Montevideo"]};
 
-    const DEPTS = {
-      "Artigas": ["Artigas","Bella Unión","Tomás Gomensoro","Baltasar Brum"],
-      "Canelones": ["Canelones","Ciudad de la Costa","Las Piedras","Pando","La Paz","Progreso","Santa Lucía","Atlántida","Parque del Plata","Sauce","San Ramón","Empalme Olmos","Toledo"],
-      "Cerro Largo": ["Melo","Río Branco","Fraile Muerto","Tupambaé","Isidoro Noblía"],
-      "Colonia": ["Colonia del Sacramento","Carmelo","Nueva Helvecia","Juan Lacaze","Rosario","Tarariras","Ombúes de Lavalle"],
-      "Durazno": ["Durazno","Sarandí del Yí","Carmen","Centenario"],
-      "Flores": ["Trinidad","Ismael Cortinas"],
-      "Florida": ["Florida","Sarandí Grande","Casupá","25 de Mayo"],
-      "Lavalleja": ["Minas","José Pedro Varela","Solís de Mataojo","Mariscala"],
-      "Maldonado": ["Maldonado","Punta del Este","San Carlos","Piriápolis","Pan de Azúcar","Aiguá","La Barra"],
-      "Montevideo": ["Montevideo"],
-      "Paysandú": ["Paysandú","Guichón","Quebracho","Piedras Coloradas"],
-      "Río Negro": ["Fray Bentos","Young","Nuevo Berlín","San Javier"],
-      "Rivera": ["Rivera","Tranqueras","Minas de Corrales","Vichadero","Mandubí"],
-      "Rocha": ["Rocha","Chuy","Castillos","Lascano","La Paloma","Punta del Diablo"],
-      "Salto": ["Salto","Constitución","Belén","Daymán","San Antonio"],
-      "San José": ["San José de Mayo","Ciudad del Plata","Libertad","Ecilda Paullier","Delta El Tigre","Raigón"],
-      "Soriano": ["Mercedes","Dolores","Cardona","José Enrique Rodó","Palmitas"],
-      "Tacuarembó": ["Tacuarembó","Paso de los Toros","San Gregorio de Polanco","Curtina","Ansina"],
-      "Treinta y Tres": ["Treinta y Tres","Vergara","Santa Clara de Olimar","Villa Sara"]
-    };
-
-    function fillDept(){ Object.keys(DEPTS).forEach(d => deptSel.append(new Option(d,d))); }
+    function fillDept(){ 
+      Object.keys(DEPTS).forEach(d => deptSel.append(new Option(d,d))); 
+    }
+    
     function renderLocationText(){
       const raw = localStorage.getItem(LOCATION_KEY);
-      if(!raw){ locText.innerHTML = 'Ingresa tu <strong>ubicación</strong>'; return; }
-      try{ const {loc} = JSON.parse(raw); locText.textContent = `Enviar a ${loc}`; }
-      catch{ locText.innerHTML = 'Ingresa tu <strong>ubicación</strong>'; }
+      if(!raw){ 
+        locText.innerHTML = 'Ingresa tu <strong>ubicación</strong>'; 
+        return; 
+      }
+      try{ 
+        const {loc} = JSON.parse(raw); 
+        locText.textContent = `Enviar a ${loc}`; 
+      }
+      catch{ 
+        locText.innerHTML = 'Ingresa tu <strong>ubicación</strong>'; 
+      }
     }
 
-    document.getElementById('openLocation').addEventListener('click', e=>{
-      e.preventDefault(); locationModal.classList.add('open'); overlay.classList.add('show');
+    function openLocationModal() {
+      locationModal.classList.add('open');
+      overlay.classList.add('show');
+      document.body.classList.add('modal-open');
+    }
+    
+    function closeLocationModal() {
+      locationModal.classList.remove('open');
+      overlay.classList.remove('show');
+      document.body.classList.remove('modal-open');
+    }
+
+    openLocationBtn.addEventListener('click', e=>{ 
+      e.preventDefault(); 
+      openLocationModal(); 
     });
-    document.getElementById('closeLocation').addEventListener('click', ()=>{
-      locationModal.classList.remove('open'); overlay.classList.remove('show');
-    });
-    document.getElementById('cancelLoc').addEventListener('click', ()=>{
-      locationModal.classList.remove('open'); overlay.classList.remove('show');
-    });
-    overlay.addEventListener('click', ()=>{
-      locationModal.classList.remove('open'); overlay.classList.remove('show');
-    });
+    
+    closeLocationBtn.addEventListener('click', closeLocationModal);
+    cancelLocBtn.addEventListener('click', closeLocationModal);
+    overlay.addEventListener('click', closeLocationModal);
 
     deptSel.addEventListener('change', ()=>{
       locSel.innerHTML = '<option value="">Elija una opción</option>';
-      if(!deptSel.value){ locSel.disabled = true; acceptLocBtn.disabled = true; return; }
-      DEPTS[deptSel.value].forEach(l => locSel.append(new Option(l,l)));
-      locSel.disabled = false; acceptLocBtn.disabled = true;
+      if(!deptSel.value){ 
+        locSel.disabled = true; 
+        acceptLocBtn.disabled = true; 
+        return; 
+      }
+      (DEPTS[deptSel.value]||[]).forEach(l => locSel.append(new Option(l,l)));
+      locSel.disabled = false; 
+      acceptLocBtn.disabled = true;
     });
-    locSel.addEventListener('change', ()=>{ acceptLocBtn.disabled = !locSel.value; });
+    
+    locSel.addEventListener('change', ()=>{ 
+      acceptLocBtn.disabled = !locSel.value; 
+    });
 
     document.getElementById('locForm').addEventListener('submit', e=>{
       e.preventDefault();
       localStorage.setItem(LOCATION_KEY, JSON.stringify({dept:deptSel.value, loc:locSel.value}));
       renderLocationText();
-      locationModal.classList.remove('open'); overlay.classList.remove('show');
+      closeLocationModal();
     });
 
-    fillDept(); renderLocationText();
+    fillDept(); 
+    renderLocationText();
 
-    // ===== Rastrear Pedido (demo)
-    document.getElementById('trackForm').addEventListener('submit', e=>{
-      e.preventDefault();
-      const code = document.getElementById('tracking').value.trim();
-      if(!code) return;
-      document.getElementById('trackResultText').textContent = `Seguimiento del pedido ${code} (demo)`;
-      document.getElementById('trackResult').hidden = false;
+    // Submenú mobile
+    const catsDrop = document.getElementById('catsDrop');
+    const catsLink = document.getElementById('catsLink');
+    
+    catsLink.addEventListener('click', (e)=>{
+      if (window.matchMedia('(max-width: 820px)').matches){
+        e.preventDefault();
+        const isOpen = catsDrop.classList.toggle('open');
+        catsLink.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      }
     });
+    
+    document.addEventListener('click', (e)=>{
+      if(!catsDrop.contains(e.target)){
+        catsDrop.classList.remove('open');
+        catsLink.setAttribute('aria-expanded','false');
+      }
+    });
+
+    // ====== Éxito centrado ======
+    const successOverlay = document.getElementById('successOverlay');
+    const successTitle   = document.getElementById('successTitle');
+    const successText    = document.getElementById('successText');
+
+    function showSuccess(message = 'Tu publicación se guardó correctamente.', redirUrl = 'index.html', delayMs = 1400) {
+      if (successTitle && successText && successOverlay) {
+        successTitle.textContent = '¡Publicación creada!';
+        successText.textContent  = message;
+        successOverlay.classList.add('show');
+        document.body.classList.add('modal-open');
+        setTimeout(()=>{ window.location.href = redirUrl; }, delayMs);
+      }
+    }
+    window.showSuccess = showSuccess;
   </script>
 
   <!-- ===== SUPABASE: VERIFICACIÓN DE AUTENTICACIÓN ===== -->
@@ -337,6 +375,7 @@
       const ini = (n[0]||'') + (a[0]||'')
       return (ini || (email[0]||'?')).toUpperCase()
     }
+    
     const firstNameFrom = (nombre='', email='')=>{
       const n = (nombre||'').trim().split(/\s+/)[0]
       return n || (email || '').split('@')[0]
@@ -349,14 +388,17 @@
         loginBtn.classList.remove('hidden')
         return
       }
+      
       const uid = session.user.id
       let nombre = '', apellido = '', email = session.user.email || ''
+      
       try{
         const { data: perfil } = await supabase
           .from('usuario')
           .select('nombre, apellido, email')
           .eq('id_auth', uid)
           .maybeSingle()
+          
         if (perfil){
           nombre   = perfil.nombre   || session.user.user_metadata?.nombre   || ''
           apellido = perfil.apellido || session.user.user_metadata?.apellido || ''
@@ -382,9 +424,13 @@
       if(e.target.closest('#userMenu')) return
       userMenu.classList.toggle('hidden')
     })
+    
     document.addEventListener('click', (e)=>{
-      if(!userWidget.contains(e.target)){ userMenu.classList.add('hidden') }
+      if(!userWidget.contains(e.target)){ 
+        userMenu.classList.add('hidden') 
+      }
     })
+    
     logoutBtn.addEventListener('click', async (e)=>{
       e.preventDefault()
       await supabase.auth.signOut()

@@ -126,10 +126,6 @@
         <a href="ayuda.html">Ayuda</a>
       </div>
     </nav>
-
-  <!-- Si la página no lo tiene todavía: -->
-  <div id="overlay" class="overlay"></div>
-
   </header>
 
   <!-- ===== HERO OFERTAS ===== -->
@@ -182,6 +178,7 @@
     </div>
   </main>
 
+  <script src="scripts/uy-depts.js"></script>
   <script>
     // ===== Datos demo =====
     const DATA = [
@@ -282,21 +279,8 @@
     const acceptLocBtn = document.getElementById('acceptLoc');
     const locText = document.getElementById('locText');
 
-    const DEPTS = {
-      "Artigas":["Artigas","Bella Unión","Tomás Gomensoro","Baltasar Brum"],
-      "Canelones":["Canelones","Ciudad de la Costa","Las Piedras","Pando","La Paz","Progreso","Santa Lucía","Atlántida","Parque del Plata","Sauce","San Ramón","Empalme Olmos","Toledo"],
-      "Colonia":["Colonia del Sacramento","Carmelo","Nueva Helvecia","Juan Lacaze","Rosario","Tarariras","Ombúes de Lavalle"],
-      "Durazno":["Durazno","Sarandí del Yí","Carmen","Centenario"],
-      "Maldonado":["Maldonado","Punta del Este","San Carlos","Piriápolis","Pan de Azúcar","Aiguá","La Barra"],
-      "Montevideo":["Montevideo"],
-      "Paysandú":["Paysandú","Guichón","Quebracho","Piedras Coloradas"],
-      "Rocha":["Rocha","Chuy","Castillos","Lascano","La Paloma","Punta del Diablo"],
-      "Salto":["Salto","Constitución","Belén","Daymán","San Antonio"],
-      "San José":["San José de Mayo","Ciudad del Plata","Libertad","Ecilda Paullier"],
-      "Soriano":["Mercedes","Dolores","Cardona"],
-      "Tacuarembó":["Tacuarembó","Paso de los Toros"],
-      "Treinta y Tres":["Treinta y Tres","Vergara"]
-    };
+    // Usar DEPTS del archivo externo uy-depts.js
+    const DEPTS = window.UY_DEPTS || {"Montevideo":["Montevideo"]};
 
     function fillDept(){ Object.keys(DEPTS).forEach(d => deptSel.append(new Option(d,d))); }
     function renderLocationText(){
@@ -338,7 +322,7 @@
   <!-- ===== NOTIFICACIONES: SOLO EL JS (sin HTML adicional) ===== -->
   <script type="module" src="scripts/notifications.js"></script>
 
-  <!-- ===== SUPABASE: saludo “Hola, Ignacio!” ===== -->
+  <!-- ===== SUPABASE: saludo "Hola, Ignacio!" ===== -->
   <script type="module">
     import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
     const SUPABASE_URL = 'https://imexctmcesopdfdebsgo.supabase.co'
