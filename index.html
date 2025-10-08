@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>La Otra Tribuna — Tienda de camisetas</title>
   <link rel="stylesheet" href="styles/main.css" />
+  <link rel="stylesheet" href="styles/mobile.css" />
   <link rel="stylesheet" href="styles/user-widget.css" />
   <link rel="stylesheet" href="styles/notifications.css" />
   <link rel="icon" type="image/png" href="./assets/logo.png" />
@@ -190,8 +191,12 @@
       <div class="header-messages" id="headerMessage">Envíos seguros y rápidos</div>
 
       <div class="actions" style="display:flex;align-items:center;gap:12px;">
+        <button class="burger" aria-expanded="false" aria-controls="mnav" aria-label="Abrir menú">
+          <span>≡</span>
+        </button>
         <!-- Botón por defecto (si no hay sesión) -->
         <a id="loginBtn" href="login.html" class="btn-login">Iniciar sesión</a>
+      
 
         <!-- Widget de usuario (aparece con sesión) -->
         <div id="userWidget" class="user-widget hidden" aria-live="polite">
@@ -249,6 +254,31 @@
       </div>
     </nav>
   </header>
+
+  <nav id="mnav" class="mnav" role="dialog" aria-modal="true" aria-label="Menú">
+    <div class="mnav-head">
+      <strong>Menú</strong>
+      <button type="button" class="close-mnav" aria-label="Cerrar">✕</button>
+    </div>
+
+    <div class="mnav-search">
+      <input id="mq" type="search" placeholder="Buscar camisetas…" autocomplete="off" />
+      <div id="msearchMenu" class="search-menu" hidden></div>
+    </div>
+
+    <div class="mnav-links">
+      <a href="#ubicacion" id="openLocationMobile">Ingresa tu ubicación</a>
+      <a href="categorias.html">Categorías</a>
+      <a href="ofertas.html">Ofertas</a>
+      <a href="vender.html">Vender</a>
+      <a href="rastrear.html">Rastrear Pedido</a>
+      <a href="favoritos.html">Favoritos</a>
+      <a href="como-funciona.html">Cómo funciona</a>
+      <a href="autenticidad.html">Autenticidad</a>
+      <a href="ayuda.html">Ayuda</a>
+    </div>
+  </nav>
+
 
   <!-- Overlay compartido -->
   <div id="overlay" class="overlay"></div>
@@ -1163,5 +1193,60 @@
       openProductModal(item);
     });
   </script>
+  
+  <script>
+  (function(){
+    const burger   = document.querySelector('.burger');
+    const drawer   = document.getElementById('mnav');
+    const closeBtn = drawer?.querySelector('.close-mnav');
+    const overlay  = document.getElementById('overlay');
+    const q        = document.getElementById('q');
+    const mq       = document.getElementById('mq');
+    const mMenu    = document.getElementById('msearchMenu');
+
+    function openMnav(){
+      drawer.classList.add('open');
+      overlay.classList.add('show');
+      burger.setAttribute('aria-expanded','true');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeMnav(){
+      drawer.classList.remove('open');
+      overlay.classList.remove('show');
+      burger.setAttribute('aria-expanded','false');
+      document.body.style.overflow = '';
+    }
+
+    burger?.addEventListener('click', openMnav);
+    closeBtn?.addEventListener('click', closeMnav);
+    overlay?.addEventListener('click', closeMnav);
+    window.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeMnav(); });
+
+    // sincronizar buscador del drawer con el principal
+    function syncAndRender(v){
+      if(!q) return;
+      q.value = v || '';
+      q.dispatchEvent(new Event('input', {bubbles:true}));
+    }
+    mq?.addEventListener('input', ()=>{
+      syncAndRender(mq.value);
+      const mainMenu = document.getElementById('searchMenu');
+      if(mainMenu){ mMenu.innerHTML = mainMenu.innerHTML; mMenu.hidden = mainMenu.hidden; }
+    });
+    mq?.addEventListener('focus', ()=>{
+      const mainMenu = document.getElementById('searchMenu');
+      if(mainMenu){ mMenu.innerHTML = mainMenu.innerHTML; mMenu.hidden = false; }
+    });
+    document.addEventListener('click', (e)=>{
+      if(!mMenu.contains(e.target) && e.target !== mq) mMenu.hidden = true;
+    });
+
+    document.getElementById('openLocationMobile')?.addEventListener('click', (e)=>{
+      e.preventDefault();
+      closeMnav();
+      document.getElementById('openLocation')?.click();
+    });
+  })();
+</script>
 </body>
 </html>
