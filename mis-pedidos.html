@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mis compras — La Otra Tribuna</title>
+
+  <link rel="stylesheet" href="styles/main.css" />
+  <link rel="stylesheet" href="styles/mobile.css" />
+  <link rel="stylesheet" href="styles/user-widget.css" />
+  <link rel="icon" type="image/png" href="./assets/logo.png" />
+  <script src="scripts/mobile-nav.js" defer></script>
+
+  <style>
+    .info-wrap{max-width:1100px;margin:0 auto;padding:20px}
+    /* ===== Cards de pedido ===== */
+    .order-wrap{display:flex;flex-direction:column;gap:18px}
+    .order-card{background:#fff;border:1px solid var(--ring,#e5e7eb);border-radius:14px;box-shadow:0 4px 18px rgba(0,0,0,.06);overflow:hidden}
+    .order-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#f7f9f8;border-bottom:1px solid var(--ring,#e5e7eb)}
+    .order-title{font-weight:700}
+    .order-sub{color:var(--muted,#6b7280);font-size:.9em;margin-top:2px}
+    .badge{background:#e9edf0;border:1px solid #d5dbe0;color:#334155;padding:6px 10px;border-radius:999px;font-size:.85em}
+    .badge.success{background:#e8f5ee;border-color:#cbead9;color:#14532d}
+    .badge.warning{background:#fff7ed;border-color:#ffedd5;color:#8a3b12}
+    .badge.info{background:#e7f0ff;border-color:#cfe1ff;color:#0b3a82}
+
+    .order-body{padding:16px}
+    .item-row{display:grid;grid-template-columns:72px 1fr auto;gap:14px;align-items:center}
+    .thumb{width:72px;height:72px;border-radius:12px;overflow:hidden;background:#eef2f4;display:flex;align-items:center;justify-content:center}
+    .thumb img{width:100%;height:100%;object-fit:cover}
+    .item-title{font-weight:700}
+    .item-meta{color:var(--muted,#6b7280);font-size:.9em;margin-top:2px}
+    .item-price{font-weight:700;white-space:nowrap}
+
+    /* ===== Progreso ===== */
+.progress{
+  position: relative;
+  height: 56px;           /* alto suficiente para línea + labels */
+  margin: 18px 0 6px;
+}
+
+/* Línea base centrada verticalmente */
+.progress-line{
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 28px;              /* eje de la línea */
+  height: 4px;
+  background: #e5e7eb;
+  border-radius: 999px;
+}
+
+/* Relleno encima de la línea base */
+.progress .fill{
+  position: absolute;
+  left: 0;
+  top: 28px;              /* mismo eje que la línea base */
+  height: 4px;
+  background: #0b2e1f;
+  border-radius: 999px;
+  width: 0;               /* se setea por inline style */
+}
+
+/* Los pasos van posicionados sobre el mismo eje */
+.steps{
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 28px;              /* mismo eje */
+  transform: translateY(-50%);
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;   /* evita que tapen los botones al lado, si los hubiera */
+}
+
+.step{ text-align: center; width: auto; }
+
+/* El punto se centra EXACTO sobre la línea */
+.dot{
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  border: 2px solid #0b2e1f;
+  background: #fff;
+  display: grid; place-items: center;
+  position: relative;
+  top: -11px;            /* lo baja para que quede “montado” en la línea */
+  font-size: 12px;
+}
+.dot.ok{ background:#0b2e1f; color:#fff; }
+
+/* Etiqueta debajo del punto */
+.label{
+  margin-top: 10px;
+  font-size: .9em; color: var(--muted,#6b7280);
+}
+.label.ok{ color:#0b2e1f; font-weight:600; }
+
+    .order-foot{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-top:1px solid var(--ring,#e5e7eb);background:#fff}
+    .total{font-weight:800}
+    .actions{display:flex;gap:10px}
+    .btn{padding:10px 14px;border:1px solid var(--ring,#e5e7eb);background:#fff;border-radius:10px;cursor:pointer;text-decoration:none}
+    .btn.primary{border-color:#0b2e1f;background:#0b2e1f;color:#fff}
+    .empty-state{border:1px dashed var(--ring,#e5e7eb);border-radius:14px;background:#fff;padding:28px;text-align:center}
+  </style>
+</head>
+<body>
+  <!-- ===== HEADER igual al de mis_publicaciones (sin notificaciones) ===== -->
+  <header id="siteHeader">
+    <div class="top container">
+      <div class="brand-wrap">
+        <a href="index.html" class="logo-link" aria-label="Ir al inicio">
+          <img class="logo" src="./assets/logo.png" alt="La Otra Tribuna" />
+        </a>
+      </div>
+      <div class="search"><input id="q" type="search" placeholder="Buscar club o país…" autocomplete="off" /></div>
+      <div class="header-messages" id="headerMessage">Tus compras y pedidos</div>
+      <div class="actions" style="display:flex;align-items:center;gap:12px;">
+        <a id="loginBtn" href="login.html" class="btn-login">Iniciar sesión</a>
+        <div id="userWidget" class="user-widget hidden" aria-live="polite">
+          <div id="userAvatar" class="user-avatar" title="Mi perfil"></div>
+          <span id="greeting" class="user-greeting"></span>
+          <div id="userMenu" class="user-menu hidden">
+            <a href="perfil.html">👤 Perfil</a>
+            <a href="mis_publicaciones.html">📊 Mis Publicaciones</a>
+            <a href="mis_compras.html">🧾 Mis Compras</a>
+            <a href="#" id="logoutBtn" class="menu-divider">🚪 Cerrar sesión</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button class="burger" aria-expanded="false" aria-controls="mnav" aria-label="Abrir menú"><span>≡</span></button>
+    <nav class="subnav">
+      <div class="container subnav-inner">
+        <div class="subnav-left">
+          <a href="#ubicacion" class="loc-link" id="openLocation">
+            <svg class="loc-ic" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 22s7-6.46 7-12a7 7 0 1 0-14 0c0 5.54 7 12 7 12Z" stroke="currentColor" stroke-width="1.6"/>
+              <circle cx="12" cy="10" r="2.5" stroke="currentColor" stroke-width="1.6"/>
+            </svg>
+            <span class="loc-line" id="locText">Enviar a <strong>Montevideo</strong></span>
+          </a>
+        </div>
+        <div class="subnav-center">
+          <div class="has-submenu" id="catsDrop">
+            <a href="index.html" class="subnav-link">Categorías ▾</a>
+            <div class="cat-submenu">
+              <a href="index.html?cat=club#catalogo">Club</a>
+              <a href="index.html?cat=seleccion#catalogo">Selección</a>
+              <a href="index.html?cat=retro#catalogo">Retro</a>
+            </div>
+          </div>
+          <a href="ofertas.html" class="subnav-link">Ofertas</a>
+          <a href="vender.html" class="subnav-link">Vender</a>
+          <a href="rastrear.html" class="subnav-link">Rastrear Pedido</a>
+        </div>
+        <div class="subnav-right">
+          <a href="favoritos.html" class="subnav-link">Favoritos</a>
+          <a href="como-funciona.html" class="subnav-link">Cómo funciona</a>
+          <a href="autenticidad.html" class="subnav-link">Autenticidad</a>
+          <a href="ayuda.html" class="subnav-link">Ayuda</a>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <div id="overlay" class="overlay"></div>
+
+  <!-- ===== CONTENIDO PRINCIPAL ===== -->
+  <main class="container">
+    <div class="info-wrap">
+      <h1>Mis pedidos</h1>
+      <p class="lead">Acá podés ver el estado de tus pedidos y realizar seguimiento.</p>
+      <section id="orders-empty" class="empty-state" hidden>
+        <p>No registramos compras todavía.</p>
+        <a class="btn" href="index.html#catalogo">Ir al catálogo</a>
+      </section>
+      <section id="orders-list" class="order-wrap" aria-live="polite"></section>
+    </div>
+  </main>
+
+  <footer class="muted" style="text-align:center;margin:22px 0 36px">
+    © <span id="year"></span> La Otra Tribuna.
+  </footer>
+
+  <!-- Scripts comunes -->
+  <script src="scripts/uy-depts.js"></script>
+  <script type="module" src="scripts/user-widget.js"></script>
+
+  <script type="module">
+    const listEl = document.getElementById('orders-list');
+    const emptyEl = document.getElementById('orders-empty');
+    const PLACEH = 'https://placehold.co/600x400?text=Camiseta';
+    const UY = new Intl.NumberFormat('es-UY',{style:'currency',currency:'UYU',maximumFractionDigits:0});
+    const STEP_ORDER = ['Realizado','Confirmado','Enviado','Entregado'];
+    const badgeClass = e => e==='Entregado'?'badge success':(e==='Enviado'?'badge info':(e==='Confirmado'?'badge info':'badge warning'));
+    const fmtDate = iso => new Date(iso).toLocaleDateString('es-UY',{day:'2-digit',month:'short',year:'numeric'});
+
+    function renderOrders(orders){
+      if(!orders?.length){ emptyEl.hidden=false; listEl.innerHTML=''; return;}
+      emptyEl.hidden=true;
+      listEl.innerHTML = orders.map(o=>{
+        const it = o.items?.[0] || {};
+        const fillPct = (STEP_ORDER.indexOf(o.estado)/3)*100;
+        return `
+        <article class="order-card">
+          <div class="order-head">
+            <div>
+              <div class="order-title">Pedido ${o.codigo||'PED-'+o.id}</div>
+              <div class="order-sub">Realizado el ${fmtDate(o.fecha||o.created_at||new Date())}</div>
+            </div>
+            <span class="${badgeClass(o.estado)}">${o.estado}</span>
+          </div>
+          <div class="order-body">
+            <div class="item-row">
+              <div class="thumb"><img src="${it.img||PLACEH}" alt="${it.title||'Camiseta'}"></div>
+              <div>
+                <div class="item-title">${it.title||'Camiseta Uruguay 2022'}</div>
+                <div class="item-meta">${it.categoria||'Selección'} • Talle ${it.talle||'M'} • ${it.autenticidad||'Original'}</div>
+              </div>
+              <div class="item-price">${UY.format(o.total||2490)}</div>
+            </div>
+            <div class="progress">
+              <div class="progress-line"></div>
+              <div class="fill" style="width:${fillPct}%"></div>
+              <div class="steps">
+                ${STEP_ORDER.map((s,i)=>`
+                  <div class="step">
+                    <div class="dot ${i<=STEP_ORDER.indexOf(o.estado)?'ok':''}">${i<=STEP_ORDER.indexOf(o.estado)?'✓':''}</div>
+                    <div class="label ${i<=STEP_ORDER.indexOf(o.estado)?'ok':''}">${s}</div>
+                  </div>`).join('')}
+              </div>
+            </div>
+          </div>
+          <div class="order-foot">
+            <div class="total">Total: ${UY.format(o.total||2490)}</div>
+            <div class="actions">
+              <a class="btn" href="pedido.html?id=${o.id}">Ver detalles</a>
+              <a class="btn primary" href="rastrear.html?id=${o.id}">Rastrear envío</a>
+            </div>
+          </div>
+        </article>`}).join('');
+    }
+
+    // 🔹 Ejemplo local (sin DB)
+    const example=[{
+      id:1, codigo:'PED-00123', estado:'Entregado', total:2490, fecha:'2023-11-15T00:00:00Z',
+      items:[{title:'Camiseta Uruguay 2022',categoria:'Selección',talle:'M',autenticidad:'Original',img:'https://placehold.co/600x400'}]
+    }];
+    renderOrders(example);
+  </script>
+</body>
+</html>
