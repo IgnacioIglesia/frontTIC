@@ -326,6 +326,21 @@
         <strong id="cartTotal">$ 0</strong>
       </div>
       <button class="btn primary checkout-btn">Finalizar compra</button>
+      <script>
+  // Detecta clic en el botón de Finalizar compra dentro del panel del carrito
+  document.getElementById('cartMenu').addEventListener('click', (e) => {
+  const checkout = e.target.closest('.checkout-btn');
+  if (!checkout) return;
+
+  // (opcional) asegurar persistencia más reciente
+  localStorage.setItem('lot_cart', JSON.stringify(Object.fromEntries(cart)));
+
+  document.getElementById('cartMenu').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+
+  window.location.href = 'compra.html';
+});
+</script>
     </div>
   </aside>
 
@@ -550,6 +565,12 @@
     // ===== CARRITO PERSISTENTE =====
     const cart = new Map(Object.entries(JSON.parse(localStorage.getItem('lot_cart') || '{}')).map(([k,v]) => [+k, v]));
 function saveCart(){ localStorage.setItem('lot_cart', JSON.stringify(Object.fromEntries(cart))); }
+
+function openCart(){
+  cartMenu.classList.add('open');
+  showOverlay();
+  updateCartUI(); // ← fuerza a pintar lo que hay en localStorage
+}
 
 function updateCartUI(){
   let totalPrice = 0;
@@ -1129,6 +1150,8 @@ function updateCartUI(){
         procesarPublicaciones(publicaciones || []);
       } catch {}
     }
+
+    
   
     function procesarPublicaciones(publicaciones) {
   DATA = publicaciones.map(pub => {

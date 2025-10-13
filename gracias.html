@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gracias por tu compra — La Otra Tribuna</title>
+  <link rel="icon" type="image/png" href="./assets/logo.png" />
+  <style>
+    :root{ --bg:#f5f6f8; --text:#0f172a; --muted:#64748b; --card:#fff; --ring:#e5e7eb; --brand:#064e3b; }
+    *{box-sizing:border-box} body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text)}
+    .container{max-width:840px;margin:auto;padding:24px}
+    .card{background:var(--card);border:1px solid var(--ring);border-radius:16px;padding:24px}
+    h1{margin:0 0 6px} .muted{color:var(--muted)}
+    .row{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin:18px 0}
+    .btn{border:1px solid var(--ring);background:#fff;border-radius:12px;padding:12px 16px;font-weight:700;text-decoration:none;color:inherit}
+    .btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}
+    .list{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+    .item{display:flex;justify-content:space-between;gap:10px}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h1>¡Gracias por tu compra!</h1>
+      <div class="muted" id="orderId"></div>
+
+      <div class="row">
+        <a class="btn" href="index.html">← Volver al inicio</a>
+        <a class="btn primary" href="mis-pedidos.html">Ver mis pedidos</a>
+      </div>
+
+      <h3>Resumen del pedido</h3>
+      <div class="list" id="orderList"></div>
+      <div class="list" style="border-top:1px dashed #e5e7eb;margin-top:12px;padding-top:12px">
+        <div class="item"><span>Subtotal</span><strong id="sub"></strong></div>
+        <div class="item"><span>Envío</span><strong id="ship"></strong></div>
+        <div class="item" style="font-size:18px"><span>Total</span><strong id="total"></strong></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const uy = new Intl.NumberFormat('es-UY',{style:'currency',currency:'UYU',maximumFractionDigits:0});
+    const ok = localStorage.getItem('lot_payment_success') === '1';
+    const order = JSON.parse(localStorage.getItem('lot_last_order') || 'null');
+
+    if (!ok || !order) {
+      // Si no venís de una compra válida, mandamos al inicio
+      location.href = 'index.html';
+    } else {
+      // Mostrar resumen
+      const list = document.getElementById('orderList');
+      const items = order.items || {};
+      Object.entries(items).forEach(([id, qty])=>{
+        const row = document.createElement('div');
+        row.className = 'item';
+        row.innerHTML = `<span>Producto #${id} × ${qty}</span><strong></strong>`;
+        list.appendChild(row);
+      });
+      document.getElementById('sub').textContent = uy.format(order.subtotal || 0);
+      document.getElementById('ship').textContent = uy.format(order.ship || 0);
+      document.getElementById('total').textContent = uy.format(order.total || 0);
+      document.getElementById('orderId').textContent = 'Pedido #' + Math.floor(order.ts/1000);
+
+      // 👉 AHORA SÍ: vaciar el carrito y limpiar flags
+      localStorage.removeItem('lot_cart');
+      localStorage.removeItem('lot_payment_success');
+      // (Mantenemos lot_last_order por si querés “Mis pedidos”)
+    }
+  </script>
+</body>
+</html>

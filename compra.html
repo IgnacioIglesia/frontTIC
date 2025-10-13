@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Finalizar compra — La Otra Tribuna</title>
+  <link rel="icon" type="image/png" href="./assets/logo.png" />
+  <style>
+    :root{
+      --bg:#f6f6f7; --text:#1b1b1f; --muted:#6b7280; --card:#fff; --ring:#e5e7eb;
+      --brand:#064e3b; --brand-ink:#033126;
+    }
+    *{box-sizing:border-box} body{margin:0;font-family:system-ui,Segoe UI,Inter,Roboto,sans-serif;color:var(--text);background:var(--bg)}
+    .container{max-width:1080px;margin:auto;padding:16px}
+    header{position:sticky;top:0;background:#ffffffcc;backdrop-filter:blur(8px);border-bottom:1px solid var(--ring);z-index:10}
+    header .container{display:flex;align-items:center;gap:16px}
+    header a{color:inherit;text-decoration:none}
+    header img{height:36px}
+    h1{font-size:24px;margin:16px 0}
+    .grid{display:grid;grid-template-columns: 2fr 1fr; gap:24px}
+    .card{background:var(--card);border:1px solid var(--ring);border-radius:12px;padding:16px}
+    .card h2{font-size:18px;margin:0 0 12px}
+    .row{display:flex;gap:12px;align-items:center}
+    .row > * {flex:1}
+    label{font-weight:600;font-size:14px}
+    input,select,textarea{width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:10px;font-size:14px}
+    .muted{color:var(--muted)}
+    .radio{display:flex;flex-direction:column;gap:10px}
+    .radio label{display:flex;gap:10px;align-items:center;font-weight:500}
+    .hidden{display:none}
+    .summary-list{display:flex;flex-direction:column;gap:12px;margin:8px 0}
+    .summary-item{display:grid;grid-template-columns:48px 1fr auto;gap:10px;align-items:center}
+    .summary-item img{width:48px;height:48px;border-radius:8px;object-fit:cover;border:1px solid var(--ring)}
+    .summary-item .name{font-weight:600}
+    .summary-totals{border-top:1px dashed var(--ring);margin-top:12px;padding-top:12px;display:flex;flex-direction:column;gap:6px}
+    .tot{display:flex;justify-content:space-between}
+    .btn{cursor:pointer;border:0;border-radius:10px;padding:12px 16px;font-weight:700}
+    .btn.primary{background:var(--brand);color:#fff}
+    .btn.ghost{background:#fff;border:1px solid var(--ring)}
+    .inline{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+    .pill{font-size:12px;background:#eaf3ef;color:var(--brand-ink);border-radius:999px;padding:4px 8px}
+    footer{padding:32px 0;color:var(--muted);text-align:center}
+    @media (max-width: 880px){ .grid{grid-template-columns:1fr} }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <a href="index.html"><img src="./assets/logo.png" alt="La Otra Tribuna" /></a>
+      <div class="muted">Checkout seguro</div>
+      <div style="margin-left:auto" class="inline">
+        <a class="btn ghost" href="index.html">← Seguir comprando</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <h1>Finalizar compra</h1>
+    <div class="grid">
+      <!-- Columna izquierda: envío + pago -->
+      <div class="card">
+        <h2>Datos de envío</h2>
+        <div class="row">
+          <div>
+            <label>Nombre y Apellido</label>
+            <input id="name" placeholder="Ej: Juan Pérez" />
+          </div>
+          <div>
+            <label>Documento</label>
+            <input id="doc" placeholder="Ej: 4.123.456-7" />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>Departamento</label>
+            <select id="dept">
+              <option value="">Seleccionar…</option>
+              <option>Montevideo</option><option>Canelones</option><option>Maldonado</option>
+              <option>Colonia</option><option>Salto</option><option>Paysandú</option>
+              <option>Rocha</option><option>Cerro Largo</option><option>Rivera</option>
+              <!-- … agrega los que quieras -->
+            </select>
+          </div>
+          <div>
+            <label>Localidad</label>
+            <input id="city" placeholder="Ej: Pocitos" />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>Dirección</label>
+            <input id="addr" placeholder="Calle y número, apto, esquina" />
+          </div>
+        </div>
+
+        <h2 style="margin-top:18px">Método de envío</h2>
+        <div class="radio" id="shipGroup">
+          <label><input type="radio" name="ship" value="puerta" checked> A domicilio <span class="pill">Desde $ 180</span></label>
+          <label><input type="radio" name="ship" value="agencia"> Retiro en agencia/Pick-up <span class="pill">Desde $ 100</span></label>
+        </div>
+
+        <h2 style="margin-top:18px">Pago</h2>
+        <div class="radio" id="payGroup">
+          <label><input type="radio" name="pay" value="tarjeta" checked> Tarjeta de crédito / débito</label>
+          <label><input type="radio" name="pay" value="transfer"> Transferencia bancaria</label>
+          <label><input type="radio" name="pay" value="contra"> Contraentrega</label>
+          <label><input type="radio" name="pay" value="mp"> Mercado Pago</label>
+        </div>
+
+        <!-- Form tarjeta -->
+        <div id="cardForm" style="margin-top:12px">
+          <div class="row">
+            <div>
+              <label>Número de tarjeta</label>
+              <input id="cardNumber" inputmode="numeric" placeholder="#### #### #### ####" />
+            </div>
+            <div>
+              <label>Vencimiento</label>
+              <input id="cardExp" placeholder="MM/AA" />
+            </div>
+            <div>
+              <label>CVC</label>
+              <input id="cardCvc" inputmode="numeric" placeholder="***" />
+            </div>
+          </div>
+          <div class="row">
+            <div>
+              <label>Titular</label>
+              <input id="cardName" placeholder="Como figura en la tarjeta" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Info transferencia -->
+        <div id="transferInfo" class="hidden" style="margin-top:12px">
+          <div class="card" style="background:#f9fafb">
+            <div class="muted">Banco BROU — Caja de ahorro UYU</div>
+            <div><strong>Cuenta:</strong> 000123456 — <strong>A nombre de:</strong> La Otra Tribuna</div>
+            <div class="muted" style="font-size:13px">Enviá el comprobante a pagos@laotrat.com con tu número de pedido.</div>
+          </div>
+        </div>
+
+        <!-- Info contraentrega -->
+        <div id="codInfo" class="hidden" style="margin-top:12px">
+          <div class="muted">Pagás en efectivo al recibir. Recordá tener el monto justo.</div>
+        </div>
+
+        <!-- Info MP -->
+        <div id="mpInfo" class="hidden" style="margin-top:12px">
+          <div class="muted">Te vamos a redirigir a Mercado Pago para completar el pago.</div>
+        </div>
+
+        <div style="margin-top:18px" class="inline">
+          <button id="payBtn" class="btn primary">Confirmar y pagar</button>
+          <span id="formMsg" class="muted"></span>
+        </div>
+      </div>
+
+      <!-- Columna derecha: resumen -->
+      <aside class="card">
+        <h2>Resumen</h2>
+        <div id="summary" class="summary-list"></div>
+        <div class="summary-totals">
+          <div class="tot"><span>Subtotal</span><strong id="sub"></strong></div>
+          <div class="tot"><span>Envío</span><strong id="ship"></strong></div>
+          <div class="tot" style="font-size:18px"><span>Total</span><strong id="total"></strong></div>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <footer>© <span id="year"></span> La Otra Tribuna</footer>
+
+  <!-- Supabase (para re-leer las publicaciones y armar el resumen por ID) -->
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+    const SUPABASE_URL = 'https://imexctmcesopdfdebsgo.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImltZXhjdG1jZXNvcGRmZGVic2dvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzMDczMDIsImV4cCI6MjA3NDg4MzMwMn0.g1lziVKAuUvMEOkYxJhe2D2z8PlwGJ6xcXo_SSpTj7Q';
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const $ = (s)=>document.querySelector(s);
+    const uy = new Intl.NumberFormat('es-UY',{style:'currency',currency:'UYU',maximumFractionDigits:0});
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // ===== Cargar carrito desde localStorage
+    // ===== Cargar carrito desde localStorage
+const rawCart = localStorage.getItem('lot_cart');
+if (!rawCart || rawCart === '{}' || rawCart === 'null') {
+  // si no hay carrito, salir silenciosamente
+  window.location.replace('index.html');
+}
+
+// convertir en Map
+const cart = new Map(Object.entries(JSON.parse(rawCart)).map(([k,v]) => [+k, v]));
+if (cart.size === 0) {
+  window.location.replace('index.html');
+}
+
+    // ===== Traer publicaciones para mapear IDs -> nombre/precio/foto
+    const { data: publicaciones } = await supabase
+      .from('publicacion')
+      .select(`id_publicacion, titulo, precio, permiso_oferta, foto (url)`)
+      .in('id_publicacion', [...cart.keys()]);
+
+    const map = new Map();
+    (publicaciones||[]).forEach(pub => {
+      map.set(pub.id_publicacion, {
+        nombre: pub.titulo,
+        precio: pub.permiso_oferta ? Math.round(pub.precio * 0.9) : pub.precio,
+        img: (pub.foto && pub.foto[0]?.url) || './assets/fallback.png'
+      });
+    });
+
+    // ===== Armar resumen
+    const summary = $('#summary');
+    let subtotal = 0;
+    cart.forEach((qty, id) => {
+      const p = map.get(id);
+      if (!p) return;
+      const itemTotal = p.precio * qty;
+      subtotal += itemTotal;
+
+      const row = document.createElement('div');
+      row.className = 'summary-item';
+      row.innerHTML = `
+        <img src="${p.img}" alt="">
+        <div>
+          <div class="name">${p.nombre}</div>
+          <div class="muted">${uy.format(p.precio)} x ${qty}</div>
+        </div>
+        <div><strong>${uy.format(itemTotal)}</strong></div>
+      `;
+      summary.appendChild(row);
+    });
+
+    // Envío estimado según método
+    function envioActual(){
+      const v = document.querySelector('input[name="ship"]:checked')?.value || 'puerta';
+      return v === 'puerta' ? 180 : 100;
+    }
+
+    function renderTotals(){
+      $('#sub').textContent = uy.format(subtotal);
+      $('#ship').textContent = uy.format(envioActual());
+      $('#total').textContent = uy.format(subtotal + envioActual());
+    }
+    renderTotals();
+    document.getElementById('shipGroup').addEventListener('change', renderTotals);
+
+    // ===== Formulario de pago dinámico
+    const payGroup = document.getElementById('payGroup');
+    const cardForm = document.getElementById('cardForm');
+    const transferInfo = document.getElementById('transferInfo');
+    const codInfo = document.getElementById('codInfo');
+    const mpInfo = document.getElementById('mpInfo');
+
+    function togglePayUI(){
+      const m = document.querySelector('input[name="pay"]:checked')?.value;
+      cardForm.classList.toggle('hidden', m !== 'tarjeta');
+      transferInfo.classList.toggle('hidden', m !== 'transfer');
+      codInfo.classList.toggle('hidden', m !== 'contra');
+      mpInfo.classList.toggle('hidden', m !== 'mp');
+    }
+    togglePayUI();
+    payGroup.addEventListener('change', togglePayUI);
+
+    // ===== Confirmar y pagar
+    document.getElementById('payBtn').addEventListener('click', async ()=>{
+  const name = $('#name').value.trim();
+  const addr = $('#addr').value.trim();
+  const dept = $('#dept').value;
+  const city = $('#city').value.trim();
+  const payM = document.querySelector('input[name="pay"]:checked')?.value;
+  const btn = document.getElementById('payBtn'); // ⬅️ referencia al botón
+
+  if (!name || !addr || !dept || !city) {
+    $('#formMsg').textContent = 'Completá los datos de envío.';
+    return;
+  }
+  if (payM === 'tarjeta') {
+    const num = $('#cardNumber').value.replace(/\s+/g,'');
+    const exp = $('#cardExp').value.trim();
+    const cvc = $('#cardCvc').value.trim();
+    if (num.length < 13 || !/^\d+$/.test(num) || !/^\d{2}\/\d{2}$/.test(exp) || !/^\d{3,4}$/.test(cvc)) {
+      $('#formMsg').textContent = 'Revisá los datos de la tarjeta.';
+      return;
+    }
+  }
+
+  // 🔹 Desactivar botón mientras se procesa
+  btn.disabled = true;
+  $('#formMsg').textContent = 'Procesando…';
+
+  await new Promise(r => setTimeout(r, 900));
+
+  const order = {
+    items: Object.fromEntries(cart),
+    subtotal,
+    envio: envioActual(),
+    total: subtotal + envioActual(),
+    pago: payM,
+    fecha: new Date().toLocaleString()
+  };
+  localStorage.setItem('lot_last_order', JSON.stringify(order));
+  localStorage.setItem('lot_payment_success', '1');
+
+  // Redirige a la página de gracias
+  window.location.href = 'gracias.html';
+});
+  </script>
+</body>
+</html>
