@@ -1,0 +1,684 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Publicación — La Otra Tribuna</title>
+  <link rel="stylesheet" href="styles/main.css" />
+  <link rel="stylesheet" href="styles/mobile.css" />
+  <script src="scripts/mobile-nav.js" defer></script>
+  <link rel="stylesheet" href="styles/user-widget.css" />
+  <link rel="stylesheet" href="styles/notifications.css" />
+  <link rel="icon" type="image/png" href="./assets/logo.png" />
+  <style>
+    .publicacion-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .publicacion-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      margin-bottom: 40px;
+    }
+
+    @media (max-width: 768px) {
+      .publicacion-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+    }
+
+    .publicacion-imagen {
+      width: 100%;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .publicacion-info {
+      padding: 20px 0;
+    }
+
+    .publicacion-titulo {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: #1a1a1a;
+    }
+
+    .publicacion-precio {
+      font-size: 32px;
+      font-weight: 700;
+      color: #064e3b;
+      margin-bottom: 20px;
+    }
+
+    .publicacion-precio-oferta {
+      font-size: 24px;
+      color: #d92d20;
+      text-decoration: line-through;
+      margin-right: 12px;
+    }
+
+    .badge-oferta {
+      background: #d92d20;
+      color: white;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      display: inline-block;
+      margin-left: 12px;
+    }
+
+    .publicacion-detalles {
+      background: #f8f9fa;
+      padding: 24px;
+      border-radius: 12px;
+      margin-bottom: 24px;
+    }
+
+    .detalle-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .detalle-item:last-child {
+      border-bottom: none;
+    }
+
+    .detalle-label {
+      font-weight: 600;
+      color: #4b5563;
+    }
+
+    .detalle-valor {
+      color: #1a1a1a;
+    }
+
+    .publicacion-descripcion {
+      margin-bottom: 24px;
+    }
+
+    .publicacion-descripcion h3 {
+      margin-bottom: 12px;
+      color: #1a1a1a;
+    }
+
+    .publicacion-descripcion p {
+      line-height: 1.6;
+      color: #4b5563;
+    }
+
+    .vendedor-info {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 12px;
+      margin-bottom: 24px;
+    }
+
+    .vendedor-avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: #064e3b;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 20px;
+    }
+
+    .vendedor-datos h4 {
+      margin: 0 0 4px 0;
+      color: #1a1a1a;
+    }
+
+    .vendedor-datos p {
+      margin: 0;
+      color: #6b7280;
+    }
+
+    .acciones-publicacion {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .btn-favorito {
+      background: white;
+      border: 2px solid #e5e7eb;
+      color: #4b5563;
+      padding: 12px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .btn-favorito:hover {
+      border-color: #d92d20;
+      color: #d92d20;
+    }
+
+    .btn-favorito.activo {
+      background: #d92d20;
+      border-color: #d92d20;
+      color: white;
+    }
+
+    .galeria-imagenes {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .miniatura-imagen {
+      width: 100%;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 8px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: border-color 0.2s;
+    }
+
+    .miniatura-imagen:hover,
+    .miniatura-imagen.activa {
+      border-color: #064e3b;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 60px 20px;
+      color: #6b7280;
+    }
+
+    .error {
+      text-align: center;
+      padding: 60px 20px;
+      color: #d92d20;
+    }
+  </style>
+</head>
+<body>
+  <!-- ===== HEADER ===== -->
+  <header id="siteHeader">
+    <div class="top container">
+      <div class="brand-wrap">
+        <a href="index.html" class="logo-link" aria-label="Ir al inicio">
+          <img class="logo" src="./assets/logo.png" alt="La Otra Tribuna" />
+        </a>
+      </div>
+
+      <div class="search">
+        <input id="q" type="search" placeholder="Buscar club o país…" autocomplete="off" />
+      </div>
+
+      <div class="header-messages" id="headerMessage">Detalles de la publicación</div>
+
+      <div class="actions" style="display:flex;align-items:center;gap:12px;">
+        <!-- Botón por defecto (si NO hay sesión) -->
+        <a id="loginBtn" href="login.html" class="btn-login">Iniciar sesión</a>
+
+        <!-- Widget de usuario (oculto hasta que haya sesión) -->
+        <div id="userWidget" class="user-widget hidden" aria-live="polite" style="position:relative;">
+          <div id="userAvatar" class="user-avatar" title="Mi perfil"></div>
+          <span id="greeting" class="user-greeting"></span>
+          <div id="userMenu" class="user-menu hidden">
+            <a href="perfil.html">👤 Perfil</a>
+            <a href="mis_publicaciones.html">📊 Mis Publicaciones</a>
+            <a href="mis-pedidos.html">🧾 Mis pedidos</a>
+            <a href="#" id="logoutBtn" class="menu-divider">🚪 Cerrar sesión</a>
+          </div>
+        </div>
+
+        <!-- Tus botones existentes -->
+        <button class="pill" id="favBtn" aria-label="Abrir favoritos">❤️<span id="favCount">0</span></button>
+        <button class="pill" id="cartBtn" aria-label="Abrir carrito">🛒 <span id="cartCount">0</span></button>
+      </div>
+    </div>
+    <button class="burger" aria-expanded="false" aria-controls="mnav" aria-label="Abrir menú">
+      <span>≡</span>
+    </button>
+
+    <!-- ===== SUBNAV ===== -->
+    <nav class="subnav">
+      <div class="container subnav-inner">
+        <div class="subnav-left">
+          <a href="#ubicacion" class="loc-link" id="openLocation">
+            <svg class="loc-ic" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 22s7-6.46 7-12a7 7 0 1 0-14 0c0 5.54 7 12 7 12Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="12" cy="10" r="2.5" stroke="currentColor" stroke-width="1.6"/>
+            </svg>
+            <span class="loc-line" id="locText">Enviar a <strong>Montevideo</strong></span>
+          </a>
+        </div>
+
+        <div class="subnav-center">
+          <div class="has-submenu" id="catsDrop">
+            <a href="index.html" class="subnav-link" id="catsLink" aria-haspopup="true" aria-expanded="false">
+              Categorías <span class="chev" aria-hidden="true">▾</span>
+            </a>
+            <div class="cat-submenu" id="catsMenu" role="menu" aria-label="Categorías">
+              <a href="index.html?cat=club#catalogo">Club</a>
+              <a href="index.html?cat=seleccion#catalogo">Selección</a>
+              <a href="index.html?cat=retro#catalogo">Retro</a>
+            </div>
+          </div>
+          <a href="ofertas.html" class="subnav-link">Ofertas</a>
+          <a href="vender.html" class="subnav-link">Vender</a>
+          <a href="rastrear.html" class="subnav-link">Rastrear Pedido</a>
+        </div>
+
+        <div class="subnav-right">
+          <a href="favoritos.html" class="subnav-link" id="favLink">Favoritos</a>
+          <a href="como-funciona.html" class="subnav-link">Cómo funciona</a>
+          <a href="autenticidad.html" class="subnav-link">Autenticidad</a>
+          <a href="ayuda.html" class="subnav-link">Ayuda</a>
+        </div>
+      </div>
+    </nav>
+
+    <nav id="mnav" class="mnav" role="dialog" aria-modal="true" aria-label="Menú">
+      <div class="mnav-head">
+        <strong>Menú</strong>
+        <button type="button" class="close-mnav" aria-label="Cerrar">✕</button>
+      </div>
+      <div class="mnav-search">
+        <input id="mq" type="search" placeholder="Buscar camisetas…" autocomplete="off" />
+        <div id="msearchMenu" class="search-menu" hidden></div>
+      </div>
+      <div class="mnav-links">
+        <a href="index.html">Inicio</a>
+        <a href="ofertas.html">Ofertas</a>
+        <a href="vender.html">Vender</a>
+        <a href="rastrear.html">Rastrear Pedido</a>
+        <a href="favoritos.html">Favoritos</a>
+        <a href="como-funciona.html">Cómo funciona</a>
+        <a href="autenticidad.html">Autenticidad</a>
+        <a href="ayuda.html">Ayuda</a>
+      </div>
+    </nav>
+  </header>
+
+  <!-- ===== OVERLAY UBICACIÓN ===== -->
+  <div id="overlay" class="overlay"></div>
+  <div id="locationModal" class="modal" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3>Elige dónde recibir tus compras</h3>
+        <button class="modal-close" id="closeLocation" aria-label="Cerrar">✕</button>
+      </div>
+      <form id="locForm" class="loc-form" autocomplete="off">
+        <div class="field">
+          <label for="departamento">Departamento</label>
+          <select id="departamento" required>
+            <option value="" selected>Elija una opción</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="localidad">Localidad</label>
+          <select id="localidad" required disabled>
+            <option value="" selected>Elija una opción</option>
+          </select>
+        </div>
+        <div class="actions-row">
+          <button type="button" class="btn" id="cancelLoc">Cancelar</button>
+          <button type="submit" class="btn primary" id="acceptLoc" disabled>Aceptar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== PANELES LATERALES ===== -->
+  <aside id="cartMenu" class="cart-menu">
+    <div class="cart-header">
+      <h3>Tu carrito</h3>
+      <button id="closeCart" class="close-btn">✕</button>
+    </div>
+    <div id="cartItems" class="cart-items">
+      <p class="muted">Tu carrito está vacío</p>
+    </div>
+    <div class="cart-footer">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span>Total:</span>
+        <strong id="cartTotal">$ 0</strong>
+      </div>
+      <button class="btn primary checkout-btn">Finalizar compra</button>
+    </div>
+  </aside>
+
+  <aside id="favMenu" class="cart-menu">
+    <div class="cart-header">
+      <h3>Favoritos</h3>
+      <button id="closeFav" class="close-btn">✕</button>
+    </div>
+    <div id="favItems" class="cart-items">
+      <p class="muted">Aún no agregaste favoritos</p>
+    </div>
+    <div class="cart-footer">
+      <button class="btn primary checkout-btn" id="favGoCart">Pasar todo al carrito</button>
+    </div>
+  </aside>
+
+  <!-- ===== CONTENIDO PRINCIPAL ===== -->
+  <main>
+    <div class="publicacion-container">
+      <div id="loading" class="loading">
+        <p>Cargando publicación...</p>
+      </div>
+
+      <div id="error" class="error" style="display: none;">
+        <p>No se pudo cargar la publicación. <a href="index.html">Volver al catálogo</a></p>
+      </div>
+
+      <div id="publicacion-content" style="display: none;">
+        <!-- Aquí se cargará el contenido de la publicación -->
+      </div>
+    </div>
+  </main>
+
+  <script src="scripts/uy-depts.js"></script>
+  <script>
+    // ===== VARIABLES GLOBALES =====
+    const PLACEHOLDER = 'https://placehold.co/600x750?text=Camiseta';
+    const uy = new Intl.NumberFormat('es-UY',{style:'currency',currency:'UYU',maximumFractionDigits:0});
+    
+    // ===== FAVORITOS PERSISTENTES =====
+    let favorites = new Set();
+    function initializeFavorites() {
+        const saved = localStorage.getItem('lot_favorites');
+        favorites = new Set(saved ? JSON.parse(saved) : []);
+    }
+    function saveFavorites(){ localStorage.setItem('lot_favorites', JSON.stringify([...favorites])); }
+
+    // ===== CARRITO PERSISTENTE =====
+    const cart = new Map(Object.entries(JSON.parse(localStorage.getItem('lot_cart') || '{}')).map(([k,v]) => [+k, v]));
+    function saveCart(){ localStorage.setItem('lot_cart', JSON.stringify(Object.fromEntries(cart))); }
+
+    // ===== CARGAR PUBLICACIÓN =====
+    async function cargarPublicacion() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const idPublicacion = urlParams.get('id');
+
+      if (!idPublicacion) {
+        mostrarError('No se especificó una publicación');
+        return;
+      }
+
+      try {
+        const publicacion = await obtenerPublicacionDesdeSupabase(idPublicacion);
+        if (publicacion) {
+          mostrarPublicacion(publicacion);
+        } else {
+          mostrarError('Publicación no encontrada');
+        }
+      } catch (error) {
+        console.error('Error cargando publicación:', error);
+        mostrarError('Error al cargar la publicación');
+      }
+    }
+
+    function mostrarPublicacion(publicacion) {
+      const contentDiv = document.getElementById('publicacion-content');
+      const loadingDiv = document.getElementById('loading');
+      
+      // Ocultar loading y mostrar contenido
+      loadingDiv.style.display = 'none';
+      contentDiv.style.display = 'block';
+
+      const precioFinal = publicacion.precio_oferta || publicacion.precio;
+      const esOferta = publicacion.precio_oferta !== null;
+
+      contentDiv.innerHTML = `
+        <div class="publicacion-grid">
+          <div>
+            <img src="${publicacion.img}" alt="${publicacion.nombre}" class="publicacion-imagen" id="imagenPrincipal">
+            ${publicacion.fotos && publicacion.fotos.length > 1 ? `
+              <div class="galeria-imagenes">
+                ${publicacion.fotos.map((foto, index) => `
+                  <img src="${foto.url}" alt="Imagen ${index + 1}" class="miniatura-imagen ${index === 0 ? 'activa' : ''}" 
+                       data-imagen="${foto.url}" onclick="cambiarImagenPrincipal('${foto.url}', this)">
+                `).join('')}
+              </div>
+            ` : ''}
+          </div>
+          
+          <div class="publicacion-info">
+            <h1 class="publicacion-titulo">${publicacion.nombre}</h1>
+            
+            <div class="publicacion-precio">
+              ${esOferta ? `
+                <span class="publicacion-precio-oferta">${uy.format(publicacion.precio)}</span>
+                <span>${uy.format(precioFinal)}</span>
+                <span class="badge-oferta">-10% OFF</span>
+              ` : `
+                <span>${uy.format(precioFinal)}</span>
+              `}
+            </div>
+
+            <div class="publicacion-detalles">
+              <div class="detalle-item">
+                <span class="detalle-label">Categoría</span>
+                <span class="detalle-valor">${publicacion.categoria}</span>
+              </div>
+              <div class="detalle-item">
+                <span class="detalle-label">Club/Selección</span>
+                <span class="detalle-valor">${publicacion.club}</span>
+              </div>
+              <div class="detalle-item">
+                <span class="detalle-label">Talle</span>
+                <span class="detalle-valor">${publicacion.talle || 'No especificado'}</span>
+              </div>
+              <div class="detalle-item">
+                <span class="detalle-label">Condición</span>
+                <span class="detalle-valor">${publicacion.condicion || 'No especificada'}</span>
+              </div>
+              <div class="detalle-item">
+                <span class="detalle-label">Autenticidad</span>
+                <span class="detalle-valor">${publicacion.autenticidad || 'No especificada'}</span>
+              </div>
+              <div class="detalle-item">
+                <span class="detalle-label">Stock disponible</span>
+                <span class="detalle-valor">${publicacion.stock || 1} unidad(es)</span>
+              </div>
+            </div>
+
+            <div class="publicacion-descripcion">
+              <h3>Descripción</h3>
+              <p>${publicacion.descripcion || 'El vendedor no agregó una descripción.'}</p>
+            </div>
+
+            <div class="vendedor-info">
+              <div class="vendedor-avatar">${publicacion.vendedorIniciales}</div>
+              <div class="vendedor-datos">
+                <h4>${publicacion.vendedorNombre}</h4>
+                <p>${publicacion.vendedorEmail}</p>
+              </div>
+            </div>
+
+            <div class="acciones-publicacion">
+              <button class="btn primary" onclick="agregarAlCarrito(${publicacion.id})" style="flex: 1;">
+                Agregar al carrito
+              </button>
+              <button class="btn-favorito ${favorites.has(publicacion.id) ? 'activo' : ''}" 
+                      onclick="toggleFavorito(${publicacion.id}, this)">
+                ${favorites.has(publicacion.id) ? '❤️ En favoritos' : '🤍 Agregar a favoritos'}
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function cambiarImagenPrincipal(urlImagen, elemento) {
+      document.getElementById('imagenPrincipal').src = urlImagen;
+      
+      // Remover clase activa de todas las miniaturas
+      document.querySelectorAll('.miniatura-imagen').forEach(img => {
+        img.classList.remove('activa');
+      });
+      
+      // Agregar clase activa a la miniatura clickeada
+      elemento.classList.add('activa');
+    }
+
+    function agregarAlCarrito(id) {
+      cart.set(id, (cart.get(id) || 0) + 1);
+      saveCart();
+      updateCartBadge();
+      
+      // Mostrar feedback
+      const btn = document.querySelector('.btn.primary');
+      const originalText = btn.textContent;
+      btn.textContent = '¡Agregado! ✓';
+      setTimeout(() => {
+        btn.textContent = originalText;
+      }, 2000);
+    }
+
+    function toggleFavorito(id, boton) {
+      if (favorites.has(id)) {
+        favorites.delete(id);
+        boton.classList.remove('activo');
+        boton.innerHTML = '🤍 Agregar a favoritos';
+      } else {
+        favorites.add(id);
+        boton.classList.add('activo');
+        boton.innerHTML = '❤️ En favoritos';
+      }
+      saveFavorites();
+      updateFavBadge();
+    }
+
+    function mostrarError(mensaje) {
+      const loadingDiv = document.getElementById('loading');
+      const errorDiv = document.getElementById('error');
+      
+      loadingDiv.style.display = 'none';
+      errorDiv.style.display = 'block';
+      errorDiv.querySelector('p').textContent = mensaje;
+    }
+
+    // ===== BADGES =====
+    function updateFavBadge(){
+      const favCountBadge = document.getElementById('favCount');
+      if (favCountBadge) favCountBadge.textContent = favorites.size;
+    }
+    function updateCartBadge(){
+      const cartCountBadge = document.getElementById('cartCount');
+      if (cartCountBadge) {
+        let totalQty = 0; 
+        cart.forEach(qty => totalQty += qty);
+        cartCountBadge.textContent = totalQty;
+      }
+    }
+
+    // ===== INICIALIZAR =====
+    document.addEventListener('DOMContentLoaded', function() {
+      initializeFavorites();
+      updateFavBadge();
+      updateCartBadge();
+      cargarPublicacion();
+    });
+  </script>
+
+  <!-- ===== SUPABASE ===== -->
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+    const SUPABASE_URL = 'https://imexctmcesopdfdebsgo.supabase.co'
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImltZXhjdG1jZXNvcGRmZGVic2dvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzMDczMDIsImV4cCI6MjA3NDg4MzMwMn0.g1lziVKAuUvMEOkYxJhe2D2z8PlwGJ6xcXo_SSpTj7Q' 
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+    // Mapeo de vendedores (deberías obtener esto de la base de datos)
+    const VENDEDORES = {
+      1: { 
+        nombre: 'Ignacio Iglesia', 
+        email: 'iaioiglesia@icloud.com',
+        iniciales: 'II'
+      },
+      2: { 
+        nombre: 'María Pérez', 
+        email: 'maria@example.com',
+        iniciales: 'MP'
+      }
+    };
+
+    async function obtenerPublicacionDesdeSupabase(idPublicacion) {
+      try {
+        const { data: publicacion, error } = await supabase
+          .from('publicacion')
+          .select(`*, foto (*)`)
+          .eq('id_publicacion', idPublicacion)
+          .eq('estado', 'Activa')
+          .single();
+
+        if (error) {
+          console.error('Error obteniendo publicación:', error);
+          return null;
+        }
+
+        if (!publicacion) {
+          return null;
+        }
+
+        // Procesar la publicación
+        const primeraFoto = publicacion.foto && publicacion.foto.length > 0 ? publicacion.foto[0].url : null;
+        const precioOferta = publicacion.permiso_oferta ? Math.round(publicacion.precio * 0.9) : null;
+        
+        // Obtener información del vendedor
+        const infoVendedor = VENDEDORES[publicacion.id_usuario] || {
+          nombre: 'Usuario',
+          email: 'Email no disponible',
+          iniciales: 'U'
+        };
+
+        return {
+          id: publicacion.id_publicacion,
+          nombre: publicacion.titulo,
+          precio: publicacion.precio,
+          precio_oferta: precioOferta,
+          permiso_oferta: publicacion.permiso_oferta,
+          club: publicacion.club,
+          categoria: formatCategoria(publicacion.categoria),
+          img: primeraFoto || PLACEHOLDER,
+          talle: publicacion.talle,
+          condicion: publicacion.condicion,
+          autenticidad: publicacion.autenticidad,
+          stock: publicacion.stock,
+          descripcion: publicacion.descripcion,
+          sellerId: publicacion.id_usuario,
+          fotos: publicacion.foto || [],
+          vendedorNombre: infoVendedor.nombre,
+          vendedorEmail: infoVendedor.email,
+          vendedorIniciales: infoVendedor.iniciales
+        };
+
+      } catch (error) {
+        console.error('Error:', error);
+        return null;
+      }
+    }
+
+    function formatCategoria(cat) {
+      if (!cat) return 'Club';
+      if (cat === 'Seleccion') return 'Selección';
+      return cat;
+    }
+
+    // Hacer la función global para que el script principal pueda usarla
+    window.obtenerPublicacionDesdeSupabase = obtenerPublicacionDesdeSupabase;
+  </script>
+</body>
+</html>

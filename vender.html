@@ -140,6 +140,43 @@
     .success-title { font-weight: 700; font-size: 18px; }
     .success-text  { color: #6b7280; font-size: 14px; }
     .success-sub   { color: #6b7280; font-size: 13px; }
+
+    /* ===== CHECKBOX OFERTAS AUTOMÁTICAS ===== */
+    .checkbox-field {
+      margin: 20px 0;
+      padding: 16px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      background: #f8f9fa;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      cursor: pointer;
+    }
+
+    .checkbox-label input[type="checkbox"] {
+      margin-top: 2px;
+      width: 18px;
+      height: 18px;
+    }
+
+    .checkbox-text {
+      flex: 1;
+    }
+
+    .checkbox-text strong {
+      display: block;
+      margin-bottom: 4px;
+      color: #333;
+    }
+
+    .checkbox-text small {
+      line-height: 1.4;
+      color: #6b7280;
+    }
   </style>
 </head>
 <body>
@@ -373,9 +410,24 @@
               <input type="radio" id="estado-activa" name="estado" value="Activa" checked>
               <label for="estado-activa">Activa</label>
 
-
               <input type="radio" id="estado-vendida" name="estado" value="Vendida">
               <label for="estado-vendida">Vendida</label>
+            </div>
+          </div>
+
+          <!-- ===== CHECKBOX OFERTAS AUTOMÁTICAS ===== -->
+          <div class="field span-2">
+            <div class="checkbox-field">
+              <label class="checkbox-label">
+                <input type="checkbox" id="permisoOferta" name="permisoOferta" />
+                <span class="checkmark"></span>
+                <div class="checkbox-text">
+                  <strong>Participar en ofertas automáticas</strong>
+                  <small class="muted">
+                    Si tu camiseta no se vende en 30 días, se moverá automáticamente al apartado de ofertas con 10% de descuento.
+                  </small>
+                </div>
+              </label>
             </div>
           </div>
         </div>
@@ -648,6 +700,7 @@
       const autenticidad = mapAuth(document.getElementById('auth').value);
       const talle = document.getElementById('talle').value;
       const stock = parseInt(document.getElementById('stock').value, 10);
+      const permisoOferta = document.getElementById('permisoOferta').checked;
 
       if (!equipo || !titulo || Number.isNaN(precio) || Number.isNaN(stock)) {
         alert('Completá equipo, título, precio y stock correctamente.');
@@ -680,8 +733,8 @@
         .from('producto_base')
         .insert([{
           equipo: equipo,
-          categoria: categoria_prod,      // enum categoria_prod (Club/Seleccion)
-          nombre_public: titulo           // título como nombre_public
+          categoria: categoria_prod,
+          nombre_public: titulo
         }])
         .select('id_producto')
         .single();
@@ -693,7 +746,7 @@
       }
       const id_producto = prod.id_producto;
 
-      // 2) publicacion (incluye la nueva columna club)
+      // 2) publicacion - SOLO con columnas que existen en tu tabla
       const pubRow = {
         id_usuario,
         id_producto,
@@ -703,11 +756,12 @@
         moneda,
         condicion,
         autenticidad,
-        categoria: categoria_pub,  // enum categoria_pub_t (Club/Seleccion/Retro)
+        categoria: categoria_pub,
         talle,
         stock,
         estado: estado_pub,
-        club: equipo               // para el catálogo
+        club: equipo,
+        permiso_oferta: permisoOferta  // SOLO esta columna extra que SÍ existe
       };
 
       const { data: pub, error: pubErr } = await sbClient
@@ -735,7 +789,11 @@
       }
 
       // Éxito ✅
-      window.showSuccess?.('Tu publicación se guardó correctamente.', 'index.html', 1400);
+      const mensajeExito = permisoOferta 
+        ? 'Tu publicación se guardó correctamente. Si no se vende en 30 días, entrará automáticamente en ofertas.'
+        : 'Tu publicación se guardó correctamente.';
+      
+      window.showSuccess?.(mensajeExito, 'index.html', 1400);
     });
   </script>
 

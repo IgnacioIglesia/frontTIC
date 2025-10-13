@@ -165,6 +165,37 @@
     </div>
   </div>
 
+  <!-- ===== PANELES LATERALES ===== -->
+  <aside id="cartMenu" class="cart-menu">
+    <div class="cart-header">
+      <h3>Tu carrito</h3>
+      <button id="closeCart" class="close-btn">✕</button>
+    </div>
+    <div id="cartItems" class="cart-items">
+      <p class="muted">Tu carrito está vacío</p>
+    </div>
+    <div class="cart-footer">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span>Total:</span>
+        <strong id="cartTotal">$ 0</strong>
+      </div>
+      <button class="btn primary checkout-btn">Finalizar compra</button>
+    </div>
+  </aside>
+
+  <aside id="favMenu" class="cart-menu">
+    <div class="cart-header">
+      <h3>Favoritos</h3>
+      <button id="closeFav" class="close-btn">✕</button>
+    </div>
+    <div id="favItems" class="cart-items">
+      <p class="muted">Aún no agregaste favoritos</p>
+    </div>
+    <div class="cart-footer">
+      <button class="btn primary checkout-btn" id="favGoCart">Pasar todo al carrito</button>
+    </div>
+  </aside>
+
   <!-- ===== CONTENIDO ===== -->
   <main>
     <div class="container">
@@ -180,40 +211,251 @@
 
   <script src="scripts/uy-depts.js"></script>
   <script>
-    // ===== Datos demo =====
-    const DATA = [
-      {id:1,nombre:'Camiseta Local 24/25',club:'Barcelona',pais:'España',categoria:'Club',precio:3290,oferta:true,desc:15,img:'./assets/camisetas/barcelona-local.jpg'},
-      {id:2,nombre:'Camiseta Visitante 24/25',club:'Barcelona',pais:'España',categoria:'Club',precio:3190,oferta:false,desc:0,img:'./assets/camisetas/barcelona-visitante.jpg'},
-      {id:3,nombre:'Camiseta Titular 24/25',club:'Real Madrid',pais:'España',categoria:'Club',precio:3490,oferta:true,desc:10,img:'./assets/camisetas/real-madrid-titular.jpg'},
-      {id:4,nombre:'Camiseta Selección 24/25',club:'Uruguay',pais:'Uruguay',categoria:'Selección',precio:2990,oferta:true,desc:20,img:'./assets/camisetas/uruguay-seleccion.jpg'}
-    ];
-    const PLACEHOLDER = 'https://placehold.co/600x750?text=Camiseta';
-    const uy = new Intl.NumberFormat('es-UY',{style:'currency',currency:'UYU',maximumFractionDigits:0});
-
+    // ===== ELEMENTOS DEL DOM =====
     const grid = document.getElementById('grid');
     const count = document.getElementById('count');
+    const overlay = document.getElementById('overlay');
+    
     document.getElementById('year').textContent = new Date().getFullYear();
 
-    // ===== Favoritos (localStorage) =====
-    const favorites = new Set(JSON.parse(localStorage.getItem('lot_favorites') || '[]'));
+    // ===== VARIABLES GLOBALES =====
+    const PLACEHOLDER = 'https://placehold.co/600x750?text=Camiseta';
+    const uy = new Intl.NumberFormat('es-UY',{style:'currency',currency:'UYU',maximumFractionDigits:0});
+    let DATA = []; // Ahora se cargará desde Supabase
+
+    // ===== FAVORITOS PERSISTENTES =====
+    let favorites = new Set();
+    function initializeFavorites() {
+        const saved = localStorage.getItem('lot_favorites');
+        favorites = new Set(saved ? JSON.parse(saved) : []);
+        console.log('Favoritos inicializados:', favorites.size);
+    }
     function saveFavorites(){ localStorage.setItem('lot_favorites', JSON.stringify([...favorites])); }
 
-    // ===== Render grilla solo con ofertas =====
-    function priceWithDiscount(p, d){ return Math.round(p * (1 - d/100)); }
+    // ===== CARRITO PERSISTENTE =====
+    const cart = new Map(Object.entries(JSON.parse(localStorage.getItem('lot_cart') || '{}')).map(([k,v]) => [+k, v]));
+    function saveCart(){ localStorage.setItem('lot_cart', JSON.stringify(Object.fromEntries(cart))); }
 
+    // ===== RENDERIZAR MENÚ DE FAVORITOS =====
+    function renderFavMenu() {
+      const favItemsDiv = document.getElementById('favItems');
+      if (!favItemsDiv) return;
+      
+      favItemsDiv.innerHTML = '';
+      
+      if (favorites.size === 0) {
+        favItemsDiv.innerHTML = '<p class="muted">Aún no agregaste favoritos</p>';
+        return;
+      }
+      
+      favorites.forEach(id => {
+        const prod = DATA.find(p => p.id === id);
+        if (!prod) return;
+        
+        // Usar precio_oferta si existe, sino precio normal
+        const precioFinal = prod.precio_oferta || prod.precio;
+        
+        const row = document.createElement('div');
+        row.className = 'cart-item';
+        row.innerHTML = `
+          <img src="${prod.img}" alt="${prod.nombre}" onerror="this.src='${PLACEHOLDER}'">
+          <div class="meta">
+            <strong>${prod.nombre}</strong>
+            <span class="muted">${uy.format(precioFinal)}${prod.precio_oferta ? ' <span style="color:#d92d20;font-size:12px">(10% OFF)</span>' : ''}</span>
+            <div class="qty">
+              <button class="icon" data-act="addcart" data-id="${id}" title="Agregar al carrito">🛒</button>
+              <button class="icon" data-act="rmfav" data-id="${id}" title="Quitar de favoritos">🗑</button>
+            </div>
+          </div>`;
+        favItemsDiv.appendChild(row);
+      });
+    }
+
+    // ===== PANEL CARRITO =====
+    const cartBtn = document.getElementById('cartBtn');
+    const closeCart = document.getElementById('closeCart');
+    const cartItemsDiv = document.getElementById('cartItems');
+    const cartTotal = document.getElementById('cartTotal');
+    const cartMenu = document.getElementById('cartMenu');
+
+    function showOverlay(){ overlay.classList.add('show'); }
+    function hideOverlay(){ overlay.classList.remove('show'); }
+    function hideOverlayIfIdle(){
+      const cartOpen = document.querySelector('.cart-menu.open');
+      const favOpen = document.querySelector('#favMenu.open');
+      const locOpen = document.getElementById('locationModal').classList.contains('open');
+      
+      if (!cartOpen && !favOpen && !locOpen) {
+        hideOverlay();
+      }
+    }
+    function openCart(){ 
+      cartMenu.classList.add('open'); 
+      showOverlay(); 
+      updateCartUI(); 
+    }
+    function closeCartMenu(){ 
+      cartMenu.classList.remove('open'); 
+      hideOverlayIfIdle(); 
+    }
+
+    // ===== PANEL FAVORITOS =====
+    const favBtn = document.getElementById('favBtn');
+    const favMenu = document.getElementById('favMenu');
+    const closeFav = document.getElementById('closeFav');
+    const favItemsDiv = document.getElementById('favItems');
+    const favGoCartBtn = document.getElementById('favGoCart');
+
+    function openFav(){ 
+      favMenu.classList.add('open'); 
+      showOverlay(); 
+      renderFavMenu();
+    }
+    function closeFavMenu(){ 
+      favMenu.classList.remove('open'); 
+      hideOverlayIfIdle(); 
+    }
+
+    // ===== CERRAR PANELES AL HACER CLIC EN OVERLAY =====
+    overlay.addEventListener('click', () => {
+      closeCartMenu();
+      closeFavMenu();
+      closeLocation();
+    });
+
+    // También agregar para cerrar con tecla Escape
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeCartMenu();
+        closeFavMenu();
+        closeLocation();
+      }
+    });
+
+    // Event listeners para botones
+    cartBtn.addEventListener('click', openCart);
+    closeCart.addEventListener('click', closeCartMenu);
+
+    favBtn.addEventListener('click', openFav);
+    closeFav.addEventListener('click', closeFavMenu);
+
+    function updateCartUI(){
+      let totalPrice = 0;
+      cartItemsDiv.innerHTML = '';
+      if (cart.size === 0) {
+        cartItemsDiv.innerHTML = '<p class="muted">Tu carrito está vacío</p>';
+        cartTotal.textContent = '$ 0'; 
+        updateCartBadge(); 
+        return;
+      }
+      
+      cart.forEach((qty, id) => {
+        const prod = DATA.find(p => p.id === id);
+        if (prod) {
+          // Usar precio_oferta si existe, sino precio normal
+          const precioFinal = prod.precio_oferta || prod.precio;
+          const itemTotal = precioFinal * qty; 
+          totalPrice += itemTotal;
+          
+          const row = document.createElement('div');
+          row.className = 'cart-item';
+          row.innerHTML = `
+            <img src="${prod.img}" alt="${prod.nombre}" onerror="this.src='${PLACEHOLDER}'">
+            <div class="meta">
+              <strong>${prod.nombre}</strong>
+              <span class="muted">${uy.format(precioFinal)} c/u${prod.precio_oferta ? ' <span style="color:#d92d20;font-size:12px">(10% OFF)</span>' : ''}</span>
+              <div class="qty">
+                <button class="icon" data-act="dec" data-id="${id}">−</button>
+                <span>${qty}</span>
+                <button class="icon" data-act="inc" data-id="${id}">＋</button>
+                <button class="icon" data-act="rm" data-id="${id}" title="Quitar">🗑</button>
+              </div>
+            </div>
+            <div><strong>${uy.format(itemTotal)}</strong></div>`;
+          cartItemsDiv.appendChild(row);
+        }
+      });
+      cartTotal.textContent = uy.format(totalPrice); 
+      updateCartBadge();
+    }
+
+    cartItemsDiv.addEventListener('click', (e)=>{
+      const btn = e.target.closest('button.icon'); 
+      if (!btn) return;
+      const id = Number(btn.dataset.id); 
+      const act = btn.dataset.act;
+      if (act === 'inc') cart.set(id, (cart.get(id) || 0) + 1);
+      else if (act === 'dec') { 
+        const current = cart.get(id) || 0; 
+        if (current > 1) cart.set(id, current - 1); 
+        else cart.delete(id);
+      }
+      else if (act === 'rm') cart.delete(id);
+      saveCart(); 
+      updateCartUI();
+    });
+
+    favGoCartBtn.addEventListener('click', ()=>{
+      favorites.forEach(id=>{ 
+        const prod = DATA.find(p=>p.id===id); 
+        if(!prod) return; 
+        cart.set(id, (cart.get(id) || 0) + 1);
+      });
+      saveCart(); 
+      updateCartUI(); 
+      openCart();
+    });
+
+    favItemsDiv.addEventListener('click', (e)=>{
+      const btn = e.target.closest('button.icon'); 
+      if(!btn) return;
+      const id = Number(btn.dataset.id), act = btn.dataset.act;
+      const prod = DATA.find(p => p.id === id); 
+      if(!prod) return;
+      
+      if(act==='addcart'){ 
+        cart.set(id, (cart.get(id) || 0) + 1);
+        saveCart(); 
+        updateCartUI(); 
+        openCart(); 
+      }
+      else if(act==='rmfav'){ 
+        favorites.delete(id); 
+        saveFavorites(); 
+        updateFavBadge(); 
+        renderFavMenu();
+        updateGridFavIcons(); 
+      }
+    });
+
+    // ===== BADGES =====
+    function updateFavBadge(){
+      const favCountBadge = document.getElementById('favCount');
+      if (favCountBadge) favCountBadge.textContent = favorites.size;
+    }
+    function updateCartBadge(){
+      const cartCountBadge = document.getElementById('cartCount');
+      if (cartCountBadge) {
+        let totalQty = 0; 
+        cart.forEach(qty => totalQty += qty);
+        cartCountBadge.textContent = totalQty;
+      }
+    }
+
+    // ===== Render grilla con datos reales =====
     function render(){
-      const items = DATA.filter(p => p.oferta);
-      count.textContent = items.length;
+      console.log('Renderizando DATA:', DATA);
+      count.textContent = DATA.length;
       grid.innerHTML = '';
 
-      for(const p of items){
-        const finalPrice = priceWithDiscount(p.precio, p.desc || 0);
+      for(const p of DATA){
+        const precioConDescuento = p.precio_oferta || p.precio;
         const el = document.createElement('article');
         el.className = 'card';
         el.innerHTML = `
           <div class="media">
             <img src="${p.img}" alt="${p.nombre}" loading="lazy" onerror="this.src='${PLACEHOLDER}'">
-            <span class="badge" style="position:absolute;left:8px;top:8px;background:#d92d20;color:#fff;border-radius:999px;padding:4px 8px;font-size:12px">-${p.desc}%</span>
+            <span class="badge" style="position:absolute;left:8px;top:8px;background:#d92d20;color:#fff;border-radius:999px;padding:4px 8px;font-size:12px">-10%</span>
             <button class="fav-toggle ${favorites.has(p.id)?'active':''}" data-fav-id="${p.id}" title="Agregar a favoritos">
               ${favorites.has(p.id)?'❤️':'🤍'}
             </button>
@@ -225,7 +467,7 @@
                 <div class="muted">${p.club} • ${p.categoria}</div>
               </div>
               <div class="price">
-                <div style="font-weight:700">${uy.format(finalPrice)}</div>
+                <div style="font-weight:700">${uy.format(precioConDescuento)}</div>
                 <div class="muted" style="text-decoration:line-through;font-size:12px">${uy.format(p.precio)}</div>
               </div>
             </div>
@@ -233,6 +475,7 @@
           </div>`;
         grid.appendChild(el);
       }
+      updateGridFavIcons();
     }
 
     function updateGridFavIcons(){
@@ -244,32 +487,45 @@
     }
 
     grid.addEventListener('click', (e)=>{
-      const addBtn = e.target.closest('button[data-id]');
-      const favBtn = e.target.closest('.fav-toggle');
+  // Primero verificar si se hizo clic en la tarjeta (no en botones)
+  const card = e.target.closest('.card');
+  if (card && !e.target.closest('button')) {
+    const idAttrBtn = card.querySelector('button[data-id]');
+    const id = idAttrBtn ? Number(idAttrBtn.dataset.id) : null;
+    if (id) {
+      // Redirigir a la página de publicación
+      window.location.href = `publicacion.html?id=${id}`;
+      return;
+    }
+  }
+  
+  // Luego verificar botones específicos
+  const addBtn = e.target.closest('button[data-id]');
+  const favBtn = e.target.closest('.fav-toggle');
 
-      if(addBtn){
-        const id = Number(addBtn.dataset.id);
-        const key = 'lot_cart_demo';
-        const cart = new Map(Object.entries(JSON.parse(localStorage.getItem(key) || '{}')).map(([k,v])=>[+k,v]));
-        cart.set(id, (cart.get(id)||0)+1);
-        localStorage.setItem(key, JSON.stringify(Object.fromEntries(cart)));
-        addBtn.textContent = 'Agregado ✓';
-        setTimeout(()=> addBtn.textContent = 'Agregar al carrito', 900);
-        alert('Agregado al carrito (demo)');
-        return;
-      }
-      if(favBtn){
-        const id = Number(favBtn.dataset.favId);
-        if(favorites.has(id)) favorites.delete(id); else favorites.add(id);
-        saveFavorites(); updateGridFavIcons(); return;
-      }
-    });
-
-    render(); updateGridFavIcons();
+  if(addBtn){
+    const id = Number(addBtn.dataset.id);
+    cart.set(id, (cart.get(id) || 0) + 1);
+    saveCart(); 
+    updateCartUI();
+    addBtn.textContent = 'Agregado ✓'; 
+    setTimeout(()=> addBtn.textContent = 'Agregar al carrito', 900);
+    return;
+  }
+  if(favBtn){
+    const id = Number(favBtn.dataset.favId);
+    if(favorites.has(id)) favorites.delete(id); 
+    else favorites.add(id);
+    saveFavorites(); 
+    updateFavBadge(); 
+    renderFavMenu(); 
+    updateGridFavIcons(); 
+    return;
+  }
+});
 
     // ===== Ubicación =====
     const LOCATION_KEY = 'lot_location';
-    const overlay = document.getElementById('overlay');
     const locationModal = document.getElementById('locationModal');
     const openLocationBtn = document.getElementById('openLocation');
     const closeLocationBtn = document.getElementById('closeLocation');
@@ -289,15 +545,12 @@
       try{ const {loc} = JSON.parse(raw); locText.textContent = `Enviar a ${loc}`; }
       catch{ locText.innerHTML = 'Ingresa tu <strong>ubicación</strong>'; }
     }
-    function showOverlay(){ overlay.classList.add('show'); }
-    function hideOverlay(){ overlay.classList.remove('show'); }
     function openLocation(){ locationModal.classList.add('open'); showOverlay(); }
-    function closeLocation(){ locationModal.classList.remove('open'); hideOverlay(); }
+    function closeLocation(){ locationModal.classList.remove('open'); hideOverlayIfIdle(); }
 
     openLocationBtn.addEventListener('click', (e)=>{ e.preventDefault(); openLocation(); });
-    closeLocationBtn?.addEventListener('click', closeLocation);
-    cancelLocBtn?.addEventListener('click', closeLocation);
-    overlay.addEventListener('click', closeLocation);
+    closeLocationBtn.addEventListener('click', closeLocation);
+    cancelLocBtn.addEventListener('click', closeLocation);
 
     deptSel.addEventListener('change', ()=>{
       const dept = deptSel.value;
@@ -314,15 +567,31 @@
       renderLocationText(); closeLocation();
     });
 
-    fillDept(); renderLocationText();
+    fillDept(); 
+    renderLocationText();
 
-    // (En ofertas no abrimos panel de favoritos — solo persistimos la lista)
+    // ===== INICIALIZAR =====
+    function inicializarUI() {
+      console.log('Inicializando UI con DATA:', DATA.length);
+      updateFavBadge();
+      updateCartBadge();
+      updateCartUI();
+      renderFavMenu();
+      updateGridFavIcons();
+      render(); // Asegurar que se renderice
+    }
+
+    // Hacer funciones globales para que el módulo Supabase pueda llamarlas
+    window.inicializarUI = inicializarUI;
+    window.updateGridFavIcons = updateGridFavIcons;
+    window.render = render;
+    window.initializeFavorites = initializeFavorites; // ← ESTA ES LA QUE FALTABA
   </script>
 
   <!-- ===== NOTIFICACIONES: SOLO EL JS (sin HTML adicional) ===== -->
   <script type="module" src="scripts/notifications.js"></script>
 
-  <!-- ===== SUPABASE: saludo "Hola, Ignacio!" ===== -->
+  <!-- ===== SUPABASE: cargar publicaciones en ofertas ===== -->
   <script type="module">
     import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
     const SUPABASE_URL = 'https://imexctmcesopdfdebsgo.supabase.co'
@@ -376,8 +645,86 @@
       userWdg.classList.remove('hidden')
     }
 
-    await refreshHeader()
-    supabase.auth.onAuthStateChange(()=>refreshHeader())
+    // ===== CARGAR PUBLICACIONES EN OFERTAS =====
+    async function cargarPublicacionesOfertas() {
+      try {
+        // Calcular fecha límite (hace 30 días)
+        const fechaLimite = new Date();
+        fechaLimite.setDate(fechaLimite.getDate() - 30);
+        const fechaLimiteStr = fechaLimite.toISOString().split('T')[0];
+
+        console.log('Buscando publicaciones con fecha <=', fechaLimiteStr);
+
+        const { data: publicaciones, error } = await supabase
+          .from('publicacion')
+          .select(`*, foto (*)`)
+          .eq('estado', 'Activa')
+          .eq('permiso_oferta', true)
+          .lte('fecha_publicacion', fechaLimiteStr);
+
+        if (error) {
+          console.error('Error cargando ofertas:', error);
+          return;
+        }
+
+        console.log('Publicaciones en ofertas encontradas:', publicaciones);
+        procesarPublicaciones(publicaciones || []);
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
+
+    function procesarPublicaciones(publicaciones) {
+  DATA = publicaciones.map(pub => {
+    const primeraFoto = pub.foto && pub.foto.length > 0 ? pub.foto[0].url : null;
+    
+    // PARA OFERTAS: Siempre usar precio_oferta (10% descuento)
+    const precioOferta = Math.round(pub.precio * 0.9);
+    
+    return {
+      id: pub.id_publicacion,
+      nombre: pub.titulo,
+      precio: pub.precio,
+      precio_oferta: precioOferta, // ← Siempre con descuento en ofertas
+      permiso_oferta: true, // ← Forzar a true en ofertas
+      club: pub.club,
+      pais: 'Uruguay',
+      categoria: formatCategoria(pub.categoria),
+      img: primeraFoto || PLACEHOLDER,
+      talle: pub.talle,
+      condicion: pub.condicion,
+      autenticidad: pub.autenticidad,
+      stock: pub.stock,
+      descripcion: pub.descripcion,
+      sellerId: pub.id_usuario,
+      fotos: pub.foto || []
+    }
+  });
+
+  console.log('DATA procesada:', DATA);
+
+  // Inicializar favoritos después de cargar DATA
+  if (window.initializeFavorites) {
+    window.initializeFavorites();
+  }
+  
+  // Inicializar toda la UI
+  if (window.inicializarUI) {
+    window.inicializarUI();
+  }
+}
+
+    function formatCategoria(cat) {
+      if (!cat) return 'Club';
+      if (cat === 'Seleccion') return 'Selección';
+      return cat;
+    }
+
+    // Inicializar
+    await refreshHeader();
+    await cargarPublicacionesOfertas();
+
+    supabase.auth.onAuthStateChange(() => refreshHeader());
 
     // Menú del usuario
     userWdg.addEventListener('click', (e)=>{
